@@ -5,6 +5,5 @@ venv
 env.ps1
 .vscode
 db.sqlite3
-/static
 /ants/static
 .DS_Store

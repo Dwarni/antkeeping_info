@@ -1,5 +1,5 @@
 (function() {
-    var countrySelect = $( "#id_country" );
+    var countrySelect = $( "#countrySelect" );
     countrySelect.change(function() {
         var countryCode = countrySelect.val();
         var newUrl = countriesUrl;

@@ -3,12 +3,31 @@
 
 {% block content %}
 <form>
-    {{ form.as_p }}
+    <div class="form-group row">
+        <label for="countrySelect" class="col-sm-2 col-form-label">Country:</label>
+        <div class="col-sm-10">
+            <select id="countrySelect" class="form-control">
+                {% if country_code is None %}
+                <option value="" selected>Please select a country</option>
+                {% endif %}
+                {% for country in countries %}
+                {% if country_code == country.code %}
+                <option value="{{ country.code }}" selected>{{ country.name }}</option>
+                {% else %}
+                <option value="{{ country.code }}">{{ country.name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+    </div>
 </form>
 {% if ants is not None %}
+{% if country.ant_list_complete == False %}
+<div class="alert alert-warning" role="alert">
+    This list is not marked as complete, so it may not contain all ants native to this country or state.
+</div>
+{% endif %}
 {% include "regions/ant_list.html" with ants=ants %}
-{% else %}
-<p>Please select a country</p>
 {% endif %}
 {% endblock %}
 {% block script %}
