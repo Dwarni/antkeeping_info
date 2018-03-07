@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block content %}
+<form>
+    {{ form.as_p }}
+</form>
+{% if ants is not None %}
+{% include "regions/ant_list.html" with ants=ants %}
+{% else %}
+<p>Please select a country</p>
+{% endif %}
+{% endblock %}
+{% block script %}
+<script>
+    var countriesUrl = "{{ url }}";
+</script>
+<script src="{% static "regions/js/regions.js" %}"></script>
+{% endblock %}
