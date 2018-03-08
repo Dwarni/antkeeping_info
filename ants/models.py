@@ -100,6 +100,9 @@ class Species(TaxonomicRank):
         verbose_name=_('Regions')
     )
 
+    def name_underscore(self):
+        return self.name.replace(" ", "_")
+
     class Meta:
         verbose_name = _('Species')
         verbose_name_plural = _('Species')
@@ -154,6 +157,20 @@ class AntSize(models.Model):
     minimum = create_size_field(_('Minimum (mm)'))
     maximum = create_size_field(_('Maximum (mm)'))
     ant_species = models.ForeignKey('AntSpecies', on_delete=models.CASCADE)
+
+    @staticmethod
+    def calc_img_width(size):
+        factor = Decimal(1.16959)
+        if size:
+            return size * factor
+        else:
+            return None
+
+    def minimum_img(self):
+        return self.calc_img_width(self.minimum)
+
+    def maximum_img(self):
+        return self.calc_img_width(self.maximum)
 
     def __str__(self):
         return self.ANT_SIZE_STRINGS.get(self.type)
