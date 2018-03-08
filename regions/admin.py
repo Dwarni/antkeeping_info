@@ -3,11 +3,15 @@ from regions.models import Country, Region
 
 
 # Register your models here.
+class BaseRegionAdmin(admin.ModelAdmin):
+    search_fields = ["name"]
+
+
 @admin.register(Region)
-class RegionAdmin(admin.ModelAdmin):
+class RegionAdmin(BaseRegionAdmin):
     pass
 
 
 @admin.register(Country)
-class CountryAdmin(admin.ModelAdmin):
+class CountryAdmin(BaseRegionAdmin):
     pass
