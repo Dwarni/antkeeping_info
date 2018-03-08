@@ -4,7 +4,11 @@ from django.utils.translation import ugettext as _
 
 # Create your models here.
 class Country(models.Model):
-    code = models.CharField(max_length=3, verbose_name='Country code', db_index=True)
+    code = models.CharField(
+        max_length=3,
+        verbose_name='Country code',
+        db_index=True
+    )
     name = models.CharField(max_length=200)
     ant_list_complete = models.BooleanField(default=False)
 
