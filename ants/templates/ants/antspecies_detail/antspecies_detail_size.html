@@ -2,17 +2,17 @@
 {% load static %}
 <div class="ant-size-container">
     <h5>{% trans header %}</h5>
-    {% if size_min and size_max %}
+    {% if size %}
     <div class="ant-size-body-container">
         <div class="min-max-container">
             <div class="size-th">
                 Min
             </div>
             <div class="size-img">
-                <img src="{% static 'ants/img/ant.svg' %}" style="width: {{ min_size_img  }}mm;">
+                <img src="{% static 'ants/img/ant.svg' %}" style="width: {{ size.minimum_img  }}mm;">
             </div>
             <div class="size-footer">
-                {{ size_min }} mm
+                {{ size.minimum }} mm
             </div>
         </div>
          <div class="min-max-container">
@@ -20,10 +20,10 @@
                 Max
             </div>
             <div class="size-img">
-                <img src="{% static 'ants/img/ant.svg' %}" style="width: {{ max_size_img  }}mm;">
+                <img src="{% static 'ants/img/ant.svg' %}" style="width: {{ size.minimum_img  }}mm;">
             </div>
             <div class="size-footer">
-                {{ size_max }} mm
+                {{ size.maximum }} mm
             </div>
         </div>
     </div>
