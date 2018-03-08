@@ -1,5 +1,5 @@
 # Antkeeping.info
-The goal of Antkeeping.info is to provide ant keepers around the world with all the information interesting for ant keepers For example:
+The goal of Antkeeping.info is to provide ant keepers around the world with all the information they are intersted in. For example:
 * Detailed information for specific species ( e.g. size, food, distribution, nuptial flight timesetc.)
 * Species lists for specific countries/states
 * Detailed information about spotted nuptial flights
