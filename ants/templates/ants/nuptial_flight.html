@@ -1,0 +1,36 @@
+{% extends 'generic_antspecies_list.html' %}
+{% load django_bootstrap_breadcrumbs %}
+{% load i18n %}
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "Nuptial flights" "nuptial_flight" %}
+{% endblock %}
+{% block nav_right_form %}
+    <label for="country">{% trans 'Countries' %}:</label>
+    <select class="form-control vert-sep" id="country"
+            onChange="countryChanged({% url 'nuptial_flight_base' %}, '{{ search_name|default_if_none:'null' }}')">
+        <option>All</option>
+        {% for country in countries %}
+        <option value="{{ country.code }}"{% ifequal country.code country_code %}selected{% endifequal %}>
+            {% trans country.name %}
+        </option>
+        {% endfor %}
+    </select>
+    {% if regions %}
+    <label for="region">{% trans 'State' %}:</label>
+    <select class="form-control vert-sep" id="region"
+            onChange="regionChanged('{% url 'nuptial_flight' country_code %}', '{{ search_name|default_if_none:'null'}}')">
+        <option>All</option>
+        {% for region in regions %}
+        <option value="{{ region.code }}"{% ifequal region.code region_code %}selected{% endifequal %}>
+            {% trans region.name %}
+        </option>
+        {% endfor %}
+    </select>
+    {% endif %}
+{% endblock %}
+{% block table_header %}<th>Start</th><th>End</th>{% endblock %}
+{% block table_column %}
+    <td style="width:50px;">{{antspecies.nuptial_flight_start_month}}</td>
+    <td style="width:50px;">{{antspecies.nuptial_flight_end_month}}</td>
+{% endblock %}

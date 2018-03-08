@@ -1,4 +1,4 @@
-from ants.models import AntSpecies, Genus
+from ants.models import AntSize, AntSpecies, Genus
 
 
 def genus_exists(name):
@@ -55,3 +55,11 @@ def get_or_create_ant_species(name):
 def get_ants_by_country(code):
     ants = AntSpecies.objects.filter(countries__code=code)
     return ants
+
+
+def get_ant_size(ant_id, type):
+    size = AntSize.objects \
+        .filter(ant_species__id=ant_id) \
+        .filter(type=type) \
+        .first()
+    return size

@@ -1,0 +1,86 @@
+{% extends 'ants/antspecies_list.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<h1>{{ object.name }}</h1>
+<section class="ant-detail-section">
+    <h2>{% trans 'Taxonomy' %}</h2>
+<span class="taxonomy">
+    {% if object.genus is not None %}
+        {{ object.genus.subfamily.family }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+        {{ object.genus.subfamily }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+        {{ object.genus }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+        {{ object.name }}</span>
+    {% else %}
+        {% trans 'No information' %}
+    {% endif %}
+</section>
+<section class="ant-detail-section">
+    <h2>{% trans 'General information' %}</h2>
+<table>
+    <tr>
+        <td class="detail-table-caption">
+            {% trans 'Colony structure' %}:
+        </td>
+        <td>
+            {{ object.get_polygyny_display|default_if_none:"No information." }}
+        </td>
+    </tr>
+    <tr>
+        <td class="detail-table-caption">
+            {% trans 'Worker polymorphism' %}:
+        </td>
+        <td>
+            {{ object.worker_polymorphism|yesno:"Yes,No,No information." }}
+        </td>
+    </tr>
+    <tr>
+        <td class="detail-table-caption">
+            {% trans 'Nutrition' %}:
+        </td>
+        <td>
+            {{ object.get_nutrition_display|default_if_none:"No information." }}
+        </td>
+    </tr>
+    <tr>
+        <td class="detail-table-caption">
+            {% trans 'Nuptial flight' %}:
+        </td>
+        <td>
+            {{ object.nuptial_flight }}
+        </td>
+    </tr>
+    <tr>
+        <td class="detail-table-caption">
+            Links:
+        </td>
+        <td>
+            <a target="_blank" href="http://www.antwiki.org/wiki/{{ object.name_underscore }}">AntWiki</a>
+        </td>
+    </tr>
+</table>
+</section>
+<section class="ant-detail-section">
+    <h2>{% trans 'Further information' %}</h2>
+<!-- Nav tabs -->
+<ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" data-toggle="tab" href="#distribution" role="tab">{% trans 'Distribution' %}</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-toggle="tab" href="#names" role="tab">{% trans 'Names' %}</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-toggle="tab" href="#sizes" role="tab">{% trans 'Sizes' %}</a>
+    </li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+    {% include 'ants/antspecies_detail/antspecies_detail_names.html' %}
+    {% include 'ants/antspecies_detail/antspecies_detail_sizes.html' %}
+    {% include 'ants/antspecies_detail/antspecies_detail_distribution.html' %}
+</div>
+{% endblock %}
+</section>

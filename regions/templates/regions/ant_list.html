@@ -1,5 +1,5 @@
 <ul>
 {% for ant in ants %}
-    <li>{{ant.name}}</li>
+    <li><a href="{% url "ant_detail" ant.slug %}">{{ant.name}}</a></li>
 {% endfor %}
 </ul>

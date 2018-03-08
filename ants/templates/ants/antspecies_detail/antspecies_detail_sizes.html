@@ -1,0 +1,9 @@
+{% load i18n %}
+{% load static %}
+<div class="tab-pane" id="sizes" role="tabpanel">
+    <div class="ant-sizes-container">
+        {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size_min=worker_size.minimum size_max=worker_size.maximum min_size_img=min_worker_size_img max_size_img=max_worker_size_img header="Worker" only %}
+        {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size_min=queen_size.minimum size_max=queen_size.maximum min_size_img=min_queen_size_img max_size_img=max_queen_size_img header="Queen" only %}
+        {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size_min=male_size.minimum size_max=male_size.maximum min_size_img=min_male_size_img max_size_img=max_male_size_img header="Male" only %}
+    </div>
+</div>

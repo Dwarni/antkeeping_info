@@ -1,0 +1,37 @@
+{% load i18n %}
+<div class="tab-pane" id="names" role="tabpanel">
+    <table>
+        <tr>
+            <td class="detail-table-caption">
+                {% trans 'Valid name' %}:
+            </td>
+            <td>
+                {{ object.name }}
+            </td>
+        </tr>
+        <tr>
+            <td class="detail-table-caption">
+                {% trans 'Common names' %}:
+            </td>
+            <td>
+                {% for common_name in common_names %}
+                {{ common_name.name }} ({{ common_name.language }}) {{ forloop.last|yesno:",&#44;"|safe }}
+                {% empty %}
+                {% trans 'No information' %}.
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <td class="detail-table-caption">
+                {% trans 'Invalid names' %}:
+            </td>
+            <td>
+                {% for old_name in old_names %}
+                {{ old_name.name }}{{ forloop.last|yesno:",&#44;"|safe }}
+                {% empty %}
+                {% trans 'No information' %}.
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
+</div>

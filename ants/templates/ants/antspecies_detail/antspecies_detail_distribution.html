@@ -1,0 +1,16 @@
+{% load i18n %}
+{% load static %}
+{% load ants_filters %}
+<div class="tab-pane active" id="distribution" role="tabpanel">
+    {% if countries %}
+    <ul>
+        {% for country in countries %}
+        <li>
+            <a href="{% url "country" country.code %}">{{ country.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>{% trans 'No information' %}.</p>
+    {% endif %}
+</div>
