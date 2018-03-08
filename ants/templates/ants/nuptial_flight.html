@@ -1,10 +1,5 @@
 {% extends 'generic_antspecies_list.html' %}
-{% load django_bootstrap_breadcrumbs %}
 {% load i18n %}
-{% block breadcrumbs %}
-    {{ block.super }}
-    {% breadcrumb "Nuptial flights" "nuptial_flight" %}
-{% endblock %}
 {% block nav_right_form %}
     <label for="country">{% trans 'Countries' %}:</label>
     <select class="form-control vert-sep" id="country"
