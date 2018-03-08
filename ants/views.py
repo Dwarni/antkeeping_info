@@ -13,19 +13,6 @@ from regions.models import Country, Region
 
 
 # Create your views here.
-def index(request):
-    return render(request, 'layout.html')
-
-
-def detail(request, ant_id):
-    ant = get_object_or_404(AntSpecies, pk=ant_id)
-    countries = Country.objects.filter(species__id=ant_id)
-    return render(request, 'ants/ant_detail.html', {
-        'ant': ant,
-        'countries': countries,
-    })
-
-
 class HomeView:
     pass
 
@@ -54,14 +41,6 @@ class AntSpeciesDetail(DetailView):
     model = AntSpecies
     template_name = 'ants/antspecies_detail/antspecies_detail.html'
 
-    @staticmethod
-    def calc_img_width(size):
-        factor = Decimal(1.16959)
-        if size:
-            return size * factor
-        else:
-            return None
-
     def get_context_data(self, **kwargs):
         context = super(AntSpeciesDetail, self).get_context_data(**kwargs)
 
@@ -86,26 +65,12 @@ class AntSpeciesDetail(DetailView):
         old_names = ObsoleteName.objects.filter(species__id=ant.id)
         context['old_names'] = old_names
         worker_size = get_ant_size(ant.id, AntSize.WORKER)
-        if worker_size is None:
-            worker_size = AntSize()
         queen_size = get_ant_size(ant.id, AntSize.QUEEN)
-        if queen_size is None:
-            queen_size = AntSize()
         male_size = get_ant_size(ant.id, AntSize.MALE)
-        if male_size is None:
-            male_size = AntSize()
 
         context['worker_size'] = worker_size
         context['queen_size'] = queen_size
         context['male_size'] = male_size
-        context['min_worker_size_img'] = self.calc_img_width(
-            worker_size.minimum)
-        context['max_worker_size_img'] = self.calc_img_width(
-            worker_size.maximum)
-        context['min_queen_size_img'] = self.calc_img_width(queen_size.minimum)
-        context['max_queen_size_img'] = self.calc_img_width(queen_size.maximum)
-        context['min_male_size_img'] = self.calc_img_width(male_size.minimum)
-        context['max_male_size_img'] = self.calc_img_width(male_size.maximum)
 
         context
         return context
