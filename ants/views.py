@@ -86,8 +86,14 @@ class AntSpeciesDetail(DetailView):
         old_names = ObsoleteName.objects.filter(species__id=ant.id)
         context['old_names'] = old_names
         worker_size = get_ant_size(ant.id, AntSize.WORKER)
+        if worker_size is None:
+            worker_size = AntSize()
         queen_size = get_ant_size(ant.id, AntSize.QUEEN)
+        if queen_size is None:
+            queen_size = AntSize()
         male_size = get_ant_size(ant.id, AntSize.MALE)
+        if male_size is None:
+            male_size = AntSize()
 
         context['worker_size'] = worker_size
         context['queen_size'] = queen_size
