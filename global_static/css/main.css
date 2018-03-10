@@ -58,3 +58,7 @@ nav.navbar {
     margin-top: 15px;
     margin-bottom: 15px;
 }
+
+.ant-search {
+    margin-bottom: 1em;
+}
