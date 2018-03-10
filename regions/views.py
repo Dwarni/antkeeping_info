@@ -30,6 +30,7 @@ class CountryAntList(ListView):
         context = super().get_context_data(**kwargs)
         context['country_code'] = self.country_code
         context['country'] = self.country
+        context['ant_list_complete'] = self.country.ant_list_complete
         context['countries'] = get_countries_with_ants()
         context['regions'] = get_regions_with_ants(self.country_code)
         context['url'] = self.request.build_absolute_uri(reverse('index'))
@@ -53,4 +54,5 @@ class RegionAntList(CountryAntList):
         context = super().get_context_data(**kwargs)
         context['region_code'] = self.region_code
         context['region'] = self.region
+        context['ant_list_complete'] = self.region.ant_list_complete
         return context

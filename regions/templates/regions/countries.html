@@ -7,7 +7,7 @@
         {% include "regions/regions_select.html" with regions=regions code=region_code id='regionSelect' label='Region' url=url_country %}
     </form>
     {% if ants is not None %}
-        {% if country.ant_list_complete == False %}
+        {% if ant_list_complete == False %}
             <div class="alert alert-warning" role="alert">
                 This list is not marked as complete!
             </div>
