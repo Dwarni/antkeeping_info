@@ -3,7 +3,7 @@
     <table>
         <tr>
             <td class="detail-table-caption">
-                {% trans 'Valid name' %}:
+                {% trans 'Binomial name' %}:
             </td>
             <td>
                 {{ object.name }}
@@ -14,11 +14,7 @@
                 {% trans 'Common names' %}:
             </td>
             <td>
-                {% for common_name in common_names %}
-                {{ common_name.name }} ({{ common_name.language }}) {{ forloop.last|yesno:",&#44;"|safe }}
-                {% empty %}
-                {% trans 'No information' %}.
-                {% endfor %}
+                {{ object.common_names_str }}
             </td>
         </tr>
         <tr>
