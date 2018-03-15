@@ -1,4 +1,4 @@
-{% extends 'ants/antspecies_list.html' %}
+{% extends 'layout.html' %}
 {% load i18n %}
 {% load static %}
 
@@ -8,8 +8,12 @@
     <h2>{% trans 'Taxonomy' %}</h2>
 <span class="taxonomy">
     {% if object.genus is not None %}
-        {{ object.genus.subfamily.family }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
-        {{ object.genus.subfamily }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+        {% if object.genus.sub_family.family %}
+            {{ object.genus.sub_family.family }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+        {% endif %}
+        {% if object.genus.sub_family %}
+            {{ object.genus.sub_family }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+        {% endif %}
         {{ object.genus }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
         {{ object.name }}</span>
     {% else %}
@@ -24,7 +28,7 @@
             {% trans 'Colony structure' %}:
         </td>
         <td>
-            {{ object.get_polygyny_display|default_if_none:"No information." }}
+            {{ object.colony_structure_str }}
         </td>
     </tr>
     <tr>
@@ -45,10 +49,10 @@
     </tr>
     <tr>
         <td class="detail-table-caption">
-            {% trans 'Nuptial flight' %}:
+            {% trans 'Nuptial flight months' %}:
         </td>
         <td>
-            {{ object.nuptial_flight }}
+            {{ object.flight_months_str }}
         </td>
     </tr>
     <tr>
