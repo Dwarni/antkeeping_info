@@ -59,7 +59,7 @@ class AntSpeciesDetail(DetailView):
         context['countries'] = countries
         context['regions'] = regions
 
-        common_names = CommonName.objects.filter(species__id=ant.id)
+        common_names = ant.commonname_set.all()
         context['common_names'] = common_names
 
         old_names = ObsoleteName.objects.filter(species__id=ant.id)
@@ -96,7 +96,9 @@ class NuptialFlight(TemplateView):
             if('region' in kwargs):
                 selected_region = kwargs['region'].upper()
                 if not selected_region == 'ALL':
-                    ants = ants.filter(regions__code=selected_region).distinct()
+                    ants = ants \
+                            .filter(regions__code=selected_region) \
+                            .distinct()
                     context['region_code'] = selected_region
 
         if search_name:
