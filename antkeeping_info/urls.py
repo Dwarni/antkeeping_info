@@ -20,6 +20,6 @@ from home import views
 urlpatterns = [
     path('', views.home, name="home"),
     path('ants/', include('ants.urls')),
-    path('countries/', include('regions.urls')),
+    path('ants-by-country/', include('regions.urls')),
     path('admin/', admin.site.urls),
 ]
