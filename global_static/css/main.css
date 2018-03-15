@@ -66,3 +66,9 @@ nav.navbar {
 #noSpeciesFoundWarning {
     display: none;
 }
+
+.card-icon {
+    font-size: 150px;
+    text-align: center;
+    margin-top: 10px;
+}

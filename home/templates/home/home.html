@@ -1,4 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1>Home</h1>
+<div class="card" style="width: 18rem;">
+    <i class="fas fa-globe card-icon"></i>
+    <div class="card-body">
+      <h5 class="card-title">Countries</h5>
+      <p class="card-text">Displays a list of ants, which can be found in a specific country or state. The list contains both native and non netive species.</p>
+      <a href="{% url "index" %}" class="btn btn-primary">Countries</a>
+    </div>
+  </div>
 {% endblock %}
