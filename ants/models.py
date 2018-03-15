@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.conf import settings
-from django.core.validators import MinValueValidator, RegexValidator
+from django.core.validators import MinValueValidator, RegexValidator, \
+    ValidationError
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
@@ -9,15 +10,23 @@ from regions.models import Country, Region
 
 
 # Create your models here.
+NO_INFORMATION = _('No information.')
+
 LANG_CHOICES = sorted(
     [(lang_code, _(lang_name)) for lang_code, lang_name in settings.LANGUAGES],
     key=lambda language: language[1])
 
 
 class SpeciesDescription(models.Model):
+    """A textual description of an ant species"""
     language = models.CharField(max_length=7, choices=LANG_CHOICES)
-    html = tinymce_models.HTMLField()
+    description = models.TextField()
     species = models.ForeignKey('Species', on_delete=models.CASCADE)
+
+
+class TaxonomicRankMeta:
+    """Base meta class for all Taxonomic rank models"""
+    ordering = ['name']
 
 
 class TaxonomicRank(models.Model):
@@ -33,7 +42,6 @@ class TaxonomicRank(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['-name']
 
     def save(self, *args, **kwargs):
         if self.slug is None or not self.slug:
@@ -45,7 +53,7 @@ class TaxonomicRank(models.Model):
 
 
 class Family(TaxonomicRank):
-    class Meta:
+    class Meta(TaxonomicRankMeta):
         verbose_name = _('Family')
         verbose_name_plural = _('Families')
 
@@ -58,7 +66,7 @@ class SubFamily(TaxonomicRank):
         null=True
     )
 
-    class Meta:
+    class Meta(TaxonomicRankMeta):
         verbose_name = _('Sub Family')
         verbose_name_plural = _('Sub Families')
 
@@ -71,7 +79,7 @@ class Genus(TaxonomicRank):
         null=True
     )
 
-    class Meta:
+    class Meta(TaxonomicRankMeta):
         verbose_name_plural = _('Genera')
 
 
@@ -100,10 +108,22 @@ class Species(TaxonomicRank):
         verbose_name=_('Regions')
     )
 
+    @property
     def name_underscore(self):
         return self.name.replace(" ", "_")
 
-    class Meta:
+    @property
+    def common_names(self):
+        return self.commonname_set.all()
+
+    @property
+    def common_names_str(self):
+        if self.common_names.exists():
+            return ', '.join(str(name) for name in self.common_names)
+        else:
+            return NO_INFORMATION
+
+    class Meta(TaxonomicRankMeta):
         verbose_name = _('Species')
         verbose_name_plural = _('Species')
 
@@ -172,6 +192,12 @@ class AntSize(models.Model):
     def maximum_img(self):
         return self.calc_img_width(self.maximum)
 
+    def clean(self):
+        if self.minimum > self.maximum:
+            raise ValidationError(
+                _('Minimum size may not be greater than maximum size!')
+            )
+
     def __str__(self):
         return self.ANT_SIZE_STRINGS.get(self.type)
 
@@ -196,6 +222,13 @@ class AntSpecies(Species):
         verbose_name=_('Colony Structure')
     )
 
+    @property
+    def colony_structure_str(self):
+        if self.colony_structure is None:
+            return NO_INFORMATION
+        else:
+            return dict(self.COLONY_STRUCTURE_CHOICES)[self.colony_structure]
+
     worker_polymorphism = models.NullBooleanField(
         blank=True,
         null=True,
@@ -205,8 +238,15 @@ class AntSpecies(Species):
     flight_months = models.ManyToManyField(
         Month,
         blank=True,
-        verbose_name=_('Nuptial flight months')
+        verbose_name=_('Nuptial flight months'),
     )
+
+    @property
+    def flight_months_str(self):
+        if self.flight_months is None:
+            return NO_INFORMATION
+        else:
+            return ', '.join(str(month) for month in self.flight_months.all())
 
     LEAVES = 'LEAVES'
     LEAVES_TEXT = _('Leaves, grass and other vegetables')
@@ -234,8 +274,7 @@ class AntSpecies(Species):
         verbose_name=_('Nutrition')
     )
 
-    class Meta:
-        ordering = ['name']
+    class Meta(TaxonomicRankMeta):
         verbose_name = _('Ant Species')
         verbose_name_plural = _('Ant Species')
 
@@ -248,10 +287,10 @@ class CommonName(models.Model):
     class Meta:
         verbose_name = _('Common name')
         verbose_name_plural = _('Common names')
-        ordering = ['language', 'name']
+        ordering = ['name']
 
     def __str__(self):
-        return self.name
+        return '%s (%s)' % (self.name, dict(LANG_CHOICES)[self.language])
 
 
 class ObsoleteName(models.Model):
@@ -261,3 +300,6 @@ class ObsoleteName(models.Model):
     class Meta:
         verbose_name = _('Obsolete name')
         verbose_name_plural = _('Obsolete names')
+
+    def __str__(self):
+        return self.name
