@@ -26,9 +26,9 @@ Linux:
 
 Windows:
   ```
-  python .\manage.py loaddata .\antkeeping_info\fixtures\data.xml
+  python .\manage.py loaddata .\antkeeping_info\fixtures\data.json
   ```
 Linux:
    ```
-  python3 ./manage.py loaddata ./antkeeping_info/fixtures/data.xml
+  python3 ./manage.py loaddata ./antkeeping_info/fixtures/data.json
   ```
