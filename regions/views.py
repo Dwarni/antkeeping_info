@@ -32,7 +32,12 @@ class CountryAntList(ListView):
         context['country'] = self.country
         context['ant_list_complete'] = self.country.ant_list_complete
         context['countries'] = get_countries_with_ants()
-        context['regions'] = get_regions_with_ants(self.country_code)
+        regions = get_regions_with_ants(self.country_code)
+        context['regions'] = regions
+
+        if regions.count() > 0:
+            context['regions_type'] = regions[0].type
+
         context['url'] = self.request.build_absolute_uri(reverse('index'))
         context['url_country'] = self.request.build_absolute_uri(
             reverse('country', kwargs={

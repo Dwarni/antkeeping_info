@@ -4,7 +4,7 @@
 {% block content %}
     <form>
         {% include "regions/regions_select.html" with regions=countries code=country_code id='countrySelect' label='Country' url=url %}
-        {% include "regions/regions_select.html" with regions=regions code=region_code id='regionSelect' label='Region' url=url_country %}
+        {% include "regions/regions_select.html" with regions=regions code=region_code id='regionSelect' label=regions_type url=url_country %}
     </form>
     {% if ants is not None %}
         {% if ant_list_complete == False %}
