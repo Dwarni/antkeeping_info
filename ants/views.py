@@ -8,7 +8,6 @@ from django.views.generic.base import TemplateView
 from django.db.models import Q
 
 from .models import AntSize, AntSpecies, CommonName, ObsoleteName
-from .services import get_ant_size
 from regions.models import Country, Region
 
 
@@ -64,9 +63,9 @@ class AntSpeciesDetail(DetailView):
 
         old_names = ObsoleteName.objects.filter(species__id=ant.id)
         context['old_names'] = old_names
-        worker_size = get_ant_size(ant.id, AntSize.WORKER)
-        queen_size = get_ant_size(ant.id, AntSize.QUEEN)
-        male_size = get_ant_size(ant.id, AntSize.MALE)
+        worker_size = AntSize.objects.by_ant_and_type(ant.id, AntSize.WORKER)
+        queen_size = AntSize.objects.by_ant_and_type(ant.id, AntSize.QUEEN)
+        male_size = AntSize.objects.by_ant_and_type(ant.id, AntSize.MALE)
 
         context['worker_size'] = worker_size
         context['queen_size'] = queen_size

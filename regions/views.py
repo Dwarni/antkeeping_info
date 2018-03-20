@@ -3,7 +3,6 @@ from django.views.generic import ListView, TemplateView
 from regions.forms import AntlistForm
 from regions.models import Country, Region
 from regions.services import get_countries_with_ants, get_regions_with_ants
-from ants.services import get_ants_by_country
 from ants.models import AntSpecies
 
 
@@ -21,10 +20,13 @@ class CountryAntList(ListView):
     context_object_name = 'ants'
     template_name = 'regions/countries.html'
 
-    def get_queryset(self):
+    def get_country(self):
         self.country_code = self.kwargs['country_code']
         self.country = get_object_or_404(Country, code=self.country_code)
-        return get_ants_by_country(self.country_code)
+
+    def get_queryset(self):
+        self.get_country()
+        return AntSpecies.objects.by_country(self.country_code)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -51,8 +53,10 @@ class RegionAntList(CountryAntList):
     def get_queryset(self):
         self.region_code = self.kwargs['region_code']
         self.region = get_object_or_404(Region, code=self.region_code)
-        query_set = super().get_queryset()
-        query_set = query_set.filter(regions__code=self.region_code)
+        self.get_country()
+        query_set = AntSpecies.objects.by_region(
+            code=self.region_code
+        )
         return query_set
 
     def get_context_data(self, **kwargs):
