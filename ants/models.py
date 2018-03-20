@@ -7,6 +7,7 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 from tinymce import models as tinymce_models
 from regions.models import Country, Region
+from ants.managers import AntSizeManager, AntSpeciesManager, GenusManager
 
 
 # Create your models here.
@@ -78,6 +79,8 @@ class Genus(TaxonomicRank):
         blank=True,
         null=True
     )
+
+    objects = GenusManager()
 
     class Meta(TaxonomicRankMeta):
         verbose_name_plural = _('Genera')
@@ -201,6 +204,8 @@ class AntSize(models.Model):
     def __str__(self):
         return self.ANT_SIZE_STRINGS.get(self.type)
 
+    objects = AntSizeManager()
+
 
 class AntSpecies(Species):
     # colony
@@ -273,6 +278,8 @@ class AntSpecies(Species):
         choices=NUTRITION_CHOICES,
         verbose_name=_('Nutrition')
     )
+
+    objects = AntSpeciesManager()
 
     class Meta(TaxonomicRankMeta):
         verbose_name = _('Ant Species')
