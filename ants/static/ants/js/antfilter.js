@@ -1,13 +1,13 @@
 $( document ).ready(function() {
-    function addFilter(inputElement, listElement, noSpeciesFoundWarning) {
+    function addFilter(inputElement, tableElement, tableBodyElement, noSpeciesFoundWarning) {
         inputElement.on( "keyup", function() {
             var searchText = $( this ).val().toLowerCase();
-            applyFilter(searchText, listElement, noSpeciesFoundWarning);
+            applyFilter(searchText, tableElement, tableBodyElement, noSpeciesFoundWarning);
         })
     }
-    function applyFilter(searchText, listElement, noSpeciesFoundWarning) {
+    function applyFilter(searchText, tableElement, tableBodyElement, noSpeciesFoundWarning) {
         var visibleElements = 0;
-        listElement.children().filter(function() {
+        tableBodyElement.children().filter(function() {
             var currentText = $( this ).text().toLowerCase();
             var found = currentText.indexOf(searchText) > -1;
             $( this ).toggle(found);
@@ -17,10 +17,12 @@ $( document ).ready(function() {
         })
 
         noSpeciesFoundWarning.toggle( visibleElements == 0 );
+        tableElement.toggle( visibleElements > 0 );
     }
 
     var antSearchInput = $( "#antSearchInput" );
-    var antList = $( "#antList" );
+    var antTable = $( "#antTable" );
+    var antTableBody = $( "#antTableBody" );
     var noSpeciesFoundWarning = $( "#noSpeciesFoundWarning" );
-    addFilter(antSearchInput, antList, noSpeciesFoundWarning);
+    addFilter(antSearchInput, antTable, antTableBody, noSpeciesFoundWarning);
 });

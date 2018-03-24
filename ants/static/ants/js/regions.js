@@ -11,7 +11,10 @@ $( document ).ready(function() {
     function addChangeListener(selectElement, url) {
         selectElement.change(function() {
             var code = selectElement.val();
-            var newUrl = getNewUrl(url, code)  
+            var newUrl = getNewUrl(url, code)
+            if(window.location.href.indexOf('iframe=true') > -1) {
+                newUrl = newUrl + '?iframe=true';
+            }
             window.location.href = newUrl;
         });
     }
