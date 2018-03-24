@@ -5,7 +5,6 @@ from django.core.validators import MinValueValidator, RegexValidator, \
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
-from tinymce import models as tinymce_models
 from regions.models import Country, Region
 from ants.managers import AntSizeManager, AntSpeciesManager, GenusManager
 
