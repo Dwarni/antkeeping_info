@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% load i18n %}
+{% load static %}
+{% block content %}
+    <form>
+        {% include "ants/regions_select.html" with regions=countries code=country_code id='countrySelect' label='Country' url=url %}
+        {% include "ants/regions_select.html" with regions=regions code=region_code id='regionSelect' label=regions_type url=url_country %}
+    </form>
+    {% if ants %}
+        <div class="input-group ant-search">
+            <div class="input-group-prepend">
+            <div class="input-group-text"><i class="fas fa-search"></i></div>
+            </div>
+            <input type="text" class="form-control" id="antSearchInput" placeholder="Search">
+        </div>
+        <table id="antTable" class="table table-hover">
+            <thead>
+                <tr>
+                    <th>{% trans 'Species name' %}</th>
+                    {% block table_header %}{% endblock %}
+                </tr>
+            </thead>
+            <tbody id="antTableBody">
+                {% for ant in ants %}
+                <tr style="cursor:pointer">
+                    <td style="width:300px;">
+                        <a href="{% url 'ant_detail' ant.slug %}">{{ ant }}</a>
+                    </td>
+                    {% block table_column %}{% endblock %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div id="noSpeciesFoundWarning" class="alert alert-warning" role="alert">
+            No ant species found.
+        </div>
+    {% endif %}
+{% endblock %}
+{% block script %}
+    <script>
+        var countriesUrl = "{{ url }}";
+    </script>
+    <script src="{% static "ants/js/regions.js" %}"></script>
+    <script src="{% static "ants/js/antfilter.js" %}"></script>
+{% endblock %}
