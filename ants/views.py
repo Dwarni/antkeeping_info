@@ -16,8 +16,22 @@ class HomeView:
     pass
 
 
-class AntSpeciesList(ListView):
-    model = AntSpecies
+def add_iframe_to_context(context, request):
+    iframe = request.GET.get('iframe', None)
+    if iframe and iframe == 'true':
+        context['iframe'] = True
+    else:
+        context['iframe'] = False
+
+
+class AntList(ListView):
+    context_object_name = 'ants'
+    template_name = 'ants/ant_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        add_iframe_to_context(context, self.request)
+        return context
 
 
 class AntSpeciesSearch(TemplateView):

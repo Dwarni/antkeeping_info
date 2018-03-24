@@ -4,22 +4,21 @@ from regions.forms import AntlistForm
 from regions.models import Country, Region
 from regions.services import get_countries_with_ants, get_regions_with_ants
 from ants.models import AntSpecies
+from ants.views import AntList, add_iframe_to_context
 
 
 # Create your views here.
 class CountryIndex(TemplateView):
-    template_name = 'regions/countries.html'
+    template_name = 'ants/ant_list.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['countries'] = get_countries_with_ants()
+        add_iframe_to_context(context, self.request)
         return context
 
 
-class CountryAntList(ListView):
-    context_object_name = 'ants'
-    template_name = 'regions/countries.html'
-
+class CountryAntList(AntList):
     def get_country(self):
         self.country_code = self.kwargs['country_code']
         self.country = get_object_or_404(Country, code=self.country_code)

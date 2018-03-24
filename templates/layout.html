@@ -12,7 +12,9 @@
 </head>
 <body>
     <div class="container">
-        {% include "navbar.html" %}          
+        {% if iframe is None or iframe == False %}
+            {% include "navbar.html" %}          
+        {% endif %}
         {% block content %}
         {% endblock %}
     </div>
