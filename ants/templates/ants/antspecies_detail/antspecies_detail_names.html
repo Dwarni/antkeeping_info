@@ -22,8 +22,8 @@
                 {% trans 'Invalid names' %}:
             </td>
             <td>
-                {% for old_name in old_names %}
-                {{ old_name.name }}{{ forloop.last|yesno:",&#44;"|safe }}
+                {% for invalid_name in invalid_names %}
+                {{ invalid_name.name }}{{ forloop.last|yesno:",&#44;"|safe }}
                 {% empty %}
                 {% trans 'No information' %}.
                 {% endfor %}

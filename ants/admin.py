@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext as _
-from ants.models import AntSize, AntSpecies, CommonName, SpeciesDescription, \
-    Family, Genus, ObsoleteName, SubFamily
+from ants.models import AntRegion, AntSize, AntSpecies, CommonName, \
+    Distribution, SpeciesDescription, Family, Genus, InvalidName, SubFamily
 
 
 class AntSizeInline(admin.StackedInline):
@@ -14,8 +14,13 @@ class DescriptionInline(admin.StackedInline):
     extra = 0
 
 
-class ObsoleteNameInline(admin.StackedInline):
-    model = ObsoleteName
+class DistributionInline(admin.StackedInline):
+    model = Distribution
+    extra = 0
+
+
+class InvalidNameInline(admin.StackedInline):
+    model = InvalidName
     extra = 0
 
 
@@ -30,19 +35,19 @@ class BaseAdmin(admin.ModelAdmin):
 
 @admin.register(AntSpecies)
 class AntSpeciesAdmin(BaseAdmin):
-    filter_horizontal = ['flight_months', 'countries', 'regions']
+    filter_horizontal = ['flight_months']
     fieldsets = [
         (_('General'),          {'fields': ['name', 'genus',
                                             'colony_structure',
                                             'worker_polymorphism',
-                                            'nutrition', 'flight_months']}),
-        (_('Distribution'), {'fields': ['countries', 'regions']})
+                                            'nutrition', 'flight_months']})
     ]
     search_fields = ['name']
 
     inlines = [
+        DistributionInline,
         DescriptionInline, AntSizeInline,
-        ObsoleteNameInline, CommonNameInline]
+        InvalidNameInline, CommonNameInline]
 
 
 @admin.register(Family)
@@ -57,4 +62,9 @@ class GenusAdmin(BaseAdmin):
 
 @admin.register(SubFamily)
 class SubFamily(BaseAdmin):
+    pass
+
+
+@admin.register(AntRegion)
+class RegionAdmin(BaseAdmin):
     pass

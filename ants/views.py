@@ -1,5 +1,5 @@
 from decimal import Decimal
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, reverse
 
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
@@ -7,8 +7,7 @@ from django.views.generic.base import TemplateView
 
 from django.db.models import Q
 
-from .models import AntSize, AntSpecies, CommonName, ObsoleteName
-from regions.models import Country, Region
+from .models import AntRegion, AntSize, AntSpecies, CommonName, InvalidName
 
 
 # Create your views here.
@@ -34,6 +33,64 @@ class AntList(ListView):
         return context
 
 
+class CountryIndex(TemplateView):
+    template_name = 'ants/ant_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['countries'] = AntRegion.countries.with_ants()
+        add_iframe_to_context(context, self.request)
+        return context
+
+
+class CountryAntList(AntList):
+    def get_country(self):
+        self.country_code = self.kwargs['country_code']
+        self.country = get_object_or_404(AntRegion, code=self.country_code)
+
+    def get_queryset(self):
+        self.get_country()
+        return AntSpecies.objects.by_country(self.country_code)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['country_code'] = self.country_code
+        context['country'] = self.country
+        context['ant_list_complete'] = self.country.ant_list_complete
+        context['countries'] = AntRegion.countries.with_ants()
+        regions = AntRegion.states.with_ants_and_country(self.country_code)
+        context['regions'] = regions
+
+        if regions.count() > 0:
+            context['regions_type'] = regions[0].type
+
+        context['url'] = self.request.build_absolute_uri(reverse('index'))
+        context['url_country'] = self.request.build_absolute_uri(
+            reverse('country', kwargs={
+                'country_code': context['country_code']
+            })
+        )
+        return context
+
+
+class RegionAntList(CountryAntList):
+    def get_queryset(self):
+        self.region_code = self.kwargs['region_code']
+        self.region = get_object_or_404(AntRegion, code=self.region_code)
+        self.get_country()
+        query_set = AntSpecies.objects.by_region(
+            code=self.region_code
+        )
+        return query_set
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['region_code'] = self.region_code
+        context['region'] = self.region
+        context['ant_list_complete'] = self.region.ant_list_complete
+        return context
+
+
 class AntSpeciesSearch(TemplateView):
     template_name = 'ants/antspecies_list.html'
 
@@ -44,7 +101,7 @@ class AntSpeciesSearch(TemplateView):
             object_list = AntSpecies.objects.filter(
                 Q(name__icontains=search_term) |
                 Q(commonname__name__icontains=search_term) |
-                Q(obsoletename__name__icontains=search_term)).distinct()
+                Q(invalidname__name__icontains=search_term)).distinct()
             context['object_list'] = object_list
         context['search_term'] = search_term
         return context
@@ -59,12 +116,13 @@ class AntSpeciesDetail(DetailView):
 
         ant = context['object']
 
-        countries = Country.objects.filter(species=ant.id)
+        countries = AntRegion.countries.filter(distribution__species=ant.id)
         regions = {}
 
         for country in countries:
-            region_query = Region.objects.filter(country__code=country.code) \
-                .filter(species__id=ant.id)
+            region_query = AntRegion.objects \
+                .filter(parent__code=country.code) \
+                .filter(distribution__species__id=ant.id)
 
             if region_query:
                 regions[country.code] = region_query
@@ -75,8 +133,8 @@ class AntSpeciesDetail(DetailView):
         common_names = ant.commonname_set.all()
         context['common_names'] = common_names
 
-        old_names = ObsoleteName.objects.filter(species__id=ant.id)
-        context['old_names'] = old_names
+        invalid_names = InvalidName.objects.filter(species__id=ant.id)
+        context['invalid_names'] = invalid_names
         worker_size = AntSize.objects.by_ant_and_type(ant.id, AntSize.WORKER)
         queen_size = AntSize.objects.by_ant_and_type(ant.id, AntSize.QUEEN)
         male_size = AntSize.objects.by_ant_and_type(ant.id, AntSize.MALE)

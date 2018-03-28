@@ -5,8 +5,9 @@ from django.core.validators import MinValueValidator, RegexValidator, \
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
-from regions.models import Country, Region
-from ants.managers import AntSizeManager, AntSpeciesManager, GenusManager
+from regions.models import Region
+from ants.managers import AntRegionManager, CountryAntRegionManager, \
+    AntSizeManager, AntSpeciesManager, GenusManager, StateAntRegionManager
 
 
 # Create your models here.
@@ -44,8 +45,7 @@ class TaxonomicRank(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
-        if self.slug is None or not self.slug:
-            self.slug = slugify(self.name)
+        self.slug = slugify(self.name)
         super(TaxonomicRank, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -85,6 +85,51 @@ class Genus(TaxonomicRank):
         verbose_name_plural = _('Genera')
 
 
+class AntRegion(Region):
+    objects = AntRegionManager()
+    countries = CountryAntRegionManager()
+    states = StateAntRegionManager()
+    ant_list_complete = models.BooleanField(default=False)
+
+
+class Distribution(models.Model):
+    species = models.ForeignKey(
+        'Species',
+        on_delete=models.CASCADE
+    )
+    region = models.ForeignKey(
+        'regions.Region',
+        on_delete=models.CASCADE
+    )
+    protected = models.NullBooleanField(
+        blank=True,
+        null=True,
+        verbose_name=_('Protected by law')
+    )
+    LEAST_CONCERN = 'LEAST_CONCERN'
+    NEAR_THREATENED = 'NEAR_THREATENED'
+    VULNERABLE = 'VULNERABLE'
+    ENDANGERED = 'ENDANGERED'
+    CRITICALLY_ENDANGERED = 'CRITICALLY_ENDANGERED'
+    EXTINCT_IN_WILD = 'EXTINCT_IN_WILD'
+    EXTINCT = 'EXTINCT'
+    RED_LIST_CHOICES = (
+        (LEAST_CONCERN, _('Least Concern')),
+        (NEAR_THREATENED, _('Near Threatened')),
+        (VULNERABLE, _('Vulnerable')),
+        (ENDANGERED, _('Endangered')),
+        (CRITICALLY_ENDANGERED, _('Critically Endangered')),
+        (EXTINCT_IN_WILD, _('Extinct in the Wild')),
+        (EXTINCT, _('Extinct'))
+    )
+    red_list_status = models.TextField(
+        max_length=40,
+        blank=True,
+        null=True,
+        choices=RED_LIST_CHOICES
+    )
+
+
 class Species(TaxonomicRank):
     name = models.CharField(
         db_index=True,
@@ -98,16 +143,6 @@ class Species(TaxonomicRank):
         models.SET_NULL,
         blank=True,
         null=True
-    )
-    countries = models.ManyToManyField(
-        Country,
-        blank=True,
-        verbose_name=_('Countries')
-    )
-    regions = models.ManyToManyField(
-        Region,
-        blank=True,
-        verbose_name=_('Regions')
     )
 
     @property
@@ -281,8 +316,8 @@ class AntSpecies(Species):
     objects = AntSpeciesManager()
 
     class Meta(TaxonomicRankMeta):
-        verbose_name = _('Ant Species')
-        verbose_name_plural = _('Ant Species')
+        verbose_name = _('Species')
+        verbose_name_plural = _('Species')
 
 
 class CommonName(models.Model):
@@ -299,13 +334,13 @@ class CommonName(models.Model):
         return '%s (%s)' % (self.name, dict(LANG_CHOICES)[self.language])
 
 
-class ObsoleteName(models.Model):
+class InvalidName(models.Model):
     name = models.CharField(max_length=200)
     species = models.ForeignKey(Species, on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name = _('Obsolete name')
-        verbose_name_plural = _('Obsolete names')
+        verbose_name = _('Invalid name')
+        verbose_name_plural = _('Invalid names')
 
     def __str__(self):
         return self.name

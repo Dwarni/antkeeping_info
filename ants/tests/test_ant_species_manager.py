@@ -5,8 +5,7 @@ from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from ants.managers import AntSpeciesManager
-from ants.models import AntSpecies, Genus
-from regions.models import Country, Region
+from ants.models import AntSpecies, AntRegion, Distribution, Genus
 
 
 class AntSpeciesManagerTestCase(TestCase):
@@ -87,14 +86,20 @@ class AntSpeciesManagerTestCase(TestCase):
         """Check if genus was created too and if both genus names are equal"""
 
     def test_by_country(self):
-        new_country = Country.objects.create(name='Test Country', code='test')
+        new_country = AntRegion.objects.create(
+            name='Test Country',
+            code='test',
+            type='Country'
+        )
         ant1 = AntSpecies.objects.create(name='Myrmica testus')
         ant2 = AntSpecies.objects.create(name='Camponotus testus')
         ant3 = AntSpecies.objects.create(name='Formica testus')
-        new_country.species_set.add(ant1, ant2, ant3)
+        Distribution.objects.create(species=ant1, region=new_country)
+        Distribution.objects.create(species=ant2, region=new_country)
+        Distribution.objects.create(species=ant3, region=new_country)
 
-        new_country = Country.objects.get(name='Test Country')
-        ants = [ant.name for ant in new_country.species_set.all()]
+        new_country = AntRegion.objects.get(name='Test Country')
+        ants = [ant.name for ant in AntSpecies.objects.by_country('test')]
         self.assertEqual(len(ants), 3)
         self.assertTrue(ant1.name in ants)
         self.assertTrue(ant2.name in ants)
@@ -103,20 +108,23 @@ class AntSpeciesManagerTestCase(TestCase):
     def test_by_region(self):
         region_name = 'Test Region'
         region_code = 'test'
-        country = Country.objects.get(code='de')
-        new_region = Region.objects.create(
+        country = AntRegion.objects.get(code='de')
+        new_region = AntRegion.objects.create(
             name=region_name,
             code=region_code,
-            country=country
+            parent=country,
+            type='State'
         )
 
         ant1 = AntSpecies.objects.create(name='Myrmica testus')
         ant2 = AntSpecies.objects.create(name='Camponotus testus')
         ant3 = AntSpecies.objects.create(name='Formica testus')
-        new_region.species_set.add(ant1, ant2, ant3)
+        Distribution.objects.create(species=ant1, region=new_region)
+        Distribution.objects.create(species=ant2, region=new_region)
+        Distribution.objects.create(species=ant3, region=new_region)
 
-        new_region = Region.objects.get(code=region_code)
-        ants = [ant.name for ant in new_region.species_set.all()]
+        new_region = AntRegion.objects.get(code=region_code)
+        ants = [ant.name for ant in AntSpecies.objects.by_region(region_code)]
         self.assertEqual(len(ants), 3)
         self.assertTrue(ant1.name in ants)
         self.assertTrue(ant2.name in ants)

@@ -36,10 +36,14 @@ class AntSpeciesManager(TaxonomicRankManager):
             return self.add_with_name(name)
 
     def by_country(self, code):
-        return self.get_queryset().filter(countries__code=code)
+        return self.get_queryset() \
+            .filter(distribution__region__type='Country') \
+            .filter(distribution__region__code=code)
 
     def by_region(self, code):
-        return self.get_queryset().filter(regions__code=code)
+        return self.get_queryset() \
+            .filter(distribution__region__parent__type='Country') \
+            .filter(distribution__region__code=code)
 
 
 class AntSizeManager(Manager):
@@ -50,3 +54,25 @@ class AntSizeManager(Manager):
             .first()
 
         return size
+
+
+class AntRegionManager(Manager):
+    def with_ants(self):
+        return self.get_queryset() \
+            .filter(distribution__isnull=False) \
+            .distinct()
+
+
+class CountryAntRegionManager(AntRegionManager):
+    def get_queryset(self):
+        return super().get_queryset() \
+            .filter(type='Country')
+
+
+class StateAntRegionManager(AntRegionManager):
+    def get_queryset(self):
+        return super().get_queryset() \
+            .filter(parent__type='Country')
+    
+    def with_ants_and_country(self, country_code):
+        return self.with_ants().filter(parent__code=country_code)
