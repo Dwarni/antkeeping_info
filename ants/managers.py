@@ -73,6 +73,6 @@ class StateAntRegionManager(AntRegionManager):
     def get_queryset(self):
         return super().get_queryset() \
             .filter(parent__type='Country')
-    
+
     def with_ants_and_country(self, country_code):
         return self.with_ants().filter(parent__code=country_code)
