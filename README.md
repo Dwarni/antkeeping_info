@@ -11,8 +11,9 @@ The goal of Antkeeping.info is to provide ant keepers around the world with all 
 1. Clone the repository
 2. Create a new python virtual environment using the requirements.txt file
 3. Create a database user, a database schema and set permissions correctly
-4. Edit settings.py and edit db-settings
-5. Migrate database:
+4. Copy settings_dev.py to settings.py
+5. Edit settings.py and edit db-settings
+6. Migrate database:
 
 Windows:
  ```
