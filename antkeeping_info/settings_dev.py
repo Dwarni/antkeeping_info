@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'home',
     'regions',
     'flights',
+    'crispy_forms'
 ]
 
 MIDDLEWARE = [
@@ -130,3 +131,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "global_static")
 ]
+
+# Crispy forms settings
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
