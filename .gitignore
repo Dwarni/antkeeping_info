@@ -6,3 +6,4 @@ env.ps1
 .vscode
 db.sqlite3
 .DS_Store
+antkeeping_info/settings.py
