@@ -1,4 +1,5 @@
 {% load static %}
+{% load django_bootstrap_breadcrumbs %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,6 +16,10 @@
         {% if iframe is None or iframe == False %}
             {% include "navbar.html" %}          
         {% endif %}
+        {% block breadcrumbs %}
+            {% clear_breadcrumbs %}
+            {% breadcrumb "Home" "home" %}
+        {% endblock %}
         {% block content %}
         {% endblock %}
     </div>

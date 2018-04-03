@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'home',
     'regions',
     'flights',
-    'crispy_forms'
+    'crispy_forms',
+    'django_bootstrap_breadcrumbs'
 ]
 
 MIDDLEWARE = [

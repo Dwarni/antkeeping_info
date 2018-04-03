@@ -1,7 +1,19 @@
 {% extends 'layout.html' %}
 {% load i18n %}
 {% load static %}
+{% load django_bootstrap_breadcrumbs %}
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "Ants By Country" "index" %}
+    {% if country %}
+        {% breadcrumb country.name "country" country.code %}   
+    {% endif %}
+    {% if region %}
+        {% breadcrumb region.name "region" region.code %}
+    {% endif %}
+{% endblock %}
 {% block content %}
+    {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap4.html" %}
     <form>
         {% include "ants/regions_select.html" with regions=countries code=country_code id='countrySelect' label='Country' url=url %}
         {% include "ants/regions_select.html" with regions=regions code=region_code id='regionSelect' label=regions_type url=url_country %}
