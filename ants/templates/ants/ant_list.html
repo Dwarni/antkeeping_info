@@ -1,23 +1,7 @@
 {% extends 'layout.html' %}
 {% load i18n %}
 {% load static %}
-{% load django_bootstrap_breadcrumbs %}
-{% block breadcrumbs %}
-    {{ block.super }}
-    {% breadcrumb "Ants By Country" "index" %}
-    {% if country %}
-        {% breadcrumb country.name "country" country.code %}   
-    {% endif %}
-    {% if region %}
-        {% breadcrumb region.name "region" region.code %}
-    {% endif %}
-{% endblock %}
 {% block content %}
-    {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap4.html" %}
-    <form>
-        {% include "ants/regions_select.html" with regions=countries code=country_code id='countrySelect' label='Country' url=url %}
-        {% include "ants/regions_select.html" with regions=regions code=region_code id='regionSelect' label=regions_type url=url_country %}
-    </form>
     {% if ants %}
         <div class="input-group ant-search">
             <div class="input-group-prepend">
@@ -49,9 +33,5 @@
     {% endif %}
 {% endblock %}
 {% block script %}
-    <script>
-        var countriesUrl = "{{ url }}";
-    </script>
-    <script src="{% static "ants/js/regions.js" %}"></script>
     <script src="{% static "ants/js/antfilter.js" %}"></script>
 {% endblock %}
