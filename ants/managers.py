@@ -67,7 +67,8 @@ class AntSpeciesManager(TaxonomicRankManager):
         """
         return self.get_queryset() \
             .filter(distribution__region__type='Country') \
-            .filter(distribution__region__code=code)
+            .filter(distribution__region__code=code) \
+            .distinct()
 
     def by_region(self, code):
         """
@@ -77,7 +78,8 @@ class AntSpeciesManager(TaxonomicRankManager):
         """
         return self.get_queryset() \
             .filter(distribution__region__parent__type='Country') \
-            .filter(distribution__region__code=code)
+            .filter(distribution__region__code=code) \
+            .distinct()
 
 
 class AntSizeManager(Manager):
