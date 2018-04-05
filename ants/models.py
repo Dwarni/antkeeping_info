@@ -1,3 +1,6 @@
+"""
+    This module contains all models for ants app.
+"""
 from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator, RegexValidator, \
@@ -31,6 +34,9 @@ class TaxonomicRankMeta:
 
 
 class TaxonomicRank(models.Model):
+    """
+        Abstract base class for all taxonomic rank models.
+    """
     name = models.CharField(
         db_index=True,
         max_length=100,
@@ -44,21 +50,25 @@ class TaxonomicRank(models.Model):
     class Meta:
         abstract = True
 
-    def save(self, *args, **kwargs):
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
         self.slug = slugify(self.name)
-        super(TaxonomicRank, self).save(*args, **kwargs)
+        super().save(force_insert, force_update, using,
+                     update_fields)
 
     def __str__(self):
         return self.name
 
 
 class Family(TaxonomicRank):
+    """Model which represents a taxonomic rank of type 'Family'."""
     class Meta(TaxonomicRankMeta):
         verbose_name = _('Family')
         verbose_name_plural = _('Families')
 
 
 class SubFamily(TaxonomicRank):
+    """Model which represents a taxonomic rank of type 'Subfamily'."""
     family = models.ForeignKey(
         Family,
         models.SET_NULL,
@@ -72,6 +82,7 @@ class SubFamily(TaxonomicRank):
 
 
 class Genus(TaxonomicRank):
+    """Model which represents a taxonomic rank of type 'Genus'."""
     sub_family = models.ForeignKey(
         SubFamily,
         models.SET_NULL,
@@ -86,6 +97,9 @@ class Genus(TaxonomicRank):
 
 
 class AntRegion(Region):
+    """
+        A model which describes a region in which ants may live.
+    """
     objects = AntRegionManager()
     countries = CountryAntRegionManager()
     states = StateAntRegionManager()
@@ -93,6 +107,9 @@ class AntRegion(Region):
 
 
 class Distribution(models.Model):
+    """
+        A model which describes the destribution of an ant species.
+    """
     species = models.ForeignKey(
         'Species',
         on_delete=models.CASCADE
@@ -100,6 +117,11 @@ class Distribution(models.Model):
     region = models.ForeignKey(
         'regions.Region',
         on_delete=models.CASCADE
+    )
+    native = models.NullBooleanField(
+        blank=True,
+        null=True,
+        verbose_name=_('Native')
     )
     protected = models.NullBooleanField(
         blank=True,
@@ -131,12 +153,13 @@ class Distribution(models.Model):
 
 
 class Species(TaxonomicRank):
+    """Model which represents a taxonomic rank of type 'Species'."""
     name = models.CharField(
         db_index=True,
         max_length=100,
         unique=True,
         validators=[
-            RegexValidator('^[A-Z][a-z]+ [a-z\.]+$')
+            RegexValidator('^[A-Z][a-z]+ [a-z\\.]+$')
         ])
     genus = models.ForeignKey(
         Genus,
@@ -147,14 +170,17 @@ class Species(TaxonomicRank):
 
     @property
     def name_underscore(self):
+        """Returns the species name with an underscore instead of a space."""
         return self.name.replace(" ", "_")
 
     @property
     def common_names(self):
+        """Returns query set which contains all common names of the specific species."""
         return self.commonname_set.all()
 
     @property
     def common_names_str(self):
+        """Returns all common names of the specific species seperated by ','."""
         if self.common_names.exists():
             return ', '.join(str(name) for name in self.common_names)
         else:
@@ -164,35 +190,35 @@ class Species(TaxonomicRank):
         verbose_name = _('Species')
         verbose_name_plural = _('Species')
 
-
-def create_size_field(verbose_name):
-    SIZE_MAX_DIGITS = 6
-    SIZE_MAX_DECIMAL_PLACES = 2
-    SIZE_MIN = Decimal('0.01')
-    field = models.DecimalField(
-        max_digits=SIZE_MAX_DIGITS,
-        decimal_places=SIZE_MAX_DECIMAL_PLACES,
-        null=True,
-        blank=True,
-        validators=[
-            MinValueValidator(SIZE_MIN)
-        ],
-        verbose_name=verbose_name
-    )
-    return field
+class SizeField(models.DecimalField):
+    """Field which stores the size of an ant."""
+    MAX_DIGITS = 6
+    MAX_DECIMAL_PLACES = 2
+    MIN_SIZE = Decimal('0.01')
+    def __init__(self, *args, **kwargs):
+        kwargs['max_digits'] = self.MAX_DIGITS
+        kwargs['decimal_places'] = self.MAX_DECIMAL_PLACES
+        kwargs['null'] = True
+        kwargs['blank'] = True
+        kwargs['validators'] = [
+            MinValueValidator(self.MIN_SIZE)
+        ]
+        super().__init__(*args, **kwargs)
 
 
 class Month(models.Model):
+    """Model which represents a month"""
     name = models.CharField(max_length=50, db_index=True)
 
     def __str__(self):
-        return self.name
+        return _(self.name)
 
     class Meta:
         ordering = ['id']
 
 
 class AntSize(models.Model):
+    """Model which stores size information for a specific ant."""
     WORKER = 'WORKER'
     QUEEN = 'QUEEN'
     MALE = 'MALE'
@@ -211,8 +237,8 @@ class AntSize(models.Model):
         db_index=True,
         choices=ANT_TYPE_CHOICES
     )
-    minimum = create_size_field(_('Minimum (mm)'))
-    maximum = create_size_field(_('Maximum (mm)'))
+    minimum = SizeField(verbose_name=_('Minimum (mm)'))
+    maximum = SizeField(verbose_name=_('Maximum (mm)'))
     ant_species = models.ForeignKey('AntSpecies', on_delete=models.CASCADE)
 
     @staticmethod
