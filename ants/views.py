@@ -25,7 +25,7 @@ def add_iframe_to_context(context, request):
 
 class AntList(ListView):
     context_object_name = 'ants'
-    template_name = 'ants/ant_list.html'
+    template_name = 'ants/ants_by_country/list.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -34,7 +34,7 @@ class AntList(ListView):
 
 
 class CountryIndex(TemplateView):
-    template_name = 'ants/ant_list.html'
+    template_name = 'ants/ants_by_country/list.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
