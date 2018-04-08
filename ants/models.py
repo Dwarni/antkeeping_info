@@ -243,16 +243,18 @@ class AntSize(models.Model):
 
     @staticmethod
     def calc_img_width(size):
+        """Calculates the image with based on the size."""
         factor = Decimal(1.16959)
         if size:
             return size * factor
-        else:
-            return None
+        return None
 
     def minimum_img(self):
+        """Returns the width of the image for minimum size."""
         return self.calc_img_width(self.minimum)
 
     def maximum_img(self):
+        """Returns the width of the image for maximum size."""
         return self.calc_img_width(self.maximum)
 
     def clean(self):
@@ -268,6 +270,7 @@ class AntSize(models.Model):
 
 
 class AntSpecies(Species):
+    """Model of an ant species."""
     # colony
     MONOGYNOUS = 'MONO'
     POLYGYNOUS = 'POLY'
@@ -289,6 +292,7 @@ class AntSpecies(Species):
 
     @property
     def colony_structure_str(self):
+        """Returns the colony structure as a string."""
         if self.colony_structure is None:
             return NO_INFORMATION
         else:
@@ -308,6 +312,7 @@ class AntSpecies(Species):
 
     @property
     def flight_months_str(self):
+        """Returns the nuptial flight months as a string."""
         if self.flight_months is None:
             return NO_INFORMATION
         else:
@@ -347,6 +352,10 @@ class AntSpecies(Species):
 
 
 class CommonName(models.Model):
+    """
+        Model for a common name of a species in a aspecific
+        language.
+    """
     name = models.CharField(max_length=200)
     language = models.CharField(max_length=7, choices=LANG_CHOICES)
     species = models.ForeignKey(Species, on_delete=models.CASCADE)
@@ -361,6 +370,7 @@ class CommonName(models.Model):
 
 
 class InvalidName(models.Model):
+    """Model for an invalid name of a species."""
     name = models.CharField(max_length=200)
     species = models.ForeignKey(Species, on_delete=models.CASCADE)
 
