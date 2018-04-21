@@ -81,13 +81,10 @@ WSGI_APPLICATION = 'antkeeping_info.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'db': 'antkeeping_info',
-            'user': 'antkeeping_info',
-            'password': 'antkeeping_info',
-            'sql_mode': 'STRICT_TRANS_TABLES',
-        },
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'antkeeping_info',
+        'USER': 'antkeeping_info_user',
+        'PASSWORD': ''
     }
 }
 
