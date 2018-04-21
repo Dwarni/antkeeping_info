@@ -154,13 +154,17 @@ class Distribution(models.Model):
 
 class Species(TaxonomicRank):
     """Model which represents a taxonomic rank of type 'Species'."""
+    name_validators = [
+        RegexValidator(
+            '^[A-Z][a-z]+ [a-z\\.]+$',
+            _("""Enter a valid species name.""")
+        )    
+    ]
     name = models.CharField(
         db_index=True,
         max_length=100,
         unique=True,
-        validators=[
-            RegexValidator('^[A-Z][a-z]+ [a-z\\.]+$')
-        ])
+        validators=name_validators)
     genus = models.ForeignKey(
         Genus,
         models.SET_NULL,

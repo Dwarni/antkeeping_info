@@ -1,0 +1,12 @@
+
+<div class="input-group">
+    {% for widget in widget.subwidgets %}
+        {% if forloop.counter == 2 %}
+            <div class="input-group-append">
+                {% include widget.template_name %}
+            </div>
+        {% else %}
+            {% include widget.template_name %}
+        {% endif %}
+    {% endfor %}
+</div>

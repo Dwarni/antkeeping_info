@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    {% crispy form %}
+{% endblock %}
+{% block script %}
+    <script src="{% static 'flights/js/flight_form.js' %}"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDa1r6t-0BksWEBfsz5w83W5D4M1J1Mp98&libraries=places&callback=initMap">
+    </script>
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static "flights/css/flight_form.css" %}">
+{% endblock %}
