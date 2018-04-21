@@ -83,3 +83,12 @@ nav.navbar {
 .margin-bottom {
     margin-bottom: 1em;
 }
+
+.cards {
+    margin-left: -1em;
+    display: flex;
+}
+
+.margin-left {
+    margin-left: 1em;
+}
