@@ -1,6 +1,7 @@
 var map = null;
 var markers = [];
 var flights = [];
+var infoWindow = null;
 function initMap() {
     var initialPosition = {lat: 25, lng: 0};
     map = new google.maps.Map(document.getElementById('map'), {
@@ -45,10 +46,14 @@ function updateMap() {
                 var that = this;
                 var markerIndex = markers.indexOf(this);
                 $.get(flights[markerIndex].id + '/info-window', function(data) {
-                    var infowindow = new google.maps.InfoWindow({
+                    if(infoWindow) {
+                        infoWindow.close();
+                    }
+
+                    infoWindow = new google.maps.InfoWindow({
                         content: data
                     });
-                    infowindow.open(map, that);
+                    infoWindow.open(map, that);
                 })
             });
             
