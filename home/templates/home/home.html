@@ -1,9 +1,12 @@
 {% extends "layout.html" %}
 {% load i18n %}
+{% load static %}
 {% block content %}
 <div class="cards">
   <div class="card margin-left" style="width: 18rem;">
-    <i class="fas fa-globe card-icon"></i>
+    <div class="card-image-box">
+      <img class="card-image rounded" src="{% static 'home/img/world_map.jpg' %}">
+    </div>
     <div class="card-body">
       <h5 class="card-title">Countries</h5>
       <p class="card-text">{% trans 'Displays a list of ants, which can be found in a specific country or state. The list contains both native and non native species.' %}</p>
@@ -13,10 +16,12 @@
     </div>
   </div>
   <div class="card margin-left" style="width: 18rem;">
-    <i class="fas fa-globe card-icon"></i>
+    <div class="card-image-box">
+      <img class="card-image rounded" src="{% static 'home/img/ant_queen.jpg' %}">
+    </div>
     <div class="card-body">
       <h5 class="card-title">Flights</h5>
-      <p class="card-text">{% trans 'View all nuptial flights on a map.' %}</p>
+      <p class="card-text">{% trans 'Displays a map which contains all nuptial flights recorded or add a new flight.' %}</p>
     </div>
     <div class="card-footer">
       <a href="{% url "flights_map" %}" class="btn btn-primary">Map</a>
