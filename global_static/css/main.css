@@ -92,3 +92,11 @@ nav.navbar {
 .margin-left {
     margin-left: 1em;
 }
+
+.card-image-box {
+    margin: auto;
+}
+
+.card-image {
+    margin-top: 10px;
+}
