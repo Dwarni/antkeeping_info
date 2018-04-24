@@ -132,3 +132,7 @@ STATICFILES_DIRS = [
 
 # Crispy forms settings
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# Google api key
+GOOGLE_API_KEY_SERVER = 'YOUR_KEY'
+GOOGLE_API_KEY_CLIENT = 'YOUR_KEY'

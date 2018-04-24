@@ -13,6 +13,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
     <script src="{% static 'flights/js/flights_map.js' %}?v=1"></script>
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDa1r6t-0BksWEBfsz5w83W5D4M1J1Mp98&libraries=places&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&libraries=places&callback=initMap">
     </script>
 {% endblock %}

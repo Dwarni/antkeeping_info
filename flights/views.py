@@ -1,4 +1,5 @@
 """Module which contains all views of flights app."""
+from django.conf import settings
 from django.core.serializers import serialize
 from django.http import JsonResponse
 from django.urls import reverse_lazy
@@ -20,6 +21,10 @@ class AddFlightView(FormView):
 class FlightsMapView(TemplateView):
     """View for the flights map."""
     template_name = 'flights/flights_map.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['GOOGLE_API_KEY'] = settings.GOOGLE_API_KEY_CLIENT
+        return context
 
 class FlightsListView(ListView):
     """List view for flights."""

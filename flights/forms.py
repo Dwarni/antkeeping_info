@@ -101,7 +101,7 @@ class FlightForm(forms.Form):
         cleaned_data = super().clean()
         address = cleaned_data.get('address')
 
-        position = geocoder.google(address, key=settings.GOOGLE_API_KEY)
+        position = geocoder.google(address, key=settings.GOOGLE_API_KEY_SERVER)
 
         # Check if api returned a valid result
         if position.status != 'OK':

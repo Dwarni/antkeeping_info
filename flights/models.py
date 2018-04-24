@@ -172,7 +172,7 @@ class Flight(models.Model):
         if address is None:
             raise ValueError(_('Pass a valid address'))
 
-        position = geocoder.google(address, key=settings.GOOGLE_API_KEY)
+        position = geocoder.google(address, key=settings.GOOGLE_API_KEY_SERVER)
 
         # Check if api returned a valid result
         if position.status != 'OK':
