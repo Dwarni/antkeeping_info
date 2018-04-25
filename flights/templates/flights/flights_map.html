@@ -1,9 +1,12 @@
 {% extends 'flights/flights.html' %}
 {% load i18n %}
 {% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}">
+{% endblock %}
 {% block content %}
     {{ block.super }}
-    <div class="margin-bottom">
+    <div class="button-container">
         <a href="{% url 'flight_add' %}" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Flight' %}</a>
     </div>
     <div id="map"></div>

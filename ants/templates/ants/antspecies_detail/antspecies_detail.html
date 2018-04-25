@@ -2,6 +2,9 @@
 {% load i18n %}
 {% load static %}
 
+{% block css %}
+<link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}">
+{% endblock %}
 {% block content %}
 <h1>{{ object.name }}</h1>
 <section class="ant-detail-section">

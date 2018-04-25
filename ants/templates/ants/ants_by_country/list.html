@@ -1,4 +1,4 @@
-{% extends 'ants/ant_list.html' %}
+{% extends 'ants/antspecies_list.html' %}
 {% load i18n %}
 {% load static %}
 {% load django_bootstrap_breadcrumbs %}
@@ -21,7 +21,7 @@
     {{ block.super }}
 {% endblock %}
 {% block script %}
-    {{ super.block }}
+    {{ block.super }}
     <script>
         var countriesUrl = "{{ url }}";
     </script>

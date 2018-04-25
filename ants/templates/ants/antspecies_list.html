@@ -1,6 +1,9 @@
 {% extends 'layout.html' %}
 {% load i18n %}
 {% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static "ants/css/antspecies_list.css" %}">
+{% endblock %}
 {% block content %}
     {% if ants %}
         <div class="input-group ant-search">

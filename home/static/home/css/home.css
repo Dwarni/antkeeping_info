@@ -1,0 +1,19 @@
+.cards {
+    margin-left: -1em;
+    margin-top: -1em;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.home-card {
+    margin-left: 1em;
+    margin-top: 1em;
+}
+
+.card-image-box {
+    margin: auto;
+}
+
+.card-image {
+    margin-top: 10px;
+}
