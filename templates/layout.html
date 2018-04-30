@@ -14,16 +14,23 @@
     {% endblock %}
 </head>
 <body>
-    <div class="container">
+    <header>
         {% if iframe is None or iframe == False %}
             {% include "navbar.html" %}          
         {% endif %}
+    </header>
+    <main role="main" class="container">
         {% block breadcrumbs %}
             {% clear_breadcrumbs %}
         {% endblock %}
         {% block content %}
         {% endblock %}
-    </div>
+    </main>
+    <footer class="footer">
+        <div class="container">
+            <span class="text-muted">Footer-Links...</span>
+        </div>
+    </footer>
     <script
 			  src="https://code.jquery.com/jquery-3.3.1.min.js"
 			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
