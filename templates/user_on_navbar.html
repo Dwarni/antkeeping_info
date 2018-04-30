@@ -1,0 +1,17 @@
+{% load i18n %}
+{% if user.is_authenticated %}
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false">
+            {{ user.username }}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="{% url "user_profile" %}">{% trans "Edit Profile" %}</a>
+            <a class="dropdown-item" href="{% url "logout" %}">{% trans "Logout" %}</a>
+        </div>
+    </li>
+{% else %}
+    <li class="nav-item">
+        <a class="nav-link" href="{% url "login" %}">{% trans "Login" %} <span class="sr-only">(current)</span></a>   
+    </li>
+{% endif %}
