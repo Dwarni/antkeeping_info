@@ -8,3 +8,19 @@
 .button-container {
     margin-bottom: 1em;
 }
+
+.info-window-container {
+    width: 300px;
+}
+
+.info-window-section {
+    margin-top: 1em;
+}
+
+.info-window-label-column {
+    width: 100px;
+}
+
+.info-window-label {
+    font-weight: bold;
+}
