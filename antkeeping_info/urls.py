@@ -23,6 +23,7 @@ urlpatterns = [
     path('ants-by-country/', include('ants.ants_by_country_urls')),
     path('flights/', include('flights.urls')),
     path('admin/', admin.site.urls),
+    path('users/', include('users.urls')),
 ]
 
 admin.site.site_header = 'Antkeeping.info administration'
