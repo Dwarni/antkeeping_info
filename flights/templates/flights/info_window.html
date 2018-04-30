@@ -1,82 +1,106 @@
-<h4>{{flight.ant_species}}</h4>
-<h5>General</h5>
-<table>
-    <tr>
-        <td>
-            Spotting type:
-        </td>
-        <td>
-            {{flight.spotting_type_verbose}}
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Date:
-        </td>
-        <td>
-            {{flight.date}}
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Time:
-        </td>
-        <td>
-            {{flight.time|default_if_none:'-'}}
-        </td>
-    </tr>
-</table>
-<h5>Location</h5>
-<table>
-    <tr>
-        <td>
-            Address:
-        </td>
-        <td>
-            {{flight.address}}
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Latitude:
-        </td>
-        <td>
-            {{flight.latitude}}
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Longitude:
-        </td>
-        <td>
-            {{flight.longitude}}
-        </td>
-    </tr>
-</table>
-<h5>Weather</h5>
-<table>
-    <tr>
-        <td>
-            Temperature:
-        </td>
-        <td>
-            {{flight.temperature|default_if_none:'-'}}
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Humidity:
-        </td>
-        <td>
-            {{flight.humidity_with_unit|default_if_none:'-'}}
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Wind speed:
-        </td>
-        <td>
-            {{flight.wind_speed|default_if_none:'-'}}
-        </td>
-    </tr>
-</table>
+<div class="info-window-container">
+    <h4>{{flight.ant_species}}</h4>
+    <section class="info-window-section">
+        <h5>General</h5>
+        <table>
+            <colgroup>
+                <col class="info-window-label-column">
+                <col />
+            </colgroup>
+            <tr>
+                <td class="info-window-label">
+                    Spotting type:
+                </td>
+                <td>
+                    {{flight.spotting_type_verbose}}
+                </td>
+            </tr>
+            <tr>
+                <td class="info-window-label">
+                    Date:
+                </td>
+                <td>
+                    {{flight.date}}
+                </td>
+            </tr>
+            <tr>
+                <td class="info-window-label">
+                    Time:
+                </td>
+                <td>
+                    {{flight.time|default_if_none:'-'}}
+                </td>
+            </tr>
+        </table>
+    </section>
+    <section class="info-window-section">
+        <h5>Location</h5>
+        <table>
+            <colgroup>
+                <col class="info-window-label-column">
+                <col />
+            </colgroup>
+            <tr>
+                <td class="info-window-label">
+                    Address:
+                </td>
+                <td>
+                    {{flight.address}}
+                </td>
+            </tr>
+            <tr>
+                <td class="info-window-label">
+                    Latitude:
+                </td>
+                <td>
+                    {{flight.latitude}}
+                </td>
+            </tr>
+            <tr>
+                <td class="info-window-label">
+                    Longitude:
+                </td>
+                <td>
+                    {{flight.longitude}}
+                </td>
+            </tr>
+        </table>
+    </section>
+    <section class="info-window-section">
+        <h5>Weather</h5>
+        <table>
+            <colgroup>
+                <col class="info-window-label-column">
+                <col />
+            </colgroup>
+            <tr>
+                <td class="info-window-label">
+                    Temperature:
+                </td>
+                <td>
+                    {{flight.temperature|default_if_none:'-'}}
+                </td>
+            </tr>
+            <tr>
+                <td class="info-window-label">
+                    Humidity:
+                </td>
+                <td>
+                    {{flight.humidity_with_unit|default_if_none:'-'}}
+                </td>
+            </tr>
+            <tr>
+                <td class="info-window-label">
+                    Wind speed:
+                </td>
+                <td>
+                    {{flight.wind_speed|default_if_none:'-'}}
+                </td>
+            </tr>
+        </table>
+    </section>
+    <section class="info-window-section">
+        <h5>Comment</h5>
+        {{ flight.comment | default_if_none:'-' }}
+    </section>
+</div>
