@@ -5,9 +5,11 @@ from django.forms import IntegerField, ChoiceField
 from django.forms.widgets import DateInput, TimeInput
 from django.utils.translation import ugettext as _
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, \
-    Submit, HTML
+from crispy_forms.layout import Layout, Field, Fieldset, ButtonHolder, \
+    Submit, HTML, Div
 from crispy_forms.bootstrap import AppendedText
+from snowpenguin.django.recaptcha2.fields import ReCaptchaField
+from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
 import geocoder
 from ants.models import Species, AntSpecies
 from flights.models import Flight, Temperature, Velocity
@@ -42,6 +44,12 @@ class FlightForm(forms.Form):
         widget=Html5TimeInput(),
         required=False
     )
+    comment = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 5}),
+        max_length=250,
+        label='',
+        required=False
+    )
 
     # location
     address = forms.CharField(
@@ -55,6 +63,7 @@ class FlightForm(forms.Form):
     humidity = forms.IntegerField(min_value=0, required=False)
     wind_speed = IntegerField(min_value=0, required=False)
     wind_speed_unit = ChoiceField(choices=Velocity.UNIT_CHOICES, required=False)
+    captcha = ReCaptchaField(widget=ReCaptchaWidget, label='')
 
     helper = FormHelper()
 
@@ -63,7 +72,7 @@ class FlightForm(forms.Form):
         self.helper.form_class = 'form-horizontal'
         self.helper.form_id = 'flightForm'
         self.helper.label_class = 'col-lg-2'
-        self.helper.field_class = 'col-lg-10'
+        self.helper.field_class = 'col'
         self.helper.html5_required = True
         self.helper.layout = Layout(
             Fieldset(
@@ -71,7 +80,7 @@ class FlightForm(forms.Form):
                 'species',
                 'spotting_type',
                 'date',
-                'time'
+                'time',
             ),
             Fieldset(
                 'Location',
@@ -86,6 +95,11 @@ class FlightForm(forms.Form):
                 'wind_speed',
                 'wind_speed_unit'
             ),
+            Fieldset(
+                'Comment',
+                'comment',
+            ),
+            'captcha',
             ButtonHolder(
                 Submit('submit', 'Submit')
             )
@@ -107,9 +121,9 @@ class FlightForm(forms.Form):
         if position.status != 'OK':
             self.add_error('address', _('Did not receive a valid result from geocoding API'))
         # Check if at least a city was found
-        elif position.city is None:
-            self.add_error('address', _("""No city could be found. The address has to
-                contain at least a city."""))
+        # elif position.city is None:
+        #     self.add_error('address', _("""No city could be found. The address has to
+        #         contain at least a city."""))
         else:
             cleaned_data['address'] = position.address
             self.latitude = position.lat
@@ -132,6 +146,7 @@ class FlightForm(forms.Form):
         spotting_type = self.cleaned_data.get('spotting_type')
         date = self.cleaned_data.get('date')
         time = self.cleaned_data.get('time')
+        comment = self.cleaned_data.get('comment')
 
         # location
         address = self.cleaned_data.get('address')
@@ -149,6 +164,7 @@ class FlightForm(forms.Form):
         new_flight.spotting_type = spotting_type
         new_flight.date = date
         new_flight.time = time
+        new_flight.comment = comment
 
         # location
         new_flight.address = address
