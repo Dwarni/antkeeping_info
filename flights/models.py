@@ -121,6 +121,7 @@ class Flight(models.Model):
     spotting_type = models.CharField(max_length=1, choices=SPOTTING_TYPE_CHOICES)
     date = models.DateField()
     time = models.TimeField(blank=True, null=True)
+    comment = models.TextField(max_length=255, blank=True, null=True)
 
     # location
     address = models.CharField(max_length=100)
