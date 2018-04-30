@@ -1,3 +1,4 @@
+{% load i18n %}
 <nav class="navbar navbar-expand-md navbar-light bg-light">
     <a class="navbar-brand" href="{% url "home" %}">Antkeeping.info</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
@@ -7,14 +8,17 @@
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="{% url "home" %}">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="{% url "home" %}">{% trans "Home" %} <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url "index" %}">Countries <span class="sr-only">(current)</span></a>   
+                <a class="nav-link" href="{% url "index" %}">{% trans "Countries" %} <span class="sr-only">(current)</span></a>   
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url "flights_map" %}">Flights <span class="sr-only">(current)</span></a>   
+                <a class="nav-link" href="{% url "flights_map" %}">{% trans "Flights" %} <span class="sr-only">(current)</span></a>   
             </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            {% include "user_on_navbar.html" %}    
         </ul>
     </div>
 </nav>
