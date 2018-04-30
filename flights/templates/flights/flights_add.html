@@ -3,6 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load django_bootstrap_breadcrumbs %}
+{% load recaptcha2 %}
 {% block breadcrumbs %}
     {{ block.super }}
     {% breadcrumb "Add Flight" "flight_add" %}
@@ -12,6 +13,7 @@
     {% crispy form %}
 {% endblock %}
 {% block script %}
+    {% recaptcha_init %}
     <script src="{% static 'flights/js/flight_form.js' %}"></script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDa1r6t-0BksWEBfsz5w83W5D4M1J1Mp98&libraries=places&callback=initMap">
