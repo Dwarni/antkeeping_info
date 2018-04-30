@@ -41,8 +41,10 @@ INSTALLED_APPS = [
     'home',
     'regions',
     'flights',
+    'users',
     'crispy_forms',
-    'django_bootstrap_breadcrumbs'
+    'django_bootstrap_breadcrumbs',
+    'snowpenguin.django.recaptcha2',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +138,10 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 # Google api key
 GOOGLE_API_KEY_SERVER = 'YOUR_KEY'
 GOOGLE_API_KEY_CLIENT = 'YOUR_KEY'
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = 'home'
+
+# Google Recaptcha
+RECAPTCHA_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'
+RECAPTCHA_PRIVATE_KEY = 'YOUR_PRIVATE_KEY'
