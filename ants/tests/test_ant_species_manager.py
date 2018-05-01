@@ -108,7 +108,11 @@ class AntSpeciesManagerTestCase(TestCase):
     def test_by_region(self):
         region_name = 'Test Region'
         region_code = 'test'
-        country = AntRegion.objects.get(code='de')
+        country = AntRegion.objects.create(
+            name='Test Country',
+            code='TE1',
+            type='Country',
+        )
         new_region = AntRegion.objects.create(
             name=region_name,
             code=region_code,
