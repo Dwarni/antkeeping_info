@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import TemplateView
 from home import views
 
 urlpatterns = [
@@ -24,6 +25,7 @@ urlpatterns = [
     path('flights/', include('flights.urls')),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
+    path('legal-notice/', TemplateView.as_view(template_name='legal_notice.html'), name='legal')
 ]
 
 admin.site.site_header = 'Antkeeping.info administration'
