@@ -1,43 +1,34 @@
-{% load static %}
-{% load django_bootstrap_breadcrumbs %}
+{% load static %} {% load django_bootstrap_breadcrumbs %}
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Antkeeping.info</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
-    <link href="https://use.fontawesome.com/releases/v5.0.8/css/all.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static "css/layout.css" %}">
-    {% block css %}
-    {% endblock %}
+    <link rel="stylesheet" href="{% static "css/vendor/bootstrap.min.css" %}">
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link rel="stylesheet" href="{% static "css/layout.css" %}"> {% block css %} {% endblock %}
 </head>
+
 <body>
     <header>
-        {% if iframe is None or iframe == False %}
-            {% include "navbar.html" %}          
-        {% endif %}
+        {% if iframe is None or iframe == False %} {% include "navbar.html" %} {% endif %}
     </header>
     <main role="main" class="container">
-        {% block breadcrumbs %}
-            {% clear_breadcrumbs %}
-        {% endblock %}
-        {% block content %}
-        {% endblock %}
+        {% block breadcrumbs %} {% clear_breadcrumbs %} {% endblock %} {% block content %} {% endblock %}
     </main>
     <footer class="footer">
         <div class="container">
-            <span class="text-muted"><a href="{% url 'legal' %}">Legal Notice</a></span>
+            <span class="text-muted">
+                <a href="{% url 'legal' %}">Legal Notice</a>
+            </span>
         </div>
     </footer>
-    <script
-			  src="https://code.jquery.com/jquery-3.3.1.min.js"
-			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-			  crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
-{% block script %}
-{% endblock %}
+    <script src="{% static "js/vendor/jquery-3.3.1.min.js" %}"></script>
+    <script src="{% static "js/vendor/bootstrap.bundle.min.js" %}"></script> 
+    {% block script %} {% endblock %}
 </body>
+
 </html>
