@@ -11,9 +11,9 @@ def format_two_units(primary, secondary):
 class Temperature():
     """Class for storing and converting temperature."""
     CELSIUS = 'C'
-    CELSIUS_SYMBOL = '°C'
+    CELSIUS_SYMBOL = '℃' # unicode symbol is used.
     FAHRENHEIT = 'F'
-    FAHRENHEIT_SYMBOL = '°F'
+    FAHRENHEIT_SYMBOL = '℉' # unicode symbol is used.
     CHOICES = (
         (CELSIUS, CELSIUS_SYMBOL),
         (FAHRENHEIT, FAHRENHEIT_SYMBOL)
@@ -70,9 +70,9 @@ class Velocity():
     @property
     def kmh(self):
         """Returns the velocity in km/h."""
-        if self.unit == Velocity.KMH:
+        if self.unit == self.KMH:
             return self.value
-        return self.value * Velocity.MPH_TO_KMH_FACTOR
+        return self.value * self.MPH_TO_KMH_FACTOR
 
     @property
     def kmh_str(self):
