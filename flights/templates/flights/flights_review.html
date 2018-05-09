@@ -1,0 +1,74 @@
+{% extends "flights/flights.html" %}
+{% load i18n %}
+{% load static %}
+{% load django_bootstrap_breadcrumbs %}
+{% block css %}
+    <link rel="stylesheet" href="{% static "flights/css/flights_review.css" %}">
+{% endblock %}
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "Review" "flights_review" %}
+{% endblock %}
+{% block content %}
+    {{ block.super }}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Species
+                </th>
+                <th>
+                    Address
+                </th>
+                <th>
+                    Comment
+                </th>
+                <th>
+                    Action
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for flight in flights %}
+                <tr>
+                    <td>
+                        {{ flight.ant_species.name }}
+                    </td>
+                    <td>
+                        {{ flight.address }}
+                    </td> 
+                    <td>
+                        {{ flight.comment|default_if_none:'-' }}
+                    </td>
+                    <td>
+                        <div class="action-btn-container">
+                            <form method="POST" action="{% url "flight_review" flight.pk %}">
+                                {% csrf_token %}
+                                <input type="submit" class="btn btn-success btn-sm" value="✓" />
+                            </form>
+                            <form method="POST" action="{% url "flight_delete" flight.pk %}" onsubmit="confirmDeletion(event)">
+                                {% csrf_token %}
+                                <input type="submit" class="btn btn-danger btn-sm" value="✗" />
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+{% block script %}
+    <script src="{% static 'js/vendor/bootbox.min.js' %}"></script>
+    <script>
+        function confirmDeletion(e) {
+            bootbox.confirm("{% trans "Are you sure you want to delete the flight?" %}", function(result) {
+                    if(result) {
+                        e.target.submit();
+                    }
+                 }
+            );
+
+            e.preventDefault();
+        }
+    </script>
+{% endblock %}

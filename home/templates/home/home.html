@@ -6,30 +6,7 @@
 {% endblock %}
 {% block content %}
 <div class="cards">
-  <div class="card home-card" style="width: 18rem;">
-    <div class="card-image-box">
-      <img class="card-image rounded" src="{% static 'home/img/world_map.jpg' %}">
-    </div>
-    <div class="card-body">
-      <h5 class="card-title">Countries</h5>
-      <p class="card-text">{% trans 'Displays a list of ants, which can be found in a specific country or state. The list contains both native and non native species.' %}</p>
-    </div>
-    <div class="card-footer">
-      <a href="{% url "index" %}" class="btn btn-primary">Open</a>
-    </div>
-  </div>
-  <div class="card home-card" style="width: 18rem;">
-    <div class="card-image-box">
-      <img class="card-image rounded" src="{% static 'home/img/ant_queen.jpg' %}">
-    </div>
-    <div class="card-body">
-      <h5 class="card-title">Flights</h5>
-      <p class="card-text">{% trans 'Displays a map which contains all nuptial flights recorded or add a new flight.' %}</p>
-    </div>
-    <div class="card-footer">
-      <a href="{% url "flights_map" %}" class="btn btn-primary">Map</a>
-      <a href="{% url "flight_add" %}" class="btn btn-primary">Add</a>
-    </div>
-  </div>
+  {% include "home/cards/countries_card.html" %}
+  {% include "home/cards/flights_card.html" %}  
 </div>
 {% endblock %}

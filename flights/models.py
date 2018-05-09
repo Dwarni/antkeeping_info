@@ -153,16 +153,22 @@ class Flight(models.Model):
         null=True
     )
 
+    reviewed = models.BooleanField(default=False)
+
     @property
     def spotting_type_verbose(self):
+        """Returns the verbose string of the set spotting type."""
         return self.SPOTTING_TYPE_CHOICES_DICT[self.spotting_type]
-    
+
     @property
     def humidity_with_unit(self):
-        if(self.humidity):
+        """Returns the humidity value + unit as a string."""
+        if self.humidity:
             return '{} %'.format(self.humidity)
         return None
 
+    def __str__(self):
+        return '{}: {}'.format(self.ant_species.name, self.address)
 
     def set_new_address(self, address):
         """
@@ -198,9 +204,9 @@ class Flight(models.Model):
         state = AntRegion.objects.get(code=state_code)
 
         # First remove all existing regions
-        self.ant_regions.clear() #pylint: disable=E1101
+        self.ant_regions.clear() # pylint: disable=E1101
 
         # And add country and state to it
-        self.ant_regions.add(country, state) #pylint: disable=E1101
+        self.ant_regions.add(country, state) # pylint: disable=E1101
         self.full_clean()
         self.save()

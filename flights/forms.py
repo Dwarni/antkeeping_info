@@ -134,7 +134,7 @@ class FlightForm(forms.Form):
 
         return cleaned_data
 
-    def create_flight(self):
+    def create_flight(self, is_staff):
         """
             The method will create a Flight model object and add it
             to the database.
@@ -171,6 +171,7 @@ class FlightForm(forms.Form):
         new_flight.latitude = self.latitude
         new_flight.longitude = self.longitude
 
+        new_flight.reviewed = is_staff
 
         # if new_flight.id is None:
         #     new_flight.full_clean()

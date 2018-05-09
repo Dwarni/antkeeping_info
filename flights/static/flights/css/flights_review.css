@@ -1,0 +1,7 @@
+.action-btn-container {
+    display: flex;
+}
+
+.btn-danger {
+    margin-left: 0.2em;
+}
