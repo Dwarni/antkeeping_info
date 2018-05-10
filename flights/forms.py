@@ -141,6 +141,13 @@ class FlightForm(forms.Form):
         """
         new_flight = Flight()
 
+        self.safe_flight(new_flight, is_staff)
+    
+    def safe_flight(self, flight, is_staff):
+        """
+            The method will fill and save the passed flight object.
+        """
+
         # general
         species_name = self.cleaned_data.get('species')
         spotting_type = self.cleaned_data.get('spotting_type')
@@ -160,20 +167,20 @@ class FlightForm(forms.Form):
 
 
         # general
-        new_flight.ant_species = AntSpecies.objects.get_or_create_with_name(species_name)
-        new_flight.spotting_type = spotting_type
-        new_flight.date = date
-        new_flight.time = time
-        new_flight.comment = comment
+        flight.ant_species = AntSpecies.objects.get_or_create_with_name(species_name)
+        flight.spotting_type = spotting_type
+        flight.date = date
+        flight.time = time
+        flight.comment = comment
 
         # location
-        new_flight.address = address
-        new_flight.latitude = self.latitude
-        new_flight.longitude = self.longitude
+        flight.address = address
+        flight.latitude = self.latitude
+        flight.longitude = self.longitude
 
-        new_flight.reviewed = is_staff
+        flight.reviewed = is_staff
 
-        # if new_flight.id is None:
+        # if flight.id is None:
         #     new_flight.full_clean()
         #     new_flight.save()
 
@@ -188,12 +195,24 @@ class FlightForm(forms.Form):
 
         # weather
         if temperature:
-            new_temperature = Temperature.objects.create(value=temperature, unit=temperature_unit)
-            new_flight.temperature = new_temperature
-        new_flight.humidity = humidity
+            if flight.temperature:
+                flight.temperature.value = temperature
+                flight.temperature.unit = temperature_unit
+                flight.temperature.full_clean()
+                flight.temperature.save()
+            else:
+                new_temperature = Temperature.objects.create(value=temperature, unit=temperature_unit)
+                flight.temperature = new_temperature
+        flight.humidity = humidity
         if wind_speed:
-            new_wind_speed = Velocity.objects.create(value=wind_speed, unit=wind_speed_unit)
-            new_flight.wind_speed = new_wind_speed
+            if flight.wind_speed:
+                flight.wind_speed.vlaue = wind_speed
+                flight.wind_speed.unit = wind_speed_unit
+                flight.wind_speed.full_clean()
+                flight.wind_speed.save()
+            else:
+                new_wind_speed = Velocity.objects.create(value=wind_speed, unit=wind_speed_unit)
+                flight.wind_speed = new_wind_speed
 
-        new_flight.full_clean()
-        new_flight.save()
+        flight.full_clean()
+        flight.save()    
