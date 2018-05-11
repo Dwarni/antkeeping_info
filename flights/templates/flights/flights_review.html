@@ -11,51 +11,55 @@
 {% endblock %}
 {% block content %}
     {{ block.super }}
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>
-                    Species
-                </th>
-                <th>
-                    Address
-                </th>
-                <th>
-                    Comment
-                </th>
-                <th>
-                    Action
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for flight in flights %}
+    {% if flights %}
+        <table class="table table-hover">
+            <thead>
                 <tr>
-                    <td>
-                        {{ flight.ant_species.name }}
-                    </td>
-                    <td>
-                        {{ flight.address }}
-                    </td> 
-                    <td>
-                        {{ flight.comment|default_if_none:'-' }}
-                    </td>
-                    <td>
-                        <div class="action-btn-container">
-                            <form method="POST" action="{% url "flight_review" flight.pk %}">
-                                {% csrf_token %}
-                                <input type="submit" class="btn btn-success btn-sm" value="✓" />
-                            </form>
-                            <form method="POST" action="{% url "flight_delete" flight.pk %}" onsubmit="confirmDeletion(event)">
-                                {% csrf_token %}
-                                <input type="submit" class="btn btn-danger btn-sm" value="✗" />
-                            </form>
-                        </div>
-                    </td>
+                    <th>
+                        Species
+                    </th>
+                    <th>
+                        Address
+                    </th>
+                    <th>
+                        Comment
+                    </th>
+                    <th>
+                        Action
+                    </th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for flight in flights %}
+                    <tr>
+                        <td>
+                            {{ flight.ant_species.name }}
+                        </td>
+                        <td>
+                            {{ flight.address }}
+                        </td> 
+                        <td>
+                            {{ flight.comment|default_if_none:'-' }}
+                        </td>
+                        <td>
+                            <div class="action-btn-container">
+                                <form method="POST" action="{% url "flight_review" flight.pk %}">
+                                    {% csrf_token %}
+                                    <input type="submit" class="btn btn-success btn-sm" value="✓" />
+                                </form>
+                                <form method="POST" action="{% url "flight_delete" flight.pk %}" onsubmit="confirmDeletion(event)">
+                                    {% csrf_token %}
+                                    <input type="submit" class="btn btn-danger btn-sm" value="✗" />
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>{% trans "No flights need to be reviewed." %}</p>
+    {% endif %}
 {% endblock %}
 {% block script %}
     <script src="{% static 'js/vendor/bootbox.min.js' %}"></script>
