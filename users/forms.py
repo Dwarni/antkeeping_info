@@ -6,6 +6,8 @@ from django.contrib.auth import forms as auth_forms
 from django.contrib.auth import models as auth_models
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit
+from snowpenguin.django.recaptcha2.fields import ReCaptchaField
+from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
 
 class SaveLayout(Layout):
     """Layout class with a 'Save'-Button at the end."""
@@ -19,6 +21,7 @@ class SaveLayout(Layout):
 
 class CustomAuthentificationForm(auth_forms.AuthenticationForm):
     """Log in form."""
+    captcha = ReCaptchaField(widget=ReCaptchaWidget, label='')
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
@@ -26,7 +29,8 @@ class CustomAuthentificationForm(auth_forms.AuthenticationForm):
             Fieldset(
                 'Log In',
                 'username',
-                'password'
+                'password',
+                'captcha'
             ),
             ButtonHolder(
                 Submit('Log In', 'Log In')
