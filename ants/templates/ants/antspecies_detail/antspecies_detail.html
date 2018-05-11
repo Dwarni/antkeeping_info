@@ -6,18 +6,18 @@
 <link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}">
 {% endblock %}
 {% block content %}
-<h1>{{ object.name }}</h1>
+<h1 class="taxonomy">{{ object.name }}</h1>
 <section class="ant-detail-section">
     <h2>{% trans 'Taxonomy' %}</h2>
 <span class="taxonomy">
     {% if object.genus is not None %}
         {% if object.genus.sub_family.family %}
-            {{ object.genus.sub_family.family }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+            {{ object.genus.sub_family.family }} 🡺
         {% endif %}
         {% if object.genus.sub_family %}
-            {{ object.genus.sub_family }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+            {{ object.genus.sub_family }} 🡺
         {% endif %}
-        {{ object.genus }} <i class="fa fa-arrow-right" aria-hidden="true"></i>
+        {{ object.genus }} 🡺
         {{ object.name }}</span>
     {% else %}
         {% trans 'No information' %}
