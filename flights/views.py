@@ -32,11 +32,12 @@ class FlightsMapView(TemplateView):
 class FlightsListView(ListView):
     """List view for flights."""
     model = Flight
-    queryset = Flight.objects.filter(reviewed=True)
+    # queryset = Flight.objects.filter(reviewed=True)
     def get(self, request, *args, **kwargs):
         qs = self.get_queryset()
         data = [{'id': flight.id, 'lat': flight.latitude, 'lng': flight.longitude, 'ant': flight.ant_species.name} for flight in qs]
         return JsonResponse(data, status=200, safe=False)
+    
 
 class FlightInfoWindow(DetailView):
     """View for google maps info window."""
