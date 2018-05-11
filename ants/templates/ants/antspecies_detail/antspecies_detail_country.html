@@ -1,0 +1,10 @@
+<li>
+    <a href="{% url "country" country.code %}">{{ country.name }}</a>
+    {% if regions %}
+        <ul id="regions-{{country.code}}">
+            {% for region in regions %}
+                <li><a href="{% url "region" country.code region.code %}">{{ region.name }}</a></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</li>

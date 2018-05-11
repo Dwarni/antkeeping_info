@@ -5,16 +5,7 @@
     {% if countries %}
     <ul>
         {% for country in countries %}
-        <li>
-            <a href="{% url "country" country.code %}">{{ country.name }}</a>
-            {% if regions and country.code in regions %}
-            <ul>
-                {% for region in regions|get_item:country.code %}
-                <li><a href="{% url "region" country.code region.code %}">{{ region.name }}</a></li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </li>
+        {% include "ants/antspecies_detail/antspecies_detail_country.html" with country=country regions=regions|get_item:country.code %}
         {% endfor %}
     </ul>
     {% else %}
