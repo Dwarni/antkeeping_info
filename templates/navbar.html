@@ -13,9 +13,18 @@
             <li class="nav-item">
                 <a class="nav-link" href="{% url "index" %}">{% trans "Countries" %} <span class="sr-only">(current)</span></a>   
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url "flights_map" %}">{% trans "Flights" %} <span class="sr-only">(current)</span></a>   
-            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="flightsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  {% trans "Flights" %}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="flightsDropdown">
+                  <a class="dropdown-item" href="{% url "flights_map" %}">{% trans "Map" %}</a>
+                  <a class="dropdown-item" href="{% url "flight_add" %}">{% trans "Add Flight" %}</a>
+                  {% if user.is_staff %}
+                    <a class="dropdown-item" href="{% url "flights_review_list" %}">{% trans "Review" %}</a>
+                  {% endif %}
+                </div>
+              </li>
         </ul>
         <ul class="navbar-nav ml-auto">
             {% include "user_on_navbar.html" %}    
