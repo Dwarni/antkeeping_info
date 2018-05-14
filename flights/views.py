@@ -27,6 +27,9 @@ class FlightsMapView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['GOOGLE_API_KEY'] = settings.GOOGLE_API_KEY_CLIENT
+        context['years'] = [
+            d.year for d in Flight.objects.all().dates('date', 'year', order='DESC')
+        ]
         return context
 
 class FlightsListView(ListView):
@@ -35,9 +38,17 @@ class FlightsListView(ListView):
     # queryset = Flight.objects.filter(reviewed=True)
     def get(self, request, *args, **kwargs):
         qs = self.get_queryset()
-        data = [{'id': flight.id, 'lat': flight.latitude, 'lng': flight.longitude, 'ant': flight.ant_species.name} for flight in qs]
+        year = request.GET.get('year')
+        if year and year != 'all':
+            qs = qs.filter(date__year=year)
+        data = [{
+            'id': flight.id,
+            'lat': flight.latitude,
+            'lng': flight.longitude,
+            'ant': flight.ant_species.name
+        } for flight in qs]
         return JsonResponse(data, status=200, safe=False)
-    
+
 
 class FlightInfoWindow(DetailView):
     """View for google maps info window."""

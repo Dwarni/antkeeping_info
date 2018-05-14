@@ -2,19 +2,27 @@
 {% load i18n %}
 {% load static %}
 {% block css %}
-    <link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}">
+    <link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=1">
 {% endblock %}
 {% block content %}
     {{ block.super }}
     <div class="button-container">
-        <a href="{% url 'flight_add' %}" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add' %}</a>
+        <div class="form-inline filter-container">
+            <select id="yearSelect" class="form-control">
+                <option value="all">{% trans "All Years" %}</option>
+                {% for year in years %}
+                    <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <a href="{% url 'flight_add' %}" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
     </div>
     <div id="map"></div>
 {% endblock %}
 {% block script %}
     <script src="{% static 'flights/js/vendor/markerclusterer.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
-    <script src="{% static 'flights/js/flights_map.js' %}?v=1"></script>
+    <script src="{% static 'flights/js/flights_map.js' %}?v=2"></script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&libraries=places&callback=initMap">
     </script>

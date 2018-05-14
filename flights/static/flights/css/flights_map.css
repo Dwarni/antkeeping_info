@@ -7,6 +7,9 @@
 
 .button-container {
     margin-bottom: 1em;
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
 }
 
 .info-window-container {
