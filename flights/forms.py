@@ -142,7 +142,7 @@ class FlightForm(forms.Form):
         new_flight = Flight()
 
         self.safe_flight(new_flight, is_staff)
-    
+
     def safe_flight(self, flight, is_staff):
         """
             The method will fill and save the passed flight object.
@@ -215,4 +215,4 @@ class FlightForm(forms.Form):
                 flight.wind_speed = new_wind_speed
 
         flight.full_clean()
-        flight.save()    
+        flight.save()
