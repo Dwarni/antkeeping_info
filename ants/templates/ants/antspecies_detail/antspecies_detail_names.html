@@ -1,26 +1,26 @@
 {% load i18n %}
 <div class="tab-pane" id="names" role="tabpanel">
-    <table>
+    <table class="ant-detail-info-table">
         <tr>
-            <td class="detail-table-caption">
+            <th>
                 {% trans 'Binomial name' %}:
-            </td>
+            </th>
             <td class="taxonomy">
                 {{ object.name }}
             </td>
         </tr>
         <tr>
-            <td class="detail-table-caption">
+            <th>
                 {% trans 'Common names' %}:
-            </td>
+            </th>
             <td>
                 {{ object.common_names_str }}
             </td>
         </tr>
         <tr>
-            <td class="detail-table-caption">
+            <th>
                 {% trans 'Invalid names' %}:
-            </td>
+            </th>
             <td>
                 {% for invalid_name in invalid_names %}
                 {{ invalid_name.name }}{{ forloop.last|yesno:",&#44;"|safe }}

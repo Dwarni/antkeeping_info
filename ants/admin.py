@@ -37,10 +37,13 @@ class BaseAdmin(admin.ModelAdmin):
 class AntSpeciesAdmin(BaseAdmin):
     filter_horizontal = ['flight_months']
     fieldsets = [
-        (_('General'),          {'fields': ['name', 'genus',
-                                            'colony_structure',
-                                            'worker_polymorphism',
-                                            'nutrition', 'flight_months']})
+        (_('General'), {'fields': ['name', 'genus',
+                                   'colony_structure',
+                                   'worker_polymorphism',
+                                   'flight_months']}),
+        (_('Keeping parameters'), {'fields': [
+            'hibernation', 'nutrition'
+        ]})
     ]
     search_fields = ['name']
 
@@ -61,7 +64,7 @@ class GenusAdmin(BaseAdmin):
 
 
 @admin.register(SubFamily)
-class SubFamily(BaseAdmin):
+class SubFamilyAdmin(BaseAdmin):
     pass
 
 

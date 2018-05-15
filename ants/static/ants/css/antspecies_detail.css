@@ -6,11 +6,6 @@
     min-width: 100px;
 }
 
-.detail-table-caption {
-    font-weight: bold;
-    min-width: 200px;
-}
-
 .species-name {
     font-style: italic;
 }
@@ -53,4 +48,8 @@ nav.navbar {
 .ant-detail-section {
     margin-top: 15px;
     margin-bottom: 15px;
+}
+
+.ant-detail-info-table th {
+    min-width: 200px;
 }

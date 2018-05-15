@@ -45,7 +45,7 @@ class TaxonomicRank(models.Model):
             RegexValidator('^[A-Z][a-z]+$')
         ]
     )
-    slug = models.SlugField(blank=True, db_index=True)
+    slug = models.SlugField(db_index=True, editable=False)
 
     class Meta:
         abstract = True
@@ -128,6 +128,7 @@ class Distribution(models.Model):
         null=True,
         verbose_name=_('Protected by law')
     )
+    NOT_ON_RED_LIST = 'NOT_ON_RED_LIST'
     LEAST_CONCERN = 'LEAST_CONCERN'
     NEAR_THREATENED = 'NEAR_THREATENED'
     VULNERABLE = 'VULNERABLE'
@@ -136,6 +137,7 @@ class Distribution(models.Model):
     EXTINCT_IN_WILD = 'EXTINCT_IN_WILD'
     EXTINCT = 'EXTINCT'
     RED_LIST_CHOICES = (
+        (NOT_ON_RED_LIST, _('Not on red list')),
         (LEAST_CONCERN, _('Least Concern')),
         (NEAR_THREATENED, _('Near Threatened')),
         (VULNERABLE, _('Vulnerable')),
@@ -151,6 +153,9 @@ class Distribution(models.Model):
         choices=RED_LIST_CHOICES
     )
 
+    def __str__(self):
+        return str(self.region)
+
 
 class Species(TaxonomicRank):
     """Model which represents a taxonomic rank of type 'Species'."""
@@ -158,7 +163,7 @@ class Species(TaxonomicRank):
         RegexValidator(
             '^[A-Z][a-z]+ [a-z\\.]+$',
             _("""Enter a valid species name.""")
-        )    
+        )
     ]
     name = models.CharField(
         db_index=True,
@@ -347,6 +352,29 @@ class AntSpecies(Species):
         choices=NUTRITION_CHOICES,
         verbose_name=_('Nutrition')
     )
+
+    LONG_HIBERNATION = 'LONG'
+    LONG_HIBERNATION_TEXT = _('yes, around 6 months')
+    SHORT_HIBERNATION = 'SHORT'
+    SHORT_HIBERNATION_TEXT = _('yes, around 3 months')
+    NO_HIBERNATION = 'NO'
+    NO_HIBERNATION_TEXT = _('No')
+
+    HIBERNATION_CHOICES = (
+        (NO_HIBERNATION, NO_HIBERNATION_TEXT),
+        (LONG_HIBERNATION, LONG_HIBERNATION_TEXT),
+        (SHORT_HIBERNATION, SHORT_HIBERNATION_TEXT)
+    )
+
+    hibernation = models.CharField(
+        max_length=5,
+        blank=True,
+        null=True,
+        choices=HIBERNATION_CHOICES,
+        verbose_name=_('Hibernation required')
+    )
+
+
 
     objects = AntSpeciesManager()
 
