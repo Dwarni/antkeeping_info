@@ -17,6 +17,12 @@ class AddFlightView(FormView):
     template_name = 'flights/flights_add.html'
     form_class = FlightForm
     success_url = reverse_lazy('flights_map')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['GOOGLE_API_KEY'] = settings.GOOGLE_API_KEY_CLIENT
+        return context
+
     def form_valid(self, form):
         form.create_flight(self.request.user.is_staff)
         return super().form_valid(form)

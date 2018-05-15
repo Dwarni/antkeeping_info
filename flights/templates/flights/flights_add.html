@@ -16,7 +16,7 @@
     {% recaptcha_init %}
     <script src="{% static 'flights/js/flight_form.js' %}"></script>
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDa1r6t-0BksWEBfsz5w83W5D4M1J1Mp98&libraries=places&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&libraries=places&callback=initMap">
     </script>
 {% endblock %}
 {% block css %}
