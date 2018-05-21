@@ -1,4 +1,4 @@
-astroid==1.6.3
+astroid==1.6.4
 certifi==2018.4.16
 chardet==3.0.4
 click==6.7
@@ -25,8 +25,8 @@ MarkupSafe==1.0
 mccabe==0.6.1
 numpy==1.14.3
 psycopg2==2.7.4
-pycountry==18.2.23
-pylint==1.8.4
+pycountry==18.5.20
+pylint==1.9.1
 pylint-django==0.11
 pylint-plugin-utils==0.2.6
 pytz==2018.4
@@ -34,7 +34,7 @@ ratelim==0.1.6
 requests==2.18.4
 rope==0.10.7
 six==1.11.0
-sortedcontainers==1.5.10
+sortedcontainers==2.0.1
 Unidecode==1.0.22
 uritemplate==3.0.0
 urllib3==1.22
