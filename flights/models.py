@@ -127,10 +127,16 @@ class Flight(models.Model):
     address = models.CharField(max_length=100)
     latitude = models.FloatField()
     longitude = models.FloatField()
-    ant_regions = models.ManyToManyField(
+    country = models.ForeignKey(
         AntRegion,
+        models.CASCADE,
         'flights'
     )
+    state_short = models.CharField(max_length=150)
+    state_long = models.CharField(max_length=150)
+    county = models.CharField(max_length=150, blank=True, null=True)
+    city_short = models.CharField(max_length=150, blank=True, null=True)
+    city_long = models.CharField(max_length=150, blank=True, null=True)
 
     # weather
     temperature = models.OneToOneField(
@@ -185,28 +191,22 @@ class Flight(models.Model):
         if position.status != 'OK':
             raise RuntimeError(_('Did not receive a valid result from geocoding API'))
 
-        # Check if at least a city was found
-        if position.city is None:
-            raise RuntimeError(_("""No city could be found. The address has to
-                contain at least a city."""))
+        # Check if at least a state was found
+        if position.state is None:
+            raise RuntimeError(_("""No state could be found. The address has to
+                contain at least a state."""))
 
         self.address = position.address
         self.latitude = position.lat
         self.longitude = position.lng
 
-        if self.id is None:
-            self.full_clean()
-            self.save()
-
         country_code = position.country.lower()
-        state_code = '{}-{}'.format(country_code, position.state.lower())
-        country = AntRegion.objects.get(code=country_code)
-        state = AntRegion.objects.get(code=state_code)
+        self.country = AntRegion.objects.get(code=country_code)
+        self.state_short = position.state
+        self.state_long = position.state_long
+        self.county = position.county
+        self.city_short = position.city
+        self.city_long = position.city_long
 
-        # First remove all existing regions
-        self.ant_regions.clear() # pylint: disable=E1101
-
-        # And add country and state to it
-        self.ant_regions.add(country, state) # pylint: disable=E1101
         self.full_clean()
         self.save()

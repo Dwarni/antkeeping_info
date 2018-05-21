@@ -5,13 +5,13 @@ from django.forms import IntegerField, ChoiceField
 from django.forms.widgets import DateInput, TimeInput
 from django.utils.translation import ugettext as _
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Field, Fieldset, ButtonHolder, \
-    Submit, HTML, Div
+from crispy_forms.layout import Layout, Fieldset, ButtonHolder, \
+    Submit, HTML
 from crispy_forms.bootstrap import AppendedText
 from snowpenguin.django.recaptcha2.fields import ReCaptchaField
 from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
 import geocoder
-from ants.models import Species, AntSpecies
+from ants.models import Species, AntSpecies, AntRegion
 from flights.models import Flight, Temperature, Velocity
 
 
@@ -105,9 +105,13 @@ class FlightForm(forms.Form):
             )
         )
 
-        self.country_code = None
-        self.state_code = None
-        self.state_name = None
+        self.country = None
+        self.state_short = None
+        self.state_long = None
+        self.county = None
+        self.city_short = None
+        self.city_long = None
+
         self.latitude = None
         self.longitude = None
 
@@ -128,9 +132,12 @@ class FlightForm(forms.Form):
             cleaned_data['address'] = position.address
             self.latitude = position.lat
             self.longitude = position.lng
-            self.country_code = position.country.lower()
-            self.state_code = '{}-{}'.format(self.country_code, position.state.lower())
-            self.state_name = position.state_long
+            self.country = AntRegion.objects.get(code=position.country.lower())
+            self.state_short = position.state
+            self.state_long = position.state_long
+            self.county = position.county
+            self.city_short = position.city
+            self.city_long = position.city_long
 
         return cleaned_data
 
@@ -175,23 +182,17 @@ class FlightForm(forms.Form):
 
         # location
         flight.address = address
+        flight.country = self.country
+        flight.state_short = self.state_short
+        flight.state_long = self.state_long
+        flight.county = self.county
+        flight.city_short = self.city_short
+        flight.city_long = self.city_long
+
         flight.latitude = self.latitude
         flight.longitude = self.longitude
 
         flight.reviewed = is_staff
-
-        # if flight.id is None:
-        #     new_flight.full_clean()
-        #     new_flight.save()
-
-        # country = AntRegion.objects.get(code=self.country_code)
-        # print(self.state_name)
-        # state = AntRegion.objects.get_or_create(code=self.state_code, defaults={
-        #     'name': self.state_name,
-        #     'parent': country
-        # })
-        # new_flight.ant_regions.add(country, state) #pylint: disable=E1101
-
 
         # weather
         if temperature:
