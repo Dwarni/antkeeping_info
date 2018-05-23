@@ -1,5 +1,6 @@
 """Module for managers of flights app."""
 import calendar
+from collections import OrderedDict
 from django.db.models import Count, Manager, Q
 from ants.models import AntSpecies
 
@@ -27,7 +28,7 @@ class FlightManager(Manager):
         }
 
         aggregation_result = flights_qs.aggregate(**frequency_aggregation)
-        ordered_result = {}
+        ordered_result = OrderedDict()
         for i in range(1, 13):
             current_month = calendar.month_name[i]
             ordered_result[current_month] = aggregation_result[current_month]
