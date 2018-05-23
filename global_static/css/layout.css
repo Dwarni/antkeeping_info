@@ -6,7 +6,6 @@ html {
 }
 body {
     margin-bottom: calc(60px + 1em);
-    font-family: 'Lato', sans-serif;
 }
 .footer {
     position: absolute;
