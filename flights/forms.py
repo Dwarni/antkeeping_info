@@ -29,6 +29,9 @@ class FlightForm(forms.Form):
     """Form class for adding end updating nuptial flights."""
 
     # general
+    test_data = forms.BooleanField(
+        required=False
+    )
     species = forms.CharField(
         max_length=40,
         validators=Species.name_validators
@@ -40,7 +43,11 @@ class FlightForm(forms.Form):
         choices=SPOTTING_TYPE_CHOICES
     )
     date = forms.DateField(widget=Html5DateInput())
-    time = forms.TimeField(
+    start_time = forms.TimeField(
+        widget=Html5TimeInput(),
+        required=False
+    )
+    end_time = forms.TimeField(
         widget=Html5TimeInput(),
         required=False
     )
@@ -76,11 +83,15 @@ class FlightForm(forms.Form):
         self.helper.html5_required = True
         self.helper.layout = Layout(
             Fieldset(
-                'General',
+                'What?',
                 'species',
-                'spotting_type',
+                'spotting_type'
+            ),
+            Fieldset(
+                'When?',
                 'date',
-                'time',
+                'start_time',
+                'end_time',
             ),
             Fieldset(
                 'Location',
@@ -121,6 +132,20 @@ class FlightForm(forms.Form):
 
         position = geocoder.google(address, key=settings.GOOGLE_API_KEY_SERVER)
 
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+
+        if start_time is not None and end_time is None:
+            self.add_error('end_time', _('Please provide an end time too.'))
+
+        if start_time is None and end_time is not None:
+            self.add_error('start_time', _('Please provide a start time too.'))
+
+        if start_time is not None and end_time is not None:
+            if start_time > end_time:
+                self.add_error('start_time', _('Start time has to be before end time'))
+                self.add_error('end_time', _('End time has to be after start time'))
+
         # Check if api returned a valid result
         if position.status != 'OK':
             self.add_error('address', _('Did not receive a valid result from geocoding API'))
@@ -159,7 +184,8 @@ class FlightForm(forms.Form):
         species_name = self.cleaned_data.get('species')
         spotting_type = self.cleaned_data.get('spotting_type')
         date = self.cleaned_data.get('date')
-        time = self.cleaned_data.get('time')
+        start_time = self.cleaned_data.get('start_time')
+        end_time = self.cleaned_data.get('end_time')
         comment = self.cleaned_data.get('comment')
 
         # location
@@ -177,7 +203,8 @@ class FlightForm(forms.Form):
         flight.ant_species = AntSpecies.objects.get_or_create_with_name(species_name)
         flight.spotting_type = spotting_type
         flight.date = date
-        flight.time = time
+        flight.start_time = start_time
+        flight.end_time = end_time
         flight.comment = comment
 
         # location

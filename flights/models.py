@@ -122,7 +122,8 @@ class Flight(models.Model):
     SPOTTING_TYPE_CHOICES_DICT = dict(SPOTTING_TYPE_CHOICES)
     spotting_type = models.CharField(max_length=1, choices=SPOTTING_TYPE_CHOICES)
     date = models.DateField()
-    time = models.TimeField(blank=True, null=True)
+    start_time = models.TimeField(blank=True, null=True)
+    end_time = models.TimeField(blank=True, null=True)
     comment = models.TextField(max_length=255, blank=True, null=True)
 
     # location
@@ -167,6 +168,17 @@ class Flight(models.Model):
     def spotting_type_verbose(self):
         """Returns the verbose string of the set spotting type."""
         return self.SPOTTING_TYPE_CHOICES_DICT[self.spotting_type]
+
+    @property
+    def time_str(self):
+        """Returns a string representation of start and end time."""
+        if self.start_time is None:
+            return None
+        if self.start_time == self.end_time:
+            return str(self.start_time)[:-3]
+
+        return '{} - {}'.format(str(self.start_time)[:-3], str(self.end_time)[:-3])
+
 
     @property
     def humidity_with_unit(self):
