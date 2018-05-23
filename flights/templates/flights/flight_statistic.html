@@ -1,0 +1,14 @@
+{% extends 'flights/flights.html' %}
+{% load i18n %}
+{% block content %}
+    <div class="form-group row">
+        <label for="antSpecies" class="col-sm-2 col-form-label">{% trans 'Species' %}</label>
+        <div class="col-sm-10">
+            <select class="form-control">
+                {% for ant in ants %}
+                    <option value="{{ ant.ant_species__slug }}">{{ ant.ant_species__name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+{% endblock %}

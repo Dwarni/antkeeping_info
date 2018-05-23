@@ -1,0 +1,9 @@
+{% load i18n %}
+<div class="tab-pane" id="flightFrequency" role="tabpanel">
+    {% if flight_frequency %}
+        <canvas id="flightFrequencyChart">
+        </canvas
+    {% else %}
+        <p>No information.</p>
+    {% endif %}
+</div>

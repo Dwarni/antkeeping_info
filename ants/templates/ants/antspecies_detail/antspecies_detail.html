@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}?v=1">
+    <link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}?v=1">
 {% endblock %}
 {% block content %}
 <h1 class="taxonomy">{{ object.name }}</h1>
@@ -94,6 +94,9 @@
     <li class="nav-item">
         <a class="nav-link" data-toggle="tab" href="#sizes" role="tab">{% trans 'Sizes' %}</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" data-toggle="tab" href="#flightFrequency" role="tab">{% trans 'Flight frequency' %}</a>
+    </li>
 </ul>
 
 <!-- Tab panes -->
@@ -101,6 +104,54 @@
     {% include 'ants/antspecies_detail/antspecies_detail_names.html' %}
     {% include 'ants/antspecies_detail/antspecies_detail_sizes.html' %}
     {% include 'ants/antspecies_detail/antspecies_detail_distribution.html' %}
+    {% include 'ants/antspecies_detail/antspecies_detail_flight_frequency.html' %}
 </div>
-{% endblock %}
 </section>
+{% endblock %}
+{% block script %}
+    <script src="{% static 'ants/js/vendor/Chart.bundle.min.js' %}"></script>
+    <script>
+        var chartData = {{ flight_frequency|safe }};
+        if(chartData) {
+            window.onload = function() {
+                chartCtx = document.getElementById("flightFrequencyChart").getContext("2d"); 
+                var myBarChart = new Chart(chartCtx, {
+                    type: 'bar',
+                    "data":{
+                        "labels":[
+                            "January",
+                            "February",
+                            "March",
+                            "April",
+                            "May",
+                            "June",
+                            "July",
+                            "August",
+                            "September",
+                            "October",
+                            "November",
+                            "December"],
+                        "datasets":[{
+                            "label": "Flight frequency",
+                            "data": chartData,
+                            "fill":false,
+                            "backgroundColor":"#4169E1",
+                        }]},
+                    "options":{
+                        "scales":{
+                            "yAxes":[{
+                                "ticks":{
+                                    "beginAtZero":true,
+                                    "stepSize": 1
+                                }
+                            }]
+                        },
+                        "legend": {
+                            display: false
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+{% endblock %}

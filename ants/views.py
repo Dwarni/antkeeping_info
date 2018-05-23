@@ -1,6 +1,7 @@
 """
     Module for all models of ants app.
 """
+import json
 from django.shortcuts import get_object_or_404, reverse
 
 from django.views.generic.list import ListView
@@ -10,6 +11,7 @@ from django.views.generic.base import TemplateView
 from django.db.models import Q
 
 from .models import AntRegion, AntSize, AntSpecies, InvalidName
+from flights.models import Flight
 
 
 # Create your views here.
@@ -152,6 +154,15 @@ class AntSpeciesDetail(DetailView):
     model = AntSpecies
     template_name = 'ants/antspecies_detail/antspecies_detail.html'
 
+    def __get_flight_frequency(self, ant_species):
+        has_flights = Flight.objects.filter(ant_species=ant_species).exists()
+        
+        if has_flights:
+            flight_frequency = Flight.objects.flight_frequency_per_month(ant_species)
+            return json.dumps([value for key, value in flight_frequency.items()], separators=(',',':'))
+        
+        return None
+
     def get_context_data(self, **kwargs):
         context = super(AntSpeciesDetail, self).get_context_data(**kwargs)
 
@@ -183,5 +194,6 @@ class AntSpeciesDetail(DetailView):
         context['worker_size'] = worker_size
         context['queen_size'] = queen_size
         context['male_size'] = male_size
+        context['flight_frequency'] = self.__get_flight_frequency(ant)
 
         return context

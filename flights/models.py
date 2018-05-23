@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _
 import geocoder
 
 from ants.models import AntSpecies, AntRegion
+from .managers import FlightManager
 
 
 # Create your models here.
@@ -105,6 +106,7 @@ class Velocity(models.Model):
 
 class Flight(models.Model):
     """Model class for ant flights."""
+    objects = FlightManager()
     # general
     ant_species = models.ForeignKey(
         AntSpecies,

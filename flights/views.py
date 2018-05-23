@@ -84,3 +84,12 @@ class FlightReviewView(View):
 class FlightDeleteView(DeleteView):
     model = Flight
     success_url = reverse_lazy('flights_review_list')
+
+class FlightStatisticView(TemplateView):
+    template_name = 'flights/flight_statistic.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ants = Flight.objects.values('ant_species__slug', 'ant_species__name').distinct().order_by('ant_species__name')
+        context['ants'] = ants
+        return context
