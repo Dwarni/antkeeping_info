@@ -178,9 +178,9 @@ class Flight(models.Model):
         if self.start_time is None:
             return None
         if self.start_time == self.end_time:
-            return str(self.start_time)[:-3]
+            return self.start_time
 
-        return '{} - {}'.format(str(self.start_time)[:-3], str(self.end_time)[:-3])
+        return '{} - {}'.format(self.start_time, self.end_time)
 
 
     @property
