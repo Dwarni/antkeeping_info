@@ -55,14 +55,8 @@ function updateMap() {
                 var that = this;
                 var markerIndex = markers.indexOf(this);
                 $.get(flights[markerIndex].id + '/info-window', function(data) {
-                    if(infoWindow) {
-                        infoWindow.close();
-                    }
-
-                    infoWindow = new google.maps.InfoWindow({
-                        content: data
-                    });
-                    infoWindow.open(map, that);
+                    $('#flightInfoModalContent').html(data);
+                    $('#flightInfoModal').modal('toggle');
                 })
             });
             

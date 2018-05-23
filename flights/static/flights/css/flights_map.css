@@ -12,18 +12,14 @@
     justify-content: space-between;
 }
 
-.info-window-container {
-    width: 300px;
+.info-window-label {
+    font-weight: bold;
+}
+
+.info-window-column {
+    min-width: 150px;
 }
 
 .info-window-section {
-    margin-top: 1em;
-}
-
-.info-window-label-column {
-    width: 100px;
-}
-
-.info-window-label {
-    font-weight: bold;
+    margin-top: 1rem;
 }
