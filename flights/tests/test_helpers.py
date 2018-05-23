@@ -40,8 +40,8 @@ class TemperatureTest(TestCase):
         """Test for formatted string output."""
         celsius = Temperature(25)
         fahrenheit = Temperature(104, Temperature.FAHRENHEIT)
-        self.assertEqual('25.0 °C (77.0 °F)', str(celsius))
-        self.assertEqual('104.0 °F (40.0 °C)', str(fahrenheit))
+        self.assertEqual('25.0 ℃ (77.0 ℉)', str(celsius))
+        self.assertEqual('104.0 ℉ (40.0 ℃)', str(fahrenheit))
 
 
 class VelocityTest(TestCase):
