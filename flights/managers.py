@@ -26,4 +26,10 @@ class FlightManager(Manager):
             for index, month in enumerate(calendar.month_name[1:])
         }
 
-        return flights_qs.aggregate(**frequency_aggregation)
+        aggregation_result = flights_qs.aggregate(**frequency_aggregation)
+        ordered_result = {}
+        for i in range(1, 13):
+            current_month = calendar.month_name[i]
+            ordered_result[current_month] = aggregation_result[current_month]
+
+        return ordered_result
