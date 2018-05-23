@@ -5,7 +5,7 @@
     {% if countries %}
     <ul>
         {% for country in countries %}
-        {% include "ants/antspecies_detail/antspecies_detail_country.html" with country=country regions=regions|get_item:country.code %}
+            {% include "ants/antspecies_detail/antspecies_detail_country.html" with country=country regions=regions|get_item:country.code %}
         {% endfor %}
     </ul>
     {% else %}
