@@ -51,12 +51,6 @@ class FlightForm(forms.Form):
         widget=Html5TimeInput(),
         required=False
     )
-    comment = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 5}),
-        max_length=250,
-        label='',
-        required=False
-    )
 
     # location
     address = forms.CharField(
@@ -71,6 +65,18 @@ class FlightForm(forms.Form):
     wind_speed = IntegerField(min_value=0, required=False)
     wind_speed_unit = ChoiceField(choices=Velocity.UNIT_CHOICES, required=False)
     captcha = ReCaptchaField(widget=ReCaptchaWidget, label='')
+
+    # additional
+    comment = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 5}),
+        max_length=250,
+        required=False
+    )
+
+    link = forms.URLField(
+        required=False,
+        help_text=_('Link to the website you have the flight spotting from.')
+    )
 
     helper = FormHelper()
 
@@ -94,7 +100,7 @@ class FlightForm(forms.Form):
                 'end_time',
             ),
             Fieldset(
-                'Location',
+                'Where?',
                 'address',
                 HTML('<div id="map"></div>')
             ),
@@ -107,8 +113,9 @@ class FlightForm(forms.Form):
                 'wind_speed_unit'
             ),
             Fieldset(
-                'Comment',
+                'Addition information',
                 'comment',
+                'link'
             ),
             'captcha',
             ButtonHolder(
@@ -186,7 +193,6 @@ class FlightForm(forms.Form):
         date = self.cleaned_data.get('date')
         start_time = self.cleaned_data.get('start_time')
         end_time = self.cleaned_data.get('end_time')
-        comment = self.cleaned_data.get('comment')
 
         # location
         address = self.cleaned_data.get('address')
@@ -198,6 +204,10 @@ class FlightForm(forms.Form):
         wind_speed = self.cleaned_data.get('wind_speed')
         wind_speed_unit = self.cleaned_data.get('wind_speed_unit')
 
+        # additional information
+        comment = self.cleaned_data.get('comment')
+        link = self.cleaned_data.get('link')
+
 
         # general
         flight.ant_species = AntSpecies.objects.get_or_create_with_name(species_name)
@@ -205,7 +215,6 @@ class FlightForm(forms.Form):
         flight.date = date
         flight.start_time = start_time
         flight.end_time = end_time
-        flight.comment = comment
 
         # location
         flight.address = address
@@ -241,6 +250,10 @@ class FlightForm(forms.Form):
             else:
                 new_wind_speed = Velocity.objects.create(value=wind_speed, unit=wind_speed_unit)
                 flight.wind_speed = new_wind_speed
+
+        # additional information
+        flight.comment = comment
+        flight.link = link
 
         flight.full_clean()
         flight.save()

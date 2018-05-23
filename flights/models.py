@@ -124,7 +124,6 @@ class Flight(models.Model):
     date = models.DateField()
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
-    comment = models.TextField(max_length=255, blank=True, null=True)
 
     # location
     address = models.CharField(max_length=100)
@@ -161,6 +160,10 @@ class Flight(models.Model):
         blank=True,
         null=True
     )
+
+    # additional information
+    comment = models.TextField(max_length=255, blank=True, null=True)
+    link = models.URLField(blank=True, null=True)
 
     reviewed = models.BooleanField(default=False)
 
