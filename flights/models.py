@@ -177,7 +177,7 @@ class Flight(models.Model):
         """Returns a string representation of start and end time."""
         if self.start_time is None:
             return None
-        if self.start_time == self.end_time:
+        if self.start_time == self.end_time or self.end_time is None:
             return self.start_time
 
         return '{} - {}'.format(self.start_time, self.end_time)
