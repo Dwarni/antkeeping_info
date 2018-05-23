@@ -55,6 +55,7 @@ nav.navbar {
 }
 
 .region-toggle-button {
+    color: inherit;
     font-size: 1.6rem;
     line-height: 1.6rem;
     height: 1.7rem;
@@ -64,6 +65,7 @@ nav.navbar {
 
 a.region-toggle-button:hover {
     text-decoration: none;
+    color: inherit;
 }
 
 .region-toggle-button:not(.collapsed)::after {
