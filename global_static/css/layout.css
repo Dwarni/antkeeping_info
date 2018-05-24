@@ -25,4 +25,30 @@ body > .container {
     padding-right: 15px;
     padding-left: 15px;
 }
+
+#CookielawBanner > .container > h6 {
+    font-weight: bold;
+}
+#CookielawBanner > .container > p {
+    position: relative;
+    padding-bottom: 3rem;
+    margin-bottom: 0;
+}
+#CookielawBanner > .container > p > a {
+    position: absolute;
+    bottom: 0;
+}
+#CookielawBanner {
+    background-color: #d9edf7;
+    border-color: #bcdff1;
+    color: #31708f;
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+    border-radius: .25rem;
+}
   

@@ -8,6 +8,8 @@ coreschema==0.0.4
 decorator==4.3.0
 Django==2.0.5
 django-bootstrap-breadcrumbs==0.9.1
+django-classy-tags==0.8.0
+django-cookie-law==2.0.1
 django-crispy-forms==1.7.2
 django-filter==1.1.0
 django-recaptcha2==1.0.3
@@ -29,6 +31,7 @@ pycountry==18.5.20
 pylint==1.9.1
 pylint-django==0.11
 pylint-plugin-utils==0.2.6
+pytest-runner==4.2
 pytz==2018.4
 ratelim==0.1.6
 requests==2.18.4

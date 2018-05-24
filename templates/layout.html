@@ -1,4 +1,5 @@
-{% load static %} {% load django_bootstrap_breadcrumbs %}
+{% load static %}
+{% load cookielaw_tags %} {% load django_bootstrap_breadcrumbs %}
 <!DOCTYPE html>
 <html>
 
@@ -16,6 +17,7 @@
         {% if iframe is None or iframe == False %} {% include "navbar.html" %} {% endif %}
     </header>
     <main role="main" class="container">
+        {% cookielaw_banner %}
         {% block breadcrumbs %} {% clear_breadcrumbs %} {% endblock %} {% block content %} {% endblock %}
     </main>
     <footer class="footer">
@@ -27,8 +29,8 @@
         </div>
     </footer>
     <script src="{% static "js/vendor/jquery-3.3.1.min.js" %}"></script>
-    <script src="{% static "js/vendor/bootstrap.bundle.min.js" %}"></script> 
+    <script src="{% static "js/vendor/bootstrap.bundle.min.js" %}"></script>
+    <script src="{% static "cookielaw/js/cookielaw.js" %}"></script>
     {% block script %} {% endblock %}
 </body>
-
 </html>

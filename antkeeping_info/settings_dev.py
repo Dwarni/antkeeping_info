@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'django_bootstrap_breadcrumbs',
     'snowpenguin.django.recaptcha2',
+    'cookielaw'
 ]
 
 MIDDLEWARE = [
