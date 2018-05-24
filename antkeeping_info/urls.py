@@ -25,7 +25,8 @@ urlpatterns = [
     path('flights/', include('flights.urls')),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
-    path('legal-notice/', TemplateView.as_view(template_name='legal_notice.html'), name='legal')
+    path('legal-notice/', TemplateView.as_view(template_name='legal_notice.html'), name='legal'),
+    path('privacy-policy/', TemplateView.as_view(template_name='privacy_policy.html'), name='privacy')
 ]
 
 admin.site.site_header = 'Antkeeping.info administration'
