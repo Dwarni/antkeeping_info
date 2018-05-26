@@ -134,8 +134,8 @@ class Flight(models.Model):
         models.CASCADE,
         'flights'
     )
-    state_short = models.CharField(max_length=150)
-    state_long = models.CharField(max_length=150)
+    state_short = models.CharField(max_length=150, blank=True, null=True)
+    state_long = models.CharField(max_length=150, blank=True, null=True)
     county = models.CharField(max_length=150, blank=True, null=True)
     city_short = models.CharField(max_length=150, blank=True, null=True)
     city_long = models.CharField(max_length=150, blank=True, null=True)
