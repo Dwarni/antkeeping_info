@@ -126,7 +126,7 @@ class Flight(models.Model):
     end_time = models.TimeField(blank=True, null=True)
 
     # location
-    address = models.CharField(max_length=100)
+    address = models.CharField(max_length=200)
     latitude = models.FloatField()
     longitude = models.FloatField()
     country = models.ForeignKey(
