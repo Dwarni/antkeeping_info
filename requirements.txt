@@ -27,9 +27,9 @@ MarkupSafe==1.0
 mccabe==0.6.1
 numpy==1.14.3
 psycopg2==2.7.4
-pycountry==18.5.20
+pycountry==18.5.26
 pylint==1.9.1
-pylint-django==0.11
+pylint-django==0.11.1
 pylint-plugin-utils==0.2.6
 pytest-runner==4.2
 pytz==2018.4
