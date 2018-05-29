@@ -11,7 +11,7 @@
             <select id="yearSelect" class="form-control">
                 <option value="all">{% trans "All Years" %}</option>
                 {% for year in years %}
-                    <option value="{{ year }}">{{ year }}</option>
+                    <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
                 {% endfor %}
             </select>
         </div>

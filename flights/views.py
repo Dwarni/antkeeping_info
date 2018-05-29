@@ -1,6 +1,6 @@
 """Module which contains all views of flights app."""
+import datetime
 from django.conf import settings
-from django.core.serializers import serialize
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import FormView, ListView, TemplateView, DetailView, View, DeleteView
@@ -41,6 +41,8 @@ class FlightsMapView(TemplateView):
         context['years'] = [
             d.year for d in Flight.objects.all().dates('date', 'year', order='DESC')
         ]
+        now = datetime.datetime.now()
+        context['current_year'] = now.year
         return context
 
 class FlightsListView(ListView):
@@ -78,6 +80,7 @@ class FlightsReviewListView(ListView):
 @method_decorator(staff_member_required, name='dispatch')
 class FlightReviewView(View):
     def post(self, request, **kwargs):
+        """Handels the post request."""
         pk = kwargs.get('pk')
         flight = get_object_or_404(Flight, pk=pk)
         flight.reviewed = True
