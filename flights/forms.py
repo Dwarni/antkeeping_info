@@ -257,3 +257,9 @@ class FlightForm(forms.Form):
 
         flight.full_clean()
         flight.save()
+
+class FlightStaffForm(FlightForm):
+    """Flight form for staff members which does not show the captcha field."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields.pop('captcha')

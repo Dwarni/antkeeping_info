@@ -7,7 +7,7 @@ from django.views.generic import FormView, ListView, TemplateView, DetailView, V
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
-from .forms import FlightForm
+from .forms import FlightForm, FlightStaffForm
 from .models import Flight
 
 
@@ -15,7 +15,6 @@ from .models import Flight
 class AddFlightView(FormView):
     """View for adding a new flight."""
     template_name = 'flights/flights_add.html'
-    form_class = FlightForm
     success_url = reverse_lazy('flights_map')
 
     def get_context_data(self, **kwargs):
@@ -26,6 +25,12 @@ class AddFlightView(FormView):
     def form_valid(self, form):
         form.create_flight(self.request.user.is_staff)
         return super().form_valid(form)
+    
+    def get_form_class(self):
+        if self.request.user.is_staff:
+            return FlightStaffForm
+        
+        return FlightForm
 
 class FlightsMapView(TemplateView):
     """View for the flights map."""
