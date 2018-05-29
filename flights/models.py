@@ -103,7 +103,6 @@ class Velocity(models.Model):
             return format_two_units(self.kmh_str, self.mph_str)
         return format_two_units(self.mph_str, self.kmh_str)
 
-
 class Flight(models.Model):
     """Model class for ant flights."""
     objects = FlightManager()
@@ -115,6 +114,8 @@ class Flight(models.Model):
     )
     FLIGHT = _('Nuptial Flight')
     QUEEN = _('Queen')
+    MALE = _('Male')
+
     SPOTTING_TYPE_CHOICES = (
         ('F', FLIGHT),
         ('Q', QUEEN)

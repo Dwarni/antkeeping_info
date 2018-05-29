@@ -14,7 +14,6 @@ import geocoder
 from ants.models import Species, AntSpecies, AntRegion
 from flights.models import Flight, Temperature, Velocity
 
-
 class Html5DateInput(DateInput):
     """Custom field which automatically activates html5 date input type."""
     input_type = 'date'
@@ -24,8 +23,7 @@ class Html5TimeInput(TimeInput):
     """Custom field which automatically activates html5 time input type."""
     input_type = 'time'
 
-
-class FlightForm(forms.Form):
+class FlightForm(forms.ModelForm):
     """Form class for adding end updating nuptial flights."""
 
     # general
@@ -36,47 +34,14 @@ class FlightForm(forms.Form):
         max_length=40,
         validators=Species.name_validators
     )
-    SPOTTING_TYPE_CHOICES = (
-        ('', ''),
-    ) + Flight.SPOTTING_TYPE_CHOICES
-    spotting_type = forms.ChoiceField(
-        choices=SPOTTING_TYPE_CHOICES
-    )
-    date = forms.DateField(widget=Html5DateInput())
-    start_time = forms.TimeField(
-        widget=Html5TimeInput(),
-        required=False
-    )
-    end_time = forms.TimeField(
-        widget=Html5TimeInput(),
-        required=False
-    )
-
-    # location
-    address = forms.CharField(
-        max_length=100,
-        required=True,
-    )
 
     # weather
     temperature = IntegerField(required=False)
     temperature_unit = ChoiceField(choices=Temperature.UNIT_CHOICES)
-    humidity = forms.IntegerField(min_value=0, required=False)
     wind_speed = IntegerField(min_value=0, required=False)
     wind_speed_unit = ChoiceField(choices=Velocity.UNIT_CHOICES, required=False)
+
     captcha = ReCaptchaField(widget=ReCaptchaWidget, label='')
-
-    # additional
-    comment = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 5}),
-        max_length=250,
-        required=False
-    )
-
-    link = forms.URLField(
-        required=False,
-        help_text=_('Link to the website you have the flight spotting from.')
-    )
 
     helper = FormHelper()
 
@@ -238,7 +203,8 @@ class FlightForm(forms.Form):
                 flight.temperature.full_clean()
                 flight.temperature.save()
             else:
-                new_temperature = Temperature.objects.create(value=temperature, unit=temperature_unit)
+                new_temperature = Temperature.objects.create(
+                    value=temperature, unit=temperature_unit)
                 flight.temperature = new_temperature
         flight.humidity = humidity
         if wind_speed:
@@ -258,8 +224,20 @@ class FlightForm(forms.Form):
         flight.full_clean()
         flight.save()
 
+    class Meta:
+        model = Flight
+        exclude = ['ant_species', 'latitude', 'longitude', 'country',
+                   'state_short', 'state_long', 'county', 'city_short',
+                   'city_long', 'reviewed', 'temperature', 'wind_speed']
+        widgets = {
+            'date': Html5DateInput,
+            'start_time': Html5TimeInput,
+            'end_time': Html5TimeInput
+        }
+
 class FlightStaffForm(FlightForm):
     """Flight form for staff members which does not show the captcha field."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields.pop('captcha')
+        self.helper.layout.fields.remove('captcha')
