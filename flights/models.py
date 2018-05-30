@@ -181,7 +181,7 @@ class Flight(models.Model):
     )
     
     # rain
-    NO_RAIN = ('NO', _('No rain'))
+    NO_RAIN = ('NO', _('No recent rain'))
     RAIN_DURING = ('DURING', _('Rain during spotting'))
     RAIN_BEFORE = ('BEFORE', _('Rain before spotting'))
     RAIN_AFTER = ('AFTER', _('Rain after spotting'))
