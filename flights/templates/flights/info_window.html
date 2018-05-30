@@ -88,6 +88,14 @@
                             {{flight.longitude}}
                         </td>
                     </tr>
+                    <tr>
+                        <td class="info-window-label">
+                            Habitat:
+                        </td>
+                        <td>
+                            {{flight.habitat_str|default:'-'}}
+                        </td>
+                    </tr>
                 </table>
             </section>
             <section class="info-window-section">
@@ -119,6 +127,22 @@
                         </td>
                         <td>
                             {{flight.wind_speed|default_if_none:'-'}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="info-window-label">
+                            Rain:
+                        </td>
+                        <td>
+                            {{flight.rain_verbose|default_if_none:'-'}}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="info-window-label">
+                            Sky Condition:
+                        </td>
+                        <td>
+                            {{flight.sky_condition_verbose|default_if_none:'-'}}
                         </td>
                     </tr>
                 </table>

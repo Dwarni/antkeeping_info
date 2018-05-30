@@ -1,16 +1,21 @@
 """Forms module for flights app"""
+import geocoder
+from dal import autocomplete
+
 from django import forms
 from django.conf import settings
 from django.forms import IntegerField, ChoiceField
 from django.forms.widgets import DateInput, TimeInput
 from django.utils.translation import ugettext as _
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, \
     Submit, HTML
-from crispy_forms.bootstrap import AppendedText
+from crispy_forms.bootstrap import Accordion, AccordionGroup, AppendedText
+
 from snowpenguin.django.recaptcha2.fields import ReCaptchaField
 from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
-import geocoder
+
 from ants.models import Species, AntSpecies, AntRegion
 from flights.models import Flight, Temperature, Velocity
 
@@ -53,32 +58,31 @@ class FlightForm(forms.ModelForm):
         self.helper.field_class = 'col'
         self.helper.html5_required = True
         self.helper.layout = Layout(
-            Fieldset(
-                'What?',
+            Fieldset(_('What?'),
                 'species',
-                'spotting_type'
+                'spotting_type',
+                active=True
             ),
-            Fieldset(
-                'When?',
+            Fieldset(_('When?'),
                 'date',
                 'start_time',
                 'end_time',
             ),
-            Fieldset(
-                'Where?',
+            Fieldset(_('Where?'),
                 'address',
-                HTML('<div id="map"></div>')
+                HTML('<div id="map"></div>'),
+                'habitat'
             ),
-            Fieldset(
-                _('Weather'),
+            Fieldset(_('Weather'),
                 'temperature',
                 'temperature_unit',
                 AppendedText('humidity', '%'),
                 'wind_speed',
-                'wind_speed_unit'
+                'wind_speed_unit',
+                'rain',
+                'sky_condition'
             ),
-            Fieldset(
-                'Addition information',
+            Fieldset(_('Addition information'),
                 'comment',
                 'link'
             ),
@@ -161,6 +165,7 @@ class FlightForm(forms.ModelForm):
 
         # location
         address = self.cleaned_data.get('address')
+        habitat = self.cleaned_data.get('habitat')
 
         # weather
         temperature = self.cleaned_data.get('temperature')
@@ -168,6 +173,8 @@ class FlightForm(forms.ModelForm):
         humidity = self.cleaned_data.get('humidity')
         wind_speed = self.cleaned_data.get('wind_speed')
         wind_speed_unit = self.cleaned_data.get('wind_speed_unit')
+        rain = self.cleaned_data.get('rain')
+        sky_condition = self.cleaned_data.get('sky_condition')
 
         # additional information
         comment = self.cleaned_data.get('comment')
@@ -217,12 +224,17 @@ class FlightForm(forms.ModelForm):
                 new_wind_speed = Velocity.objects.create(value=wind_speed, unit=wind_speed_unit)
                 flight.wind_speed = new_wind_speed
 
+        flight.rain = rain
+        flight.sky_condition = sky_condition
+
         # additional information
         flight.comment = comment
         flight.link = link
 
         flight.full_clean()
         flight.save()
+        # tags have to be added after safe
+        flight.habitat.add(*habitat)
 
     class Meta:
         model = Flight
@@ -232,7 +244,15 @@ class FlightForm(forms.ModelForm):
         widgets = {
             'date': Html5DateInput,
             'start_time': Html5TimeInput,
-            'end_time': Html5TimeInput
+            'end_time': Html5TimeInput,
+            'habitat': autocomplete.TaggitSelect2(
+                url='flight_habitat_tags_autocomplete'
+            ),
+        }
+
+        labels = {
+            'habitat': _('Habitat'),
+            'weather_comment': _('Comment')
         }
 
 class FlightStaffForm(FlightForm):

@@ -1,9 +1,13 @@
 """Module for models of flights app."""
+from datetime import datetime
+import geocoder
+
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils.translation import ugettext as _
-import geocoder
+
+from taggit.managers import TaggableManager
 
 from ants.models import AntSpecies, AntRegion
 from .managers import FlightManager
@@ -113,16 +117,24 @@ class Flight(models.Model):
         'flights'
     )
     FLIGHT = _('Nuptial Flight')
-    QUEEN = _('Queen')
+    FLIGHT_PREPERATION = _('Flight preparation')
+    QUEEN_WINGLESS = _('Wingless (dealated) queen')
+    QUEEN_WINGS = _('Winged (alate) queen')
     MALE = _('Male')
 
     SPOTTING_TYPE_CHOICES = (
         ('F', FLIGHT),
-        ('Q', QUEEN)
+        ('FP', FLIGHT_PREPERATION),
+        ('Q', QUEEN_WINGLESS),
+        ('QW', QUEEN_WINGS),
+        ('M', MALE)
     )
+
     SPOTTING_TYPE_CHOICES_DICT = dict(SPOTTING_TYPE_CHOICES)
-    spotting_type = models.CharField(max_length=1, choices=SPOTTING_TYPE_CHOICES)
-    date = models.DateField()
+    spotting_type = models.CharField(max_length=2, choices=SPOTTING_TYPE_CHOICES)
+    date = models.DateField(validators=[
+        MaxValueValidator(datetime.now().date(), _('Date has to be today or lie in the past.'))
+    ])
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
 
@@ -140,6 +152,12 @@ class Flight(models.Model):
     county = models.CharField(max_length=150, blank=True, null=True)
     city_short = models.CharField(max_length=150, blank=True, null=True)
     city_long = models.CharField(max_length=150, blank=True, null=True)
+    habitat = TaggableManager()
+
+    @property
+    def habitat_str(self):
+        """Returns a comma seperated string containing all habitat tags."""
+        return ', '.join(tag.name for tag in self.habitat.all())
 
     # weather
     temperature = models.OneToOneField(
@@ -158,6 +176,48 @@ class Flight(models.Model):
         Velocity,
         models.CASCADE,
         related_name='flight',
+        blank=True,
+        null=True
+    )
+    
+    # rain
+    NO_RAIN = ('NO', _('No rain'))
+    RAIN_DURING = ('DURING', _('Rain during spotting'))
+    RAIN_BEFORE = ('BEFORE', _('Rain before spotting'))
+    RAIN_AFTER = ('AFTER', _('Rain after spotting'))
+    RAIN_CHOICES = (
+        NO_RAIN,
+        RAIN_DURING,
+        RAIN_BEFORE,
+        RAIN_AFTER
+    )
+    RAIN_CHOICES_DICT = dict(RAIN_CHOICES)
+    rain = models.CharField(
+        max_length=6,
+        choices=RAIN_CHOICES,
+        blank=True,
+        null=True
+    )
+
+    # sky condition
+    CLEAR = ('CLEAR', _('Clear / Sunny'))
+    MCLEAR = ('MCLEAR', _('Mostly Clear / Mostly Sunny'))
+    PCLOUDY = ('PCLOUDY', _('Partly Cloudy / Partly Sunny'))
+    MCLOUDY = ('MCLOUDY', _('Mostly Cloudy / Considerable Cloudiness'))
+    CLOUDY = ('CLOUDY', _('Cloudy'))
+    FAIR = ('FAIR', _('Fair'))
+    SKY_CONDITION_CHOICES = (
+        CLEAR,
+        MCLEAR,
+        PCLOUDY,
+        MCLOUDY,
+        CLOUDY,
+        FAIR
+    )
+    SKY_CONDITION_CHOICES_DICT = dict(SKY_CONDITION_CHOICES)
+    sky_condition = models.CharField(
+        max_length=7,
+        choices=SKY_CONDITION_CHOICES,
         blank=True,
         null=True
     )
@@ -190,6 +250,16 @@ class Flight(models.Model):
         if self.humidity:
             return '{} %'.format(self.humidity)
         return None
+
+    @property
+    def rain_verbose(self):
+        """Returns the verbose string of the set rain option."""
+        return self.RAIN_CHOICES_DICT.get(self.rain, None)
+    
+    @property
+    def sky_condition_verbose(self):
+        """Returns the verbose string of the set sky condition option."""
+        return self.SKY_CONDITION_CHOICES_DICT.get(self.sky_condition, None)
 
     def __str__(self):
         return '{}: {}'.format(self.ant_species.name, self.address)

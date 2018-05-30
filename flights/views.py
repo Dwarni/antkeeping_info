@@ -1,12 +1,18 @@
 """Module which contains all views of flights app."""
 import datetime
+
+from dal import autocomplete
+from taggit.models import Tag
+
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import FormView, ListView, TemplateView, DetailView, View, DeleteView
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
+
 from .forms import FlightForm, FlightStaffForm
 from .models import Flight
 
@@ -98,6 +104,18 @@ class FlightStatisticView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        ants = Flight.objects.values('ant_species__slug', 'ant_species__name').distinct().order_by('ant_species__name')
+        ants = Flight.objects.values('ant_species__slug', 'ant_species__name') \
+            .distinct().order_by('ant_species__name')
         context['ants'] = ants
         return context
+
+class HabitatTagAutocomplete(autocomplete.Select2QuerySetView):
+    """QuerySetView for flight habitat autocomplete."""
+    def get_queryset(self):
+        flight_content_type = ContentType.objects.get(app_label='flights', model='flight')
+        qs = Tag.objects.filter(taggit_taggeditem_items__content_type=flight_content_type)
+
+        if self.q:
+            qs = qs.filter(name__istartswith=self.q)
+
+        return qs.distinct().order_by('name')

@@ -11,5 +11,9 @@ urlpatterns = [
     path('statistic/', views.FlightStatisticView.as_view(), name='flight_statistic'),
     path('<int:pk>/info-window', views.FlightInfoWindow.as_view(), name='flight_info_window'),
     path('<int:pk>/review', views.FlightReviewView.as_view(), name='flight_review'),
-    path('<int:pk>/delete', views.FlightDeleteView.as_view(), name='flight_delete')
+    path('<int:pk>/delete', views.FlightDeleteView.as_view(), name='flight_delete'),
+    path(
+        'habitat-tags-autocomplete', views.HabitatTagAutocomplete.as_view(),
+        name='flight_habitat_tags_autocomplete'
+    )
 ]
