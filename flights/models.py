@@ -116,6 +116,11 @@ class Flight(models.Model):
         models.CASCADE,
         'flights'
     )
+    species_note = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True
+    )
     FLIGHT = _('Nuptial Flight')
     FLIGHT_PREPERATION = _('Flight preparation')
     QUEEN_WINGLESS = _('Wingless (dealated) queen')

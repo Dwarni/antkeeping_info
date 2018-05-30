@@ -60,6 +60,7 @@ class FlightForm(forms.ModelForm):
         self.helper.layout = Layout(
             Fieldset(_('What?'),
                 'species',
+                'species_note',
                 'spotting_type',
                 active=True
             ),
@@ -158,6 +159,7 @@ class FlightForm(forms.ModelForm):
 
         # general
         species_name = self.cleaned_data.get('species')
+        species_note = self.cleaned_data.get('species_note')
         spotting_type = self.cleaned_data.get('spotting_type')
         date = self.cleaned_data.get('date')
         start_time = self.cleaned_data.get('start_time')
@@ -183,6 +185,7 @@ class FlightForm(forms.ModelForm):
 
         # general
         flight.ant_species = AntSpecies.objects.get_or_create_with_name(species_name)
+        flight.species_note = species_note
         flight.spotting_type = spotting_type
         flight.date = date
         flight.start_time = start_time

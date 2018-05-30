@@ -20,6 +20,14 @@
                         {{flight.spotting_type_verbose}}
                     </td>
                 </tr>
+                <tr>
+                    <td class="info-window-label">
+                        Species note:
+                    </td>
+                    <td>
+                        {{flight.species_note|default_if_none:'-'}}
+                    </td>
+                </tr>
                 {% if flight.link %}
                     <tr>
                         <td class="info-window-label">
