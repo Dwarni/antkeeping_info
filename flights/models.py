@@ -152,7 +152,7 @@ class Flight(models.Model):
     county = models.CharField(max_length=150, blank=True, null=True)
     city_short = models.CharField(max_length=150, blank=True, null=True)
     city_long = models.CharField(max_length=150, blank=True, null=True)
-    habitat = TaggableManager()
+    habitat = TaggableManager(blank=True)
 
     @property
     def habitat_str(self):
