@@ -6,7 +6,7 @@ The goal of Antkeeping.info is to provide ant keepers around the world with all 
 * Statistical information/charts about nuptial flights
 # Requirements
 * python > 3.4
-* MySQL (shema requires utf-8 binary collation)
+* PostgreSQL (Other databases are possible for testing, but settings have to be changed)
 # Setup
 1. Clone the repository
 2. Create a new python virtual environment using the requirements.txt file
