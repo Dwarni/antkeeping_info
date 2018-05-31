@@ -46,6 +46,7 @@ function updateMap() {
         // Create a marker for each place.
             var newMarker = new google.maps.Marker({
                 map: map,
+                icon: '/static/flights/img/marker.png',
                 title: flight.ant,
                 position: {lat: flight.lat, lng: flight.lng}
             });
