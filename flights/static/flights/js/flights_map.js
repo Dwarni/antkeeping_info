@@ -4,6 +4,7 @@ var flights = [];
 var mc = null; // Marker Clusterer
 var oms = null;
 var infoWindow = null;
+var markerIcon = null
 var mapSettings = {
     center: {lat: 25, lng: 0},
     zoom: 2
@@ -21,6 +22,11 @@ function initMap() {
         basicFormatEvents: true,
         keepSpiderfied: true
     });
+
+    markerIcon = {
+        url: '/static/flights/img/marker.png',
+        anchor: new google.maps.Point(8, 8)
+    }
 
     // get flights list
     updateMap();
@@ -46,7 +52,7 @@ function updateMap() {
         // Create a marker for each place.
             var newMarker = new google.maps.Marker({
                 map: map,
-                icon: '/static/flights/img/marker.png',
+                icon: markerIcon,
                 title: flight.ant,
                 position: {lat: flight.lat, lng: flight.lng}
             });

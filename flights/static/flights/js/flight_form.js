@@ -6,6 +6,10 @@ function initMap() {
     });
     var input = document.getElementById('id_address');
     var markers = [];
+    var markerIcon = {
+        url: '/static/flights/img/marker.png',
+        anchor: new google.maps.Point(8, 8)
+    };
     var searchBox = new google.maps.places.SearchBox(input);
     // Listen for the event fired when the user selects a prediction and retrieve
     // more details for that place.
@@ -33,7 +37,7 @@ function initMap() {
             // Create a marker for each place.
             markers.push(new google.maps.Marker({
                 map: map,
-                icon: '/static/flights/img/marker.png',
+                icon: markerIcon,
                 title: place.name,
                 position: place.geometry.location
             }));
