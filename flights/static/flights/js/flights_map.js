@@ -34,7 +34,7 @@ function initMap() {
 
 function updateMap() {
     // get flights list
-    var mcOptions = {gridSize: 35, maxZoom: 10, imagePath: '/static/flights/img/vendor/markerclusterer/'};
+    var mcOptions = {gridSize: 35, maxZoom: 8, imagePath: '/static/flights/img/vendor/markerclusterer/'};
     var yearSelect = document.getElementById('yearSelect');
     var year = yearSelect.options[yearSelect.selectedIndex].value;
     
