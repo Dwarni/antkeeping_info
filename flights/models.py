@@ -3,7 +3,8 @@ from datetime import datetime
 import geocoder
 
 from django.conf import settings
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext as _
 
@@ -107,6 +108,10 @@ class Velocity(models.Model):
             return format_two_units(self.kmh_str, self.mph_str)
         return format_two_units(self.mph_str, self.kmh_str)
 
+def validate_date_today_or_earlier(value):
+    if value > datetime.today().date():
+        raise ValidationError(_('Date must be today or earlier.'))
+
 class Flight(models.Model):
     """Model class for ant flights."""
     objects = FlightManager()
@@ -138,7 +143,7 @@ class Flight(models.Model):
     SPOTTING_TYPE_CHOICES_DICT = dict(SPOTTING_TYPE_CHOICES)
     spotting_type = models.CharField(max_length=2, choices=SPOTTING_TYPE_CHOICES)
     date = models.DateField(validators=[
-        MaxValueValidator(datetime.now().date(), _('Date has to be today or lie in the past.'))
+        validate_date_today_or_earlier    
     ])
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
@@ -184,7 +189,7 @@ class Flight(models.Model):
         blank=True,
         null=True
     )
-    
+
     # rain
     NO_RAIN = ('NO', _('No recent rain'))
     RAIN_DURING = ('DURING', _('Rain during spotting'))
