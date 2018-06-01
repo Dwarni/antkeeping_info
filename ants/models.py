@@ -374,7 +374,10 @@ class AntSpecies(Species):
         verbose_name=_('Hibernation required')
     )
 
-
+    information_complete = models.BooleanField(
+        default=False,
+        verbose_name=_('Information complete')
+    )
 
     objects = AntSpeciesManager()
 
