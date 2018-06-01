@@ -18,6 +18,14 @@
         {% include "ants/regions_select.html" with regions=countries code=country_code id='countrySelect' label='Country' url=url %}
         {% include "ants/regions_select.html" with regions=regions code=region_code id='regionSelect' label=regions_type url=url_country %}
     </form>
+    {% if ant_list_complete == False %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
+            <strong>{% trans 'Warning!' %}</strong> {% trans 'This list is not complete.' %}
+        </div>
+    {% endif %}
     {{ block.super }}
 {% endblock %}
 {% block script %}
