@@ -102,7 +102,7 @@ class Command(BaseCommand):
         
         with open('import_species_errors', 'w') as error_file:
             for error in errors:
-                error_file.write(error)
+                error_file.write(error + '\n')
 
 
 
