@@ -32,11 +32,4 @@ class Region(models.Model):
         ordering = ['type', 'name']
 
     def __str__(self):
-        country = None
-        if self.parent and self.parent.type == 'Country':
-            country = self.parent.name
-
-        if country:
-            return '%s (%s, %s)' % (self.name, self.type, country)
-        else:
-            return '%s (%s)' % (self.name, self.type)
+        return '%s (%s)' % (self.name, self.type)
