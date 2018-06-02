@@ -70,4 +70,4 @@ class SubFamilyAdmin(BaseAdmin):
 
 @admin.register(AntRegion)
 class RegionAdmin(BaseAdmin):
-    pass
+    search_fields = ['name', 'code', 'parent__name']
