@@ -14,6 +14,7 @@ class Region(models.Model):
         db_index=True
     )
     name = models.CharField(max_length=200)
+    official_name = models.CharField(max_length=200, blank=True, null=True)
 
     type = models.CharField(max_length=100)
 
