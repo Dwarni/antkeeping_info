@@ -103,7 +103,16 @@ class AntRegion(Region):
     objects = AntRegionManager()
     countries = CountryAntRegionManager()
     states = StateAntRegionManager()
+    """Contains the region name antwiki is using in case it is different to name."""
+    antwiki_name = models.CharField(max_length=200, blank=True, null=True)
     ant_list_complete = models.BooleanField(default=False)
+
+    @property
+    def antwiki_url(self):
+        country_name = self.name
+        if self.antwiki_name:
+            country_name = self.antwiki_name
+        return 'http://www.antwiki.org/wiki/{}'.format(country_name.replace(' ', '_'))
 
 
 class Distribution(models.Model):
