@@ -69,7 +69,11 @@ class Command(BaseCommand):
             countries = AntRegion.objects.filter(code=country_code)
 
         for country in countries:
-            antwiki_url = 'http://www.antwiki.org/wiki/{}'.format(country.name)
+            country_name = country.name
+            if country.official_name:
+                country_name = country.official_name
+
+            antwiki_url = 'http://www.antwiki.org/wiki/{}'.format(country_name)
             raw_html = simple_get(antwiki_url)
             if raw_html:
                 html = BeautifulSoup(raw_html, 'html.parser')
