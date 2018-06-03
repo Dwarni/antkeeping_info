@@ -10,8 +10,8 @@ from django.utils.translation import ugettext as _
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, \
-    Submit, HTML
-from crispy_forms.bootstrap import Accordion, AccordionGroup, AppendedText
+    Submit, HTML, Button
+from crispy_forms.bootstrap import AppendedText, FormActions
 
 from snowpenguin.django.recaptcha2.fields import ReCaptchaField
 from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
@@ -51,12 +51,18 @@ class FlightForm(forms.ModelForm):
     helper = FormHelper()
 
     def __init__(self, *args, **kwargs):
+        iframe = kwargs.pop('iframe', None)
         super().__init__(*args, **kwargs)
         self.helper.form_class = 'form-horizontal'
         self.helper.form_id = 'flightForm'
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col'
         self.helper.html5_required = True
+
+        cancel_href = '../'
+        if iframe:
+            cancel_href = cancel_href + '?iframe=true'
+
         self.helper.layout = Layout(
             Fieldset(_('What?'),
                 'species',
@@ -89,7 +95,8 @@ class FlightForm(forms.ModelForm):
             ),
             'captcha',
             ButtonHolder(
-                Submit('submit', 'Submit')
+                Submit('submit', 'Submit'),
+                HTML('<a href="{}" class="btn btn-secondary active" role="button" aria-pressed="true">Cancel</a>'.format(cancel_href)),
             )
         )
 

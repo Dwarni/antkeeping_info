@@ -5,6 +5,7 @@ from dal import autocomplete
 from taggit.models import Tag
 
 from django.conf import settings
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.urls import reverse_lazy
@@ -13,11 +14,13 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 
+from ants.views import add_iframe_to_context
 from .forms import FlightForm, FlightStaffForm
 from .models import Flight
 
 
 # Create your views here.
+@method_decorator(xframe_options_exempt, name='dispatch')
 class AddFlightView(FormView):
     """View for adding a new flight."""
     template_name = 'flights/flights_add.html'
@@ -26,18 +29,35 @@ class AddFlightView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['GOOGLE_API_KEY'] = settings.GOOGLE_API_KEY_CLIENT
+        add_iframe_to_context(context, self.request)
         return context
 
     def form_valid(self, form):
         form.create_flight(self.request.user.is_staff)
         return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        iframe = self.request.GET.get('iframe', None)
+        kwargs['iframe'] = iframe
+        return kwargs
     
     def get_form_class(self):
         if self.request.user.is_staff:
             return FlightStaffForm
         
         return FlightForm
+    
+    def get_success_url(self):
+        iframe = self.request.GET.get('iframe', None)
+        url = reverse_lazy('flights_map')
+        
+        if iframe:
+            return url + '?iframe=true'
+        
+        return url
 
+@method_decorator(xframe_options_exempt, name='dispatch')
 class FlightsMapView(TemplateView):
     """View for the flights map."""
     template_name = 'flights/flights_map.html'
@@ -49,6 +69,7 @@ class FlightsMapView(TemplateView):
         ]
         now = datetime.datetime.now()
         context['current_year'] = now.year
+        add_iframe_to_context(context, self.request)
         return context
 
 class FlightsListView(ListView):

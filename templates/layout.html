@@ -11,24 +11,35 @@
     <link rel="stylesheet" href="{% static "css/vendor/bootstrap.min.css" %}">
     <link rel="stylesheet" href="{% static "css/layout.css" %}?v=3"> {% block css %} {% endblock %}
     <script src="{% static "js/vendor/jquery-3.3.1.min.js" %}"></script>
+    {% if iframe %}
+        <style>
+            body > .container {
+                padding: 0;
+            }
+        </style>
+    {% endif %}
 </head>
 
 <body>
-    <header>
-        {% if iframe is None or iframe == False %} {% include "navbar.html" %} {% endif %}
-    </header>
+    {% if iframe is None or iframe == False %}
+        <header>
+            {% include "navbar.html" %}
+        </header>
+    {% endif %}
     <main role="main" class="container">
         {% cookielaw_banner %}
         {% block breadcrumbs %} {% clear_breadcrumbs %} {% endblock %} {% block content %} {% endblock %}
     </main>
-    <footer class="footer">
-        <div class="container">
-            <span class="text-muted">
-                <a href="{% url 'legal' %}">Legal Notice</a> |
-                <a href="{% url 'privacy' %}">Privacy Policy</a>
-            </span>
-        </div>
-    </footer>
+    {% if iframe is None or iframe == False %}
+        <footer class="footer">
+            <div class="container">
+                <span class="text-muted">
+                    <a href="{% url 'legal' %}">Legal Notice</a> |
+                    <a href="{% url 'privacy' %}">Privacy Policy</a>
+                </span>
+            </div>
+        </footer>
+    {% endif %}
     <script src="{% static "js/vendor/bootstrap.bundle.min.js" %}"></script>
     <script src="{% static "cookielaw/js/cookielaw.js" %}"></script>
     {% block script %} {% endblock %}

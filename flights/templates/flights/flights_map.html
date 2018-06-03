@@ -15,7 +15,11 @@
                 {% endfor %}
             </select>
         </div>
-        <a href="{% url 'flight_add' %}" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
+        {% if iframe %}
+            <a href="{% url 'flight_add' %}?iframe=true" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
+        {% else %}
+            <a href="{% url 'flight_add' %}" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
+        {% endif %}
     </div>
     <div id="map"></div>
     <div id="flightInfoModal" class="modal" tabindex="-1" role="dialog">
