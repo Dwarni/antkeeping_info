@@ -2,5 +2,6 @@
 from django.contrib import admin
 from .models import Flight
 
-# Register your models here.
-admin.site.register(Flight)
+@admin.register(Flight)
+class FlightAdmin(admin.ModelAdmin):
+    search_fields = ['ant_species__name', 'address', 'date', 'link']

@@ -272,7 +272,7 @@ class Flight(models.Model):
         return self.SKY_CONDITION_CHOICES_DICT.get(self.sky_condition, None)
 
     def __str__(self):
-        return '{}: {}'.format(self.ant_species.name, self.address)
+        return '{}: {}; {}'.format(self.date, self.ant_species.name, self.address)
 
     def set_new_address(self, address):
         """
