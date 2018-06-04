@@ -2,7 +2,7 @@
 {% load django_bootstrap_breadcrumbs %}
 {% block breadcrumbs %}
     {{ block.super }}
-    {% breadcrumb "Flights" "flights_map" iframe=iframe %}   
+    {% breadcrumb "Flights" "flights_map" %}   
 {% endblock %}
 {% block content %}
     {% if iframe is None or iframe == False %}
