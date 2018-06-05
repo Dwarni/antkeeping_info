@@ -14,18 +14,41 @@ function initMap() {
     var searchBox = new google.maps.places.SearchBox(input);
     // Listen for the event fired when the user selects a prediction and retrieve
     // more details for that place.
-    searchBox.addListener('places_changed', function() {
-        var places = searchBox.getPlaces();
 
-        if (places.length == 0) {
-            return;
-        }
-
+    function clearMarkers() {
         // Clear out the old markers.
         markers.forEach(function(marker) {
             marker.setMap(null);
         });
         markers = [];
+    }
+
+
+    if (input.value) {
+        getAndSetLatLong(input.value);
+    }
+
+    function getAndSetLatLong(address) {
+        if(address) {
+            address = address.replace(/\s/g, '+');
+            var url = 'https://maps.googleapis.com/maps/api/geocode/json?address='+ address + '&key=' + apiKey;
+            console.log(url);
+            $.getJSON(url, function(data) {
+                if (data.status === 'OK') {
+                    addMarkers(data.results);
+                    map.setCenter(data.results[0].geometry.location);
+                    map.setZoom(10);
+                }
+            })
+        }
+    }
+
+    function addMarkers(places, fitBounds = false) {
+        if (places.length == 0) {
+            return;
+        }
+
+        clearMarkers();
 
         // For each place, get the icon, name and location.
         var bounds = new google.maps.LatLngBounds();
@@ -43,15 +66,25 @@ function initMap() {
                 position: place.geometry.location
             }));
 
-            if (place.geometry.viewport) {
-                // Only geocodes have viewport.
-                bounds.union(place.geometry.viewport);
-            } else {
-                bounds.extend(place.geometry.location);
+            if (fitBounds) {
+                if (place.geometry.viewport) {
+                    // Only geocodes have viewport.
+                    bounds.union(place.geometry.viewport);
+                } else {
+                    bounds.extend(place.geometry.location);
+                }
             }
         });
-        map.fitBounds(bounds);
-    });  
+        if (fitBounds) {
+            map.fitBounds(bounds); 
+        }
+    }
+    searchBox.addListener('places_changed', function() {
+        var places = searchBox.getPlaces();
+        addMarkers(places);
+    });
+
+ 
 }
 $( document ).ready(function () {
     var temperatureField = $( '#id_temperature' );

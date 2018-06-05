@@ -9,7 +9,7 @@ from django.forms.widgets import DateInput, TimeInput
 from django.utils.translation import ugettext as _
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, \
+from crispy_forms.layout import Layout, Fieldset, Field, ButtonHolder, \
     Submit, HTML, Button
 from crispy_forms.bootstrap import AppendedText, FormActions
 
@@ -96,6 +96,8 @@ class FlightForm(forms.ModelForm):
             'captcha',
             ButtonHolder(
                 Submit('submit', 'Submit'),
+                Submit('add_another_species', 'Submit and add another species'),
+                Submit('add_another_flight', 'Submit and add another flight'),
                 HTML('<a href="{}" class="btn btn-secondary active" role="button" aria-pressed="true">Cancel</a>'.format(cancel_href)),
             )
         )
@@ -157,7 +159,7 @@ class FlightForm(forms.ModelForm):
         """
         new_flight = Flight()
 
-        self.safe_flight(new_flight, is_staff)
+        return self.safe_flight(new_flight, is_staff)
 
     def safe_flight(self, flight, is_staff):
         """
@@ -246,6 +248,8 @@ class FlightForm(forms.ModelForm):
         # tags have to be added after safe
         flight.habitat.add(*habitat)
 
+        return flight
+
     class Meta:
         model = Flight
         exclude = ['ant_species', 'latitude', 'longitude', 'country',
@@ -257,7 +261,7 @@ class FlightForm(forms.ModelForm):
             'end_time': Html5TimeInput,
             'habitat': autocomplete.TaggitSelect2(
                 url='flight_habitat_tags_autocomplete'
-            ),
+            )
         }
 
         labels = {

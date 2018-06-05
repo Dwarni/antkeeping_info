@@ -32,7 +32,7 @@
 {% block script %}
     <script src="{% static 'flights/js/vendor/markerclusterer.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
-    <script src="{% static 'flights/js/flights_map.js' %}?v=10"></script>
+    <script src="{% static 'flights/js/flights_map.js' %}?v=10" key="key={{ GOOGLE_API_KEY }}"></script>
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&libraries=places&callback=initMap">
     </script>

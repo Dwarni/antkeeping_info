@@ -24,7 +24,10 @@ from .models import Flight
 class AddFlightView(FormView):
     """View for adding a new flight."""
     template_name = 'flights/flights_add.html'
-    success_url = reverse_lazy('flights_map')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.flight = None
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -33,7 +36,7 @@ class AddFlightView(FormView):
         return context
 
     def form_valid(self, form):
-        form.create_flight(self.request.user.is_staff)
+        self.flight = form.create_flight(self.request.user.is_staff)
         return super().form_valid(form)
 
     def get_form_kwargs(self):
@@ -48,13 +51,59 @@ class AddFlightView(FormView):
         
         return FlightForm
     
+    def get_initial(self):
+        copy_flight = self.request.GET.get('copy_flight', None)
+
+        initial = None
+
+        if copy_flight:
+            flight = Flight.objects.get(pk=copy_flight)
+            initial = {
+                'date': flight.date,
+                'start_time': flight.start_time,
+                'end_time': flight.end_time,
+                'address': flight.address,
+                'habitat': ','.join([tag.name for tag in flight.habitat.all()]),
+                'humidity': flight.humidity,
+                'rain': flight.rain,
+                'sky_condition': flight.sky_condition,
+                'comment': flight.comment,
+                'link': flight.link
+            }
+
+            if flight.temperature:
+                initial['temperature'] = flight.temperature.value
+                initial['temperature_unit'] = flight.temperature.unit
+
+            if flight.wind_speed:
+                initial['wind_speed'] = flight.wind_speed.value
+                initial['wind_speed_unit'] = flight.wind_speed.unit
+
+        return initial
+
+    
     def get_success_url(self):
         iframe = self.request.GET.get('iframe', None)
-        url = reverse_lazy('flights_map')
-        
+        add_another_species = self.request.POST.get('add_another_species', False)
+        add_another_flight = self.request.POST.get('add_another_flight', False)
+        print(add_another_species)
+
+        url = None
+        if add_another_species or add_another_flight:
+            url = reverse_lazy('flight_add')
+        else:
+            url = reverse_lazy('flights_map')
+
         if iframe:
-            return url + '?iframe=true'
+            url += '?iframe=true'
         
+        if add_another_species:
+            copy_str = 'copy_flight={}'.format(self.flight.pk)
+            if '?' in url:
+                url += '&' + copy_str
+            else:
+                url += '?' + copy_str
+
         return url
 
 @method_decorator(xframe_options_exempt, name='dispatch')
