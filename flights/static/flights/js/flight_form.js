@@ -2,7 +2,8 @@ function initMap() {
     var uluru = {lat: 0, lng: 0};
     var map = new google.maps.Map(document.getElementById('map'), {
         zoom: 1,
-        center: uluru
+        center: uluru,
+        mapTypeId: 'terrain'
     });
     var input = document.getElementById('id_address');
     var markers = [];
