@@ -32,7 +32,6 @@ function initMap() {
         if(address) {
             address = address.replace(/\s/g, '+');
             var url = 'https://maps.googleapis.com/maps/api/geocode/json?address='+ address + '&key=' + apiKey;
-            console.log(url);
             $.getJSON(url, function(data) {
                 if (data.status === 'OK') {
                     addMarkers(data.results, false);
