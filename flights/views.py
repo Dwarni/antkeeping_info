@@ -68,7 +68,9 @@ class AddFlightView(FormView):
                 'rain': flight.rain,
                 'sky_condition': flight.sky_condition,
                 'comment': flight.comment,
-                'link': flight.link
+                'link': flight.link,
+                'project': flight.project,
+                'external_user': flight.external_user
             }
 
             if flight.temperature:

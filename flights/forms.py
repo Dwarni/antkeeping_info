@@ -91,7 +91,9 @@ class FlightForm(forms.ModelForm):
             ),
             Fieldset(_('Addition information'),
                 'comment',
-                'link'
+                'link',
+                'project',
+                'external_user'
             ),
             'captcha',
             ButtonHolder(
@@ -190,6 +192,8 @@ class FlightForm(forms.ModelForm):
         # additional information
         comment = self.cleaned_data.get('comment')
         link = self.cleaned_data.get('link')
+        project = self.cleaned_data.get('project')
+        external_user = self.cleaned_data.get('external_user')
 
 
         # general
@@ -242,6 +246,8 @@ class FlightForm(forms.ModelForm):
         # additional information
         flight.comment = comment
         flight.link = link
+        flight.project = project
+        flight.external_user = external_user
 
         flight.full_clean()
         flight.save()

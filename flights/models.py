@@ -235,6 +235,8 @@ class Flight(models.Model):
     # additional information
     comment = models.TextField(max_length=255, blank=True, null=True)
     link = models.URLField(blank=True, null=True)
+    project = models.CharField(max_length=200, blank=True, null=True)
+    external_user = models.CharField(max_length=100, blank=True, null=True)
 
     reviewed = models.BooleanField(default=False)
 
