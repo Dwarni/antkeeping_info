@@ -13,7 +13,8 @@ var mapSettings = {
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: mapSettings.zoom,
-        center: mapSettings.center
+        center: mapSettings.center,
+        mapTypeId: 'terrain'
     });
 
     oms = new OverlappingMarkerSpiderfier(map, {
