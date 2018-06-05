@@ -35,7 +35,7 @@ function initMap() {
             console.log(url);
             $.getJSON(url, function(data) {
                 if (data.status === 'OK') {
-                    addMarkers(data.results);
+                    addMarkers(data.results, false);
                     map.setCenter(data.results[0].geometry.location);
                     map.setZoom(10);
                 }
@@ -43,7 +43,7 @@ function initMap() {
         }
     }
 
-    function addMarkers(places, fitBounds = false) {
+    function addMarkers(places, fitBounds = true) {
         if (places.length == 0) {
             return;
         }
