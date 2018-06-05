@@ -43,7 +43,7 @@ function initMap() {
         }
     }
 
-    function addMarkers(places, fitBounds = true) {
+    function addMarkers(places, fitBounds) {
         if (places.length == 0) {
             return;
         }
@@ -81,7 +81,7 @@ function initMap() {
     }
     searchBox.addListener('places_changed', function() {
         var places = searchBox.getPlaces();
-        addMarkers(places);
+        addMarkers(places, true);
     });
 
  
