@@ -77,8 +77,8 @@ function updateMap() {
             mc = new MarkerClusterer(map, markers, mcOptions);
         }
 
-        map.setCenter(mapSettings.center);
-        map.setZoom(mapSettings.zoom);
+        // map.setCenter(mapSettings.center);
+        // map.setZoom(mapSettings.zoom);
     })
 }
 
