@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'regions',
     'flights',
     'users',
+    'search',
     'crispy_forms',
     'django_bootstrap_breadcrumbs',
     'snowpenguin.django.recaptcha2',

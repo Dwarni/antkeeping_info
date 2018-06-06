@@ -2,12 +2,15 @@
     This module contains all models for ants app.
 """
 from decimal import Decimal
+
 from django.conf import settings
 from django.core.validators import MinValueValidator, RegexValidator, \
     ValidationError
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
+from django.urls import reverse
+
 from regions.models import Region
 from ants.managers import AntRegionManager, CountryAntRegionManager, \
     AntSizeManager, AntSpeciesManager, GenusManager, StateAntRegionManager
@@ -107,8 +110,15 @@ class AntRegion(Region):
     antwiki_name = models.CharField(max_length=200, blank=True, null=True)
     ant_list_complete = models.BooleanField(default=False)
 
+    def get_absolute_url(self):
+        if self.type == 'Country':
+            return reverse('country', args=[self.code])
+        
+        return reverse('region', args=[self.parent.code, self.code])
+
     @property
     def antwiki_url(self):
+        """Returns the url to the antwiki.org page for that region."""
         country_name = self.name
         if self.antwiki_name:
             country_name = self.antwiki_name
@@ -387,6 +397,10 @@ class AntSpecies(Species):
         default=False,
         verbose_name=_('Information complete')
     )
+
+    def get_absolute_url(self):
+        """Returns the url to detail page."""
+        return reverse('ant_detail', args=[self.slug])
 
     objects = AntSpeciesManager()
 

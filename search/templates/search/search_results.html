@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Search results for: "{{ query_string }}"</h1>
+{% if ant_species %}
+    <h2>Ant species</h2>
+    <ul>
+    {% for ant in ant_species %}
+        <li><a href="{{ ant.get_absolute_url }}">{{ ant.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% endif %}
+{% if regions %}
+<h2>Regions</h2>
+    <ul>
+    {% for region in regions %}
+        <li><a href="{{ region.get_absolute_url }}">{{ region.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

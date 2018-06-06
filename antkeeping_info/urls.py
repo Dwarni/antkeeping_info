@@ -16,17 +16,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
+
 from home import views
+from search import views as search_views
 
 urlpatterns = [
     path('', views.home, name="home"),
     path('ants/', include('ants.urls')),
     path('ants-by-country/', include('ants.ants_by_country_urls')),
     path('flights/', include('flights.urls')),
+    path('search/', search_views.SearchView.as_view(), name='search'),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('legal-notice/', TemplateView.as_view(template_name='legal_notice.html'), name='legal'),
-    path('privacy-policy/', TemplateView.as_view(template_name='privacy_policy.html'), name='privacy')
+    path('privacy-policy/', TemplateView.as_view(template_name='privacy_policy.html'), name='privacy'),
 ]
 
 admin.site.site_header = 'Antkeeping.info administration'
