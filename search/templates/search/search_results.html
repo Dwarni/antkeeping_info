@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load i18n %}
 
 {% block content %}
 <h1>Search results for: "{{ query_string }}"</h1>
@@ -17,5 +18,10 @@
         <li><a href="{{ region.get_absolute_url }}">{{ region.name }}</a></li>
     {% endfor %}
     </ul>
+{% endif %}
+{% if not ant_species and not regions %}
+    <div class="alert alert-warning" role="alert">
+        {% trans 'No results found!' %}
+    </div>
 {% endif %}
 {% endblock %}
