@@ -43,5 +43,5 @@ six==1.11.0
 sortedcontainers==2.0.3
 Unidecode==1.0.22
 uritemplate==3.0.0
-urllib3==1.22
+urllib3==1.23
 wrapt==1.10.11
