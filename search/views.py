@@ -16,6 +16,7 @@ class SearchView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query_string = self.request.GET.get('q', None)
+        query_string = query_string.replace('+', ' ')
         
         ant_species = AntSpecies.objects.filter(
             Q(name__icontains=query_string) |
