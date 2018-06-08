@@ -21,9 +21,9 @@ class AddAntspeciesToRegionView(FormView):
         for species_name in re.findall(r'[A-Z][a-z]+\s[a-z]+[\.]?', species):
             if '.' not in species_name:
                 try:
-                    ant_species = AntSpecies.objects.get(
+                    ant_species = AntSpecies.objects.filter(
                         Q(name=species_name) | Q(invalidname__name=species_name)
-                    )
+                    ).first()
                     if not Distribution.objects.filter(
                             species=ant_species, region=ant_region
                         ).exists():
