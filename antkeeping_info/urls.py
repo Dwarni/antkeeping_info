@@ -26,6 +26,7 @@ urlpatterns = [
     path('ants-by-country/', include('ants.ants_by_country_urls')),
     path('flights/', include('flights.urls')),
     path('search/', search_views.SearchView.as_view(), name='search'),
+    path('staff/', include('staff.urls')),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('legal-notice/', TemplateView.as_view(template_name='legal_notice.html'), name='legal'),

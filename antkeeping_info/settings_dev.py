@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'flights',
     'users',
     'search',
+    'staff',
     'crispy_forms',
     'django_bootstrap_breadcrumbs',
     'snowpenguin.django.recaptcha2',
@@ -133,6 +134,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "global_static")
 ]
+
+# Django breadcrumbs
+BREADCRUMBS_TEMPLATE = "django_bootstrap_breadcrumbs/bootstrap4.html"
 
 # Crispy forms settings
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
