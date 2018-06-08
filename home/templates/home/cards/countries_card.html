@@ -1,11 +1,13 @@
 {% load static %}
 {% load i18n %}
 <div class="card">
+    <div class="card-header"> 
+        {% trans 'Countries' %}
+    </div>
     <div class="card-image-box">
         <img class="card-image rounded" src="{% static 'home/img/world_map.jpg' %}">
     </div>
     <div class="card-body">
-        <h5 class="card-title">Countries</h5>
         <p class="card-text">{% trans 'Displays a list of ants, which can be found in a specific country or state. The list contains both native and non native species.' %}</p>
     </div>
     <div class="card-footer">
