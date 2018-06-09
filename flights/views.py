@@ -5,6 +5,7 @@ from dal import autocomplete
 from taggit.models import Tag
 
 from django.conf import settings
+from django.contrib import messages
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
@@ -13,6 +14,7 @@ from django.views.generic import FormView, ListView, TemplateView, DetailView, V
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
 
 from ants.views import add_iframe_to_context
 from .forms import FlightForm, FlightStaffForm
@@ -37,6 +39,7 @@ class AddFlightView(FormView):
 
     def form_valid(self, form):
         self.flight = form.create_flight(self.request.user.is_staff)
+        messages.success(self.request, _('Added new spotting'))
         return super().form_valid(form)
 
     def get_form_kwargs(self):
