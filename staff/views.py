@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 from django.views.generic import FormView
+from django.utils.decorators import method_decorator
 
 from ants.models import AntSpecies, AntRegion, Distribution
 
