@@ -7,9 +7,12 @@ from django.views.generic import FormView
 
 from ants.models import AntSpecies, AntRegion, Distribution
 
+from flights.views import staff_member_required
+
 from .forms import AddAntspeciesToRegionForm
 
 # Create your views here.
+@method_decorator(staff_member_required, name='dispatch')
 class AddAntspeciesToRegionView(FormView):
     form_class = AddAntspeciesToRegionForm
     template_name = 'staff/add_antspecies_to_region.html'
