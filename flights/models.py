@@ -240,7 +240,7 @@ class Flight(models.Model):
     external_user = models.CharField(max_length=100, blank=True, null=True)
 
     reviewed = models.BooleanField(default=False)
-    user = models.OneToOneField(User, models.SET_NULL, blank=True, null=True)
+    user = models.ForeignKey(User, models.SET_NULL, blank=True, null=True)
 
     @property
     def spotting_type_verbose(self):
