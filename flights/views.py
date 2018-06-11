@@ -38,7 +38,7 @@ class AddFlightView(FormView):
         return context
 
     def form_valid(self, form):
-        self.flight = form.create_flight(self.request.user.is_staff)
+        self.flight = form.create_flight(self.request.user)
         messages.success(self.request, _('Added new spotting'))
         return super().form_valid(form)
 

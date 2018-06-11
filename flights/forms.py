@@ -154,16 +154,16 @@ class FlightForm(forms.ModelForm):
 
         return cleaned_data
 
-    def create_flight(self, is_staff):
+    def create_flight(self, user):
         """
             The method will create a Flight model object and add it
             to the database.
         """
         new_flight = Flight()
 
-        return self.safe_flight(new_flight, is_staff)
+        return self.safe_flight(new_flight, user)
 
-    def safe_flight(self, flight, is_staff):
+    def safe_flight(self, flight, user):
         """
             The method will fill and save the passed flight object.
         """
@@ -216,7 +216,10 @@ class FlightForm(forms.ModelForm):
         flight.latitude = self.latitude
         flight.longitude = self.longitude
 
-        flight.reviewed = is_staff
+        flight.reviewed = user.is_authenticated and user.is_staff
+
+        if user.is_authenticated:
+            flight.user = user
 
         # weather
         if temperature:
