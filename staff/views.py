@@ -1,5 +1,6 @@
 import re
 
+from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.db.models import Q
 from django.utils.translation import ugettext as _
@@ -25,6 +26,7 @@ class AddAntspeciesToRegionView(FormView):
     def form_valid(self, form):
         species = form.cleaned_data['species']
         region_id = form.cleaned_data['region']
+        create_missing_species = form.cleaned_data['create_missing_species']
         ant_region = AntRegion.objects.get(pk=region_id)
         invalid_species = []
         added_species = []
@@ -34,6 +36,14 @@ class AddAntspeciesToRegionView(FormView):
                 ant_species = AntSpecies.objects.filter(
                     Q(name=species_name) | Q(invalidname__name=species_name)
                 ).first()
+
+                if not ant_species and create_missing_species:
+                    """Try to create the missing species if checkbox was set."""
+                    try:
+                        ant_species = AntSpecies.objects.get_or_create_with_name(species_name)
+                    except ValidationError:
+                        ant_species = None
+
                 if not ant_species:
                     invalid_species.append(species_name)
                 elif not Distribution.objects.filter(

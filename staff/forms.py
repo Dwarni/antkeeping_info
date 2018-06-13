@@ -9,6 +9,7 @@ from ants.models import AntRegion
 class AddAntspeciesToRegionForm(forms.Form):
     """Form for adding a list of species to a region."""
     region = forms.ModelChoiceField(queryset=AntRegion.objects.all())
+    create_missing_species = forms.BooleanField(required=False, initial=False)
     species = forms.CharField(widget=forms.Textarea)
 
     def __init__(self, *args, **kwargs):
@@ -16,6 +17,7 @@ class AddAntspeciesToRegionForm(forms.Form):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'region',
+            'create_missing_species',
             'species',
             Submit('submit', 'Submit')
         )
