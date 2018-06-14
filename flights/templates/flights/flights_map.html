@@ -6,27 +6,39 @@
 {% endblock %}
 {% block content %}
     {{ block.super }}
-    <div class="button-container">
-        <div class="form-inline filter-container">
-            <select id="yearSelect" class="form-control">
-                <option value="all">{% trans "All Years" %}</option>
-                {% for year in years %}
-                    <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
-                {% endfor %}
-            </select>
-            <div class="input-group" id="searchContainer">
-                <div class="input-group-prepend">
-                <div class="input-group-text search-icon">⌕</div>
+        <div>
+            <div class="form-row">
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <select id="yearSelect" class="form-control">
+                            <option value="all">{% trans "All Years" %}</option>
+                            {% for year in years %}
+                                <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
-                <input type="text" class="form-control" id="antSearchInput" placeholder="{% trans 'Search' %}">
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text search-icon">⌕</div>
+                            </div>
+                            <input type="text" class="form-control" id="antSearchInput" placeholder="{% trans 'Search' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        {% if iframe %}
+                            <a href="{% url 'flight_add' %}?iframe=true" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
+                        {% else %}
+                            <a href="{% url 'flight_add' %}" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-        {% if iframe %}
-            <a href="{% url 'flight_add' %}?iframe=true" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
-        {% else %}
-            <a href="{% url 'flight_add' %}" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
-        {% endif %}
-    </div>
     <div id="map"></div>
     <div id="flightInfoModal" class="modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
