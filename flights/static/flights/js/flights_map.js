@@ -10,6 +10,7 @@ var mapSettings = {
     center: {lat: 25, lng: 0},
     zoom: 2
 };
+var mcOptions = {gridSize: 35, maxZoom: 12, imagePath: '/static/flights/img/vendor/markerclusterer/'};
 var searchInput = null;
 
 function initMap() {
@@ -71,7 +72,6 @@ function filterFlights() {
 }
 
 function updateMarkers() {
-    var mcOptions = {gridSize: 35, maxZoom: 8, imagePath: '/static/flights/img/vendor/markerclusterer/'};
     // Clear out the old markers.
     markers.forEach(function(marker) {
         marker.setMap(null);
