@@ -8,8 +8,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Antkeeping.info</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="{% static "css/vendor/bootstrap_blue.min.css" %}">
-    <link rel="stylesheet" href="{% static "css/layout.css" %}?v=3"> {% block css %} {% endblock %}
+    <link rel="stylesheet" href="{% static "css/vendor/bootstrap_cosmo.min.css" %}">
+    <link rel="stylesheet" href="{% static "css/layout.css" %}?v=5"> {% block css %} {% endblock %}
     <script src="{% static "js/vendor/jquery-3.3.1.min.js" %}"></script>
     {% if iframe %}
         <style>
@@ -28,16 +28,7 @@
     {% endif %}
     <main role="main" {% if iframe %}class="container-fluid"{% else %}class="container"{% endif %}>
         {% cookielaw_banner %}
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+        {% include 'messages.html' %}
         {% block breadcrumbs %} {% clear_breadcrumbs %} {% endblock %} {% block content %} {% endblock %}
     </main>
     {% if iframe is None or iframe == False %}
