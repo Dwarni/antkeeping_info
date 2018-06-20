@@ -1,120 +1,103 @@
-var map = null;
-var markers = [];
-var flights = [];
-var filteredFlights = [];
-var mc = null; // Marker Clusterer
-var oms = null;
-var infoWindow = null;
-var markerIcon = null
-var mapSettings = {
-    center: {lat: 25, lng: 0},
-    zoom: 2
-};
-var mcOptions = {gridSize: 35, maxZoom: 12, imagePath: '/static/flights/img/vendor/markerclusterer/'};
-var searchInput = null;
+(function () {
+    var map = null;
+    var markers = [];
+    var flights = [];
+    var filteredFlights = [];
+    var markerIcon = null
+    var searchInput = null;
+    var clusterGroup = L.markerClusterGroup();
+    var markers = []
 
-function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), {
-        zoom: mapSettings.zoom,
-        center: mapSettings.center,
-        mapTypeId: 'terrain'
-    });
+    function initMap() {
+        map = L.map('map').setView([51.505, -0.09], 13);
+        // create the tile layer with correct attribution
+        const osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const osmAttrib='Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+        // create the tile layer with correct attribution
+	    var osm = new L.TileLayer(osmUrl, {minZoom: 2, maxZoom: 17, attribution: osmAttrib});	
 
-    oms = new OverlappingMarkerSpiderfier(map, {
-        markersWontMove: true,
-        markersWontHide: true,
-        basicFormatEvents: true,
-        keepSpiderfied: true
-    });
-
-    markerIcon = {
-        url: '/static/flights/img/marker.png',
-        anchor: new google.maps.Point(8, 8)
-    }
-
-    searchInput = document.getElementById('antSearchInput');
-
-    // get flights list
-    updateMap();
-}
-
-function updateMap() {
-    // get flights list
-    var mcOptions = {gridSize: 35, maxZoom: 8, imagePath: '/static/flights/img/vendor/markerclusterer/'};
-    var yearSelect = document.getElementById('yearSelect');
-    var year = yearSelect.options[yearSelect.selectedIndex].value;
-    
-    // Clear out the old markers.
-    markers.forEach(function(marker) {
-        marker.setMap(null);
-    });
-    markers = [];
-    flights = [];
-    $.getJSON( "/flights/list?year=" + year, function(data) {
-        flights = data;
-        filterFlights();
-        updateMarkers();
-    })
-}
-
-function filterFlights() {
-    var filterString = searchInput.value;
-    var filterStringLower = filterString.toLowerCase();
-
-    if(filterString) {
-        filteredFlights = flights.filter(function(flight) {
-            var antSpeciesLower = flight.ant.toLowerCase();
-            return antSpeciesLower.indexOf(filterStringLower) >= 0;
-        })
-    } else {
-        filteredFlights = flights;
-    }
-}
-
-function updateMarkers() {
-    // Clear out the old markers.
-    markers.forEach(function(marker) {
-        marker.setMap(null);
-    });
-    markers = [];
-    oms.removeAllMarkers();
-
-    for(var flight of filteredFlights) {
-        var newMarker = new google.maps.Marker({
-            map: map,
-            icon: markerIcon,
-            title: flight.ant,
-            position: {lat: flight.lat, lng: flight.lng}
+        // start the map in South-East England
+        map.setView(new L.LatLng(22, 0),2);
+        map.addLayer(osm);
+        map.addLayer(clusterGroup);
+        clusterGroup.on('click', a => {
+            openFlightInfo(a.layer)
         });
-  
-        markers.push(newMarker);
-        newMarker.addListener('click', function() {
-            var that = this;
-            var markerIndex = markers.indexOf(this);
-            $.get(filteredFlights[markerIndex].id + '/info-window', function(data) {
-                $('#flightInfoModalContent').html(data);
-                $('#flightInfoModal').modal('toggle');
-            })
-        });
-        
-        oms.addMarker(newMarker);
-    }
-
-    if(mc) {
-        mc.clearMarkers();
-        mc.addMarkers(markers);
-    } else {
-        mc = new MarkerClusterer(map, markers, mcOptions);
-    }   
-}
-
-window.onload = function() {
-    var yearSelect = document.getElementById('yearSelect');
-    yearSelect.onchange = function() {
         updateMap();
     }
-    searchInput.onkeyup = function() {
-        filterFlights();
-        updateMarkers();
+
+    function openFlightInfo(marker) {
+        const markerIndex = markers.indexOf(marker);
+        $.get(filteredFlights[markerIndex].id + '/info-window', data => {
+            $('#flightInfoModalContent').html(data);
+            $('#flightInfoModal').modal('toggle');
+        })
+
     }
-}
+
+    function removeMarkers() {
+        clusterGroup.clearLayers();
+        markers = []
+
+    }
+
+    function updateMap() {
+        var yearSelect = document.getElementById('yearSelect');
+        var year = yearSelect.options[yearSelect.selectedIndex].value;
+
+        flights = [];
+        $.getJSON("/flights/list?year=" + year, function (data) {
+            flights = data;
+            filterFlights();
+            updateMarkers();
+        })
+    }
+
+    function filterFlights() {
+        var filterString = searchInput.value;
+        var filterStringLower = filterString.toLowerCase();
+
+        if (filterString) {
+            filteredFlights = flights.filter(function (flight) {
+                var antSpeciesLower = flight.ant.toLowerCase();
+                return antSpeciesLower.indexOf(filterStringLower) >= 0;
+            })
+        } else {
+            filteredFlights = flights;
+        }
+    }
+
+    function updateMarkers() {
+        removeMarkers()
+
+        for (var flight of filteredFlights) {
+            var plotll = new L.LatLng(flight.lat,flight.lng, true);
+			var plotmark = new L.Marker(plotll);
+            // plotmark.data=plotlist[i];
+            markers.push(plotmark)
+			clusterGroup.addLayer(plotmark)
+
+            // newMarker.addListener('click', function () {
+            //     var that = this;
+            //     var markerIndex = markers.indexOf(this);
+            //     $.get(filteredFlights[markerIndex].id + '/info-window', function (data) {
+            //         $('#flightInfoModalContent').html(data);
+            //         $('#flightInfoModal').modal('toggle');
+            //     })
+            // });
+        }
+    }
+
+    window.onload = function () {
+        var yearSelect = document.getElementById('yearSelect');
+        searchInput = document.getElementById('antSearchInput');
+        initMap();
+        yearSelect.onchange = function () {
+            updateMap();
+        }
+        searchInput.onkeyup = function () {
+            filterFlights();
+            updateMarkers();
+        }
+    }
+}) ();

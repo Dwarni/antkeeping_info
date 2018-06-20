@@ -3,6 +3,9 @@
 {% load static %}
 {% block css %}
     <link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=4">
+    <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet/leaflet.css" %}">
+    <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.css" %}">
+    <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.Default.css" %}">
 {% endblock %}
 {% block content %}
     {{ block.super }}
@@ -48,10 +51,8 @@
       </div>
 {% endblock %}
 {% block script %}
-    <script src="{% static 'flights/js/vendor/markerclusterer.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js"></script>
-    <script src="{% static 'flights/js/flights_map.js' %}?v=12" key="key={{ GOOGLE_API_KEY }}"></script>
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&libraries=places&callback=initMap">
-    </script>
+    <script src="{% static 'flights/js/vendor/leaflet.js' %}"></script>
+    <script src="{% static 'flights/js/vendor/leaflet.markercluster.js' %}"></script>
+    <script src="{% static 'flights/js/flights_map.js' %}?v=13" key="key={{ GOOGLE_API_KEY }}"></script>
 {% endblock %}
