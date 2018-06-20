@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load static %}
 {% block css %}
-    <link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=4">
+    <link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=5">
     <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet/leaflet.css" %}">
     <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.css" %}">
     <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.Default.css" %}">
@@ -42,7 +42,7 @@
                 </div>
             </div>
         </div>
-    <div id="map"></div>
+    <div id="map" {% if iframe %} class="iframe" {% endif %}></div>
     <div id="flightInfoModal" class="modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
           <div id="flightInfoModalContent" class="modal-content">
