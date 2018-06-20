@@ -16,6 +16,12 @@
     }
 }
 
+@media (max-height: 600px) {
+    #map {
+        height: 360px;
+    }
+}
+
 .button-container {
     margin-bottom: 1em;
     display: flex;
