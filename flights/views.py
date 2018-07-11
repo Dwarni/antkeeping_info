@@ -1,6 +1,8 @@
 """Module which contains all views of flights app."""
 import datetime
 
+import logging
+
 from dal import autocomplete
 from taggit.models import Tag
 
@@ -20,6 +22,7 @@ from ants.views import add_iframe_to_context
 from .forms import FlightForm, FlightStaffForm
 from .models import Flight
 
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 @method_decorator(xframe_options_exempt, name='dispatch')
@@ -33,7 +36,7 @@ class AddFlightView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['GOOGLE_API_KEY'] = settings.GOOGLE_API_KEY_CLIENT
+        context['BING_API_KEY'] = settings.BING_API_KEY_CLIENT
         add_iframe_to_context(context, self.request)
         return context
 
@@ -65,7 +68,7 @@ class AddFlightView(FormView):
                 'date': flight.date,
                 'start_time': flight.start_time,
                 'end_time': flight.end_time,
-                'address': flight.address,
+                'location': flight.address,
                 'habitat': ','.join([tag.name for tag in flight.habitat.all()]),
                 'humidity': flight.humidity,
                 'rain': flight.rain,
@@ -117,12 +120,12 @@ class FlightsMapView(TemplateView):
     template_name = 'flights/flights_map.html'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['GOOGLE_API_KEY'] = settings.GOOGLE_API_KEY_CLIENT
         context['years'] = [
             d.year for d in Flight.objects.all().dates('date', 'year', order='DESC')
         ]
         now = datetime.datetime.now()
         context['current_year'] = now.year
+        context['BING_API_KEY'] = settings.BING_API_KEY_CLIENT
         add_iframe_to_context(context, self.request)
         return context
 
