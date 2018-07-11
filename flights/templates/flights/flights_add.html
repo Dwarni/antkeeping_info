@@ -14,14 +14,11 @@
 {% endblock %}
 {% block script %}
     {% recaptcha_init %}
-    <script>
-        var apiKey = '{{ GOOGLE_API_KEY}}';
-    </script>
-    <script src="{% static 'flights/js/flight_form.js' %}?v=8"></script>
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&libraries=places&callback=initMap">
-    </script>
+    <script src="{% static 'flights/js/vendor/leaflet.js' %}"></script>
+    <script src="{% static 'flights/js/vendor/leaflet-bing-layer.min.js' %}"></script>
+    <script src="{% static 'flights/js/flight_form.js' %}?v=9" bingApiKey="{{ BING_API_KEY }}"></script>
 {% endblock %}
 {% block css %}
-    <link rel="stylesheet" href="{% static "flights/css/flights_add.css" %}">
+    <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet/leaflet.css" %}">
+    <link rel="stylesheet" href="{% static "flights/css/flights_add.css" %}?v=2">
 {% endblock %}

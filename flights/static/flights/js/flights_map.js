@@ -1,103 +1,160 @@
 (function () {
-    var map = null;
-    var markers = [];
-    var flights = [];
-    var filteredFlights = [];
-    var markerIcon = null
-    var searchInput = null;
-    var clusterGroup = L.markerClusterGroup();
-    var markers = []
+    const BING_API_KEY = document.currentScript.getAttribute('bingApiKey')
+    class AntMap {
+        constructor(year, searchString) {
+            this._bingApiKey = BING_API_KEY
+            this._markers = []
+            this._flights = []
+            this._filteredFlights = []
+            this._selectedYear = null
+            this._filterString = null
+            this._year = year
+            this._searchString = searchString
 
-    function initMap() {
-        map = L.map('map').setView([51.505, -0.09], 13);
-        // create the tile layer with correct attribution
-        const osmUrl='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-        const osmAttrib='Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
-        // create the tile layer with correct attribution
-	    var osm = new L.TileLayer(osmUrl, {minZoom: 2, maxZoom: 17, attribution: osmAttrib});	
+            this.initMap()
+        }
 
-        // start the map in South-East England
-        map.setView(new L.LatLng(22, 0),2);
-        map.addLayer(osm);
-        map.addLayer(clusterGroup);
-        clusterGroup.on('click', a => {
-            openFlightInfo(a.layer)
-        });
-        updateMap();
-    }
+        get year() {
+            return this._year
+        }
 
-    function openFlightInfo(marker) {
-        const markerIndex = markers.indexOf(marker);
-        $.get(filteredFlights[markerIndex].id + '/info-window', data => {
-            $('#flightInfoModalContent').html(data);
-            $('#flightInfoModal').modal('toggle');
-        })
+        set year(value) {
+            if(this._year !== value) {
+                this._year = value
+                this.updateMap()
+            }
+        }
 
-    }
+        get searchString() {
+            return this._searchString
+        }
 
-    function removeMarkers() {
-        clusterGroup.clearLayers();
-        markers = []
+        set searchString(value) {
+            if(this._searchString !== value) {
+                this._searchString = value
+                this.filterFlights()
+                this.updateMarkers()
+            }
+        }
 
-    }
+        initMap() {
+            this._map = L.map('map')
+                .setView([51.505, -0.09], 2);
+            this.initBingLayer()
+            this.initClusterGroup()
+            this.focusOnCurrentPosition(4)
+            this.updateMap();    
+        }
 
-    function updateMap() {
-        var yearSelect = document.getElementById('yearSelect');
-        var year = yearSelect.options[yearSelect.selectedIndex].value;
+        initClusterGroup() {
+            this._clusterGroup = L.markerClusterGroup()
+            this._map.addLayer(this._clusterGroup);
+            this._clusterGroup.on('click', a => {
+                this.openFlightInfo(a.layer)
+            });
+        }
 
-        flights = [];
-        $.getJSON("/flights/list?year=" + year, function (data) {
-            flights = data;
-            filterFlights();
-            updateMarkers();
-        })
-    }
+        initBingLayer() {
+            const options = {
+                bingMapsKey: this._bingApiKey,
+                imagerySet: 'Road',
+            }
+            L.tileLayer.bing(options).addTo(this._map)
+        }
 
-    function filterFlights() {
-        var filterString = searchInput.value;
-        var filterStringLower = filterString.toLowerCase();
-
-        if (filterString) {
-            filteredFlights = flights.filter(function (flight) {
-                var antSpeciesLower = flight.ant.toLowerCase();
-                return antSpeciesLower.indexOf(filterStringLower) >= 0;
+        async getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        const lat = position.coords.latitude
+                        const lng = position.coords.longitude
+                        resolve([lat, lng])
+                    }, error => {
+                        if (error.code == error.PERMISSION_DENIED) {
+                            reject("Can't get current position since you denied access to your location")
+                        }
+                    });
+                } else {
+                    reject('geolocation is not supported by your browser')
+                }
             })
-        } else {
-            filteredFlights = flights;
+        }
+
+        focusOnCurrentPosition(zoom) {
+            this.getCurrentPosition()
+                .then(pos => {
+                    this._map.setView(pos, zoom)
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+        }
+
+        openFlightInfo(marker) {
+            const markerIndex = this._markers.indexOf(marker);
+            const flight = this._filteredFlights[markerIndex]
+            fetch(flight.id + '/info-window')
+                .then(response => response.text())
+                .then(data => {
+                    $( "#flightInfoModalContent" ).html(data);
+                    $( "#flightInfoModal" ).modal('toggle');    
+                })
+                .catch(error => console.log(`Could not fetch info for flight with id ${flight.id}: ${error}`))
+        }
+
+        removeMarkers() {
+            this._clusterGroup.clearLayers();
+            this._markers = []
+        }
+
+        updateMap() {    
+            this._flights = []
+            this._filteredFlights = []
+            fetch("/flights/list?year=" + this._year)
+                .then(response => response.json())
+                .then(data => {
+                    this._flights = data
+                    this.filterFlights()
+                    this.updateMarkers()
+                })
+        }
+
+        filterFlights() {
+            var filterStringLower = this._searchString.toLowerCase();
+    
+            if (filterStringLower) {
+                this._filteredFlights = this._flights.filter(function (flight) {
+                    var antSpeciesLower = flight.ant.toLowerCase();
+                    return antSpeciesLower.indexOf(filterStringLower) >= 0;
+                })
+            } else {
+                this._filteredFlights = this._flights;
+            }
+        }
+
+        updateMarkers() {
+            this.removeMarkers()
+    
+            for (var flight of this._filteredFlights) {
+                var plotll = new L.LatLng(flight.lat,flight.lng, true);
+                var plotmark = new L.Marker(plotll);
+                this._markers.push(plotmark)
+                this._clusterGroup.addLayer(plotmark)
+            }
         }
     }
 
-    function updateMarkers() {
-        removeMarkers()
-
-        for (var flight of filteredFlights) {
-            var plotll = new L.LatLng(flight.lat,flight.lng, true);
-			var plotmark = new L.Marker(plotll);
-            // plotmark.data=plotlist[i];
-            markers.push(plotmark)
-			clusterGroup.addLayer(plotmark)
-
-            // newMarker.addListener('click', function () {
-            //     var that = this;
-            //     var markerIndex = markers.indexOf(this);
-            //     $.get(filteredFlights[markerIndex].id + '/info-window', function (data) {
-            //         $('#flightInfoModalContent').html(data);
-            //         $('#flightInfoModal').modal('toggle');
-            //     })
-            // });
+    window.onload = () => {
+        const yearSelect = document.getElementById( "yearSelect" )
+        const map = new AntMap(yearSelect.value, '')
+        
+        yearSelect.onchange = e => {
+            map.year = e.target.value
         }
-    }
 
-    window.onload = function () {
-        var yearSelect = document.getElementById('yearSelect');
-        searchInput = document.getElementById('antSearchInput');
-        initMap();
-        yearSelect.onchange = function () {
-            updateMap();
-        }
-        searchInput.onkeyup = function () {
-            filterFlights();
-            updateMarkers();
+        const antSearchInput = document.getElementById( "antSearchInput" )
+        antSearchInput.onkeyup = e => {
+            map.searchString = e.target.value
         }
     }
 }) ();

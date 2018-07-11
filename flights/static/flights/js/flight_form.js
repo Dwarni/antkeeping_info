@@ -1,136 +1,244 @@
-function initMap() {
-    var uluru = {lat: 0, lng: 0};
-    var map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 1,
-        center: uluru,
-        mapTypeId: 'terrain'
-    });
-    var input = document.getElementById('id_address');
-    var markers = [];
-    var markerIcon = {
-        url: '/static/flights/img/marker.png',
-        anchor: new google.maps.Point(8, 8)
-    };
-    var searchBox = new google.maps.places.SearchBox(input);
-    // Listen for the event fired when the user selects a prediction and retrieve
-    // more details for that place.
+(function () {
+    const BING_API_KEY = document.currentScript.getAttribute('BingApiKey');
+    class Map {
+        constructor(mapDivId, minZoom, maxZoom, tileUrl, osmAttrib) {
+            this._bingApiKey = BING_API_KEY
+            this.map = L.map(mapDivId)
+                .setView([51.505, -0.09], 2)
 
-    function clearMarkers() {
-        // Clear out the old markers.
-        markers.forEach(function(marker) {
-            marker.setMap(null);
-        });
-        markers = [];
-    }
+            this.initBingLayer()
 
+            this.marker = null
+        }
 
-    if (input.value) {
-        getAndSetLatLong(input.value);
-    }
+        initBingLayer() {
+            const options = {
+                bingMapsKey: this._bingApiKey,
+                imagerySet: 'Road',
+            }
+            L.tileLayer.bing(options).addTo(this.map)
+        }
 
-    function getAndSetLatLong(address) {
-        if(address) {
-            address = address.replace(/\s/g, '+');
-            var url = 'https://maps.googleapis.com/maps/api/geocode/json?address='+ address + '&key=' + apiKey;
-            $.getJSON(url, function(data) {
-                if (data.status === 'OK') {
-                    addMarkers(data.results, false);
-                    map.setCenter(data.results[0].geometry.location);
-                    map.setZoom(10);
-                }
-            })
+        addMarker(lat, lng) {
+            if(this.marker) {
+                this.map.removeLayer(this.marker)
+            }
+    
+            this.marker = L.marker([lat, lng]).addTo(this.map)
+            this.map.setView(this.marker.getLatLng(), 14);
         }
     }
 
-    function addMarkers(places, fitBounds) {
-        if (places.length == 0) {
-            return;
+    class FlightFormApp {
+        constructor() {
+            const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            // const tileUrl = 'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png'
+            const osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+            const minZoom = 2
+            const maxZoom = 17
+
+            const getCurrentLocationButtonId = 'getCurrentLocationButton'
+            const locationRadioId = 'id_id_location_type_0_1'
+            const gpsCoordinatesRadioId = 'id_id_location_type_0_2'
+            
+            const addressContainerId = 'addressContainer'
+            const addressInputId = 'id_address'
+            
+            const gpsContainerId = 'gpsContainer'
+            const latInputId = 'id_latitude'
+            const lngInputId = 'id_longitude'
+
+            const formId = 'flightForm'
+
+            this.map = new Map('map', minZoom, maxZoom, tileUrl, osmAttrib)
+            
+            this.disableFormDefaultAction(formId)
+            
+            this.initGetCurrentLocationButton(getCurrentLocationButtonId)
+            this.initAddressInput(addressInputId)
+            this.initLocationDivs(addressContainerId, gpsContainerId)
+            this.initLocationTypeRadios(locationRadioId, gpsCoordinatesRadioId)
+            this.initLatLongInput(latInputId, lngInputId)
         }
 
-        clearMarkers();
+        formatAddress(address) {
 
-        // For each place, get the icon, name and location.
-        var bounds = new google.maps.LatLngBounds();
-        places.forEach(function(place) {
-            if (!place.geometry) {
-                console.log("Returned place contains no geometry");
-                return;
+        }
+
+        initGetCurrentLocationButton(getCurrentLocationButtonId) {
+            this.getCurrentLocationButton = document.getElementById(getCurrentLocationButtonId)
+            this.getCurrentLocationButton.onclick = e => {
+                this.getAndSetCurrentLocation()
+            }
+        }
+
+        initAddressInput(addressInputId) {
+            this.addressInput = document.getElementById(addressInputId)
+            const handleLocationInput = (location) => { this.getAndSetLatLong(location) }
+            this.addressInput.onchange = e => {
+                handleLocationInput(e.target.value)
             }
 
-            // Create a marker for each place.
-            markers.push(new google.maps.Marker({
-                map: map,
-                icon: markerIcon,
-                title: place.name,
-                position: place.geometry.location
-            }));
-
-            if (fitBounds) {
-                if (place.geometry.viewport) {
-                    // Only geocodes have viewport.
-                    bounds.union(place.geometry.viewport);
-                } else {
-                    bounds.extend(place.geometry.location);
+            this.addressInput.onkeypress = e => {
+                if (e.keyCode === 13) {
+                    handleLocationInput(e.target.value)
                 }
             }
-        });
-        if (fitBounds) {
-            map.fitBounds(bounds); 
         }
-    }
-    searchBox.addListener('places_changed', function() {
-        var places = searchBox.getPlaces();
-        addMarkers(places, true);
-    });
 
- 
-}
-$( document ).ready(function () {
-    var temperatureField = $( '#id_temperature' );
-    var temperatureUnitSelect = $( '#id_temperature_unit' );
-    var temperature = undefined;
-    var temperatureUnit = undefined;
-    $('#flightForm').bind("keypress", function(e) {
-        if (e.keyCode == 13) {
-            return false;
+        initLocationDivs(addressContainerId, gpsContainerId) {
+            this.addressContainer = document.getElementById(addressContainerId)
+            this.gpsContainer = document.getElementById(gpsContainerId)
         }
-    });
 
-    function initTemperatureField() {
-        updateSavedTemperature();
-        addTemperatureChangeListener();
-        addTemperatureUnitChangeListener();
-    }
+        initLocationTypeRadios(locationRadioId, gpsCoordinatesRadioId) {
+            this.locationRadio = document.getElementById(locationRadioId)
+            this.gpsCoordinatesRadio = document.getElementById(gpsCoordinatesRadioId)
 
-    function addTemperatureUnitChangeListener() {
-        temperatureUnitSelect.change(function() {
-            var unit = $( this ).val();
-            var newTemperature = null;
+            const clickHandler = e => {
+                this.handleLocationTypeChange(e.target.value)
+            }
 
-            if(unit === temperatureUnit) {
-                temperatureField.val(temperature);
-            } else if(unit === 'C') {
-                newTemperature = Math.round((temperature - 32) * 5/9);
-                temperatureField.val(newTemperature);
+            this.locationRadio.onclick = clickHandler
+            this.gpsCoordinatesRadio.onclick = clickHandler
+
+            if(this.locationRadio.checked) {
+                this.handleLocationTypeChange(this.locationRadio.value)
             } else {
-                newTemperature = Math.round(temperature * 9/5 + 32);
-                temperatureField.val(newTemperature)
+                this.handleLocationTypeChange(this.gpsCoordinatesRadio.value)
             }
-        });    
+
+        }
+
+        initLatLongInput(latInputId, lngInputId) {
+            this.latitudeInput = document.getElementById(latInputId)
+            this.longitudeInput = document.getElementById(lngInputId)
+
+
+            
+            const handleLatLongInput = () => { 
+                const lat = this.latitudeInput.value
+                const lng = this.longitudeInput.value
+
+                if(lat && lng) {
+                    this.setLatLng(lat, lng)
+                }
+            }
+            const handleEnterPress = e => {
+                if (e.keyCode === 13) {
+                    handleLatLongInput()
+                }    
+            }
+            const handleOnChange = e => {
+                handleLatLongInput()    
+            }
+            this.latitudeInput.onkeypress = handleEnterPress
+            this.latitudeInput.onchange = handleOnChange
+            this.longitudeInput.onkeypress = handleEnterPress
+            this.longitudeInput.onchange = handleOnChange
+        }
+
+        handleLocationTypeChange(locationType) {
+            const hiddenClassName = 'hidden'
+            if(locationType === 'ADDR') {
+                this.addressContainer.classList.remove(hiddenClassName)
+                this.gpsContainer.classList.add(hiddenClassName)
+            } else {
+                this.addressContainer.classList.add(hiddenClassName)
+                this.gpsContainer.classList.remove(hiddenClassName)
+            }
+        }
+
+        disableFormDefaultAction(formId) {
+            const flightForm = document.getElementById(formId)
+            flightForm.onkeypress = e => {
+                if (e.keyCode === 13) {
+                    return false
+                }
+            }
+        }
+
+        getAndSetCurrentLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude
+                    const lng = position.coords.longitude
+                    this.fillLatLongFields(lat, lng)
+                    this.gpsCoordinatesRadio.click();
+                    this.setLatLng(lat, lng);
+                }, error => {
+                    if (error.code == error.PERMISSION_DENIED) {
+                        alert("Can't get current position since you denied access to your location")
+                    }
+                });
+            } else {
+                alert('geolocation is not supported by your browser')
+            }
+        }
+
+        setLatLng(lat, lng) {
+            const url = this.getReverseGeocodingUrl(lat, lng)
+            fetch(url)
+                .then(response => {
+                    if(!response.ok) {
+                        throw('Could not get data from reverse geocoding service')    
+                    }
+
+                    return response.json()
+                })
+                .then(json => {
+                    this.addressInput.value = json.resourceSets[0].resources[0].name
+                })
+            
+            this.map.addMarker(lat, lng)
+        }
+
+        getGeocodingUrl(address, limit) {
+            const geocodingUrl = 'http://dev.virtualearth.net/REST/v1/Locations'
+            address = address.replace(/\s/g, '+');
+            return `${geocodingUrl}?q=${address}&maxResults=${limit}&key=${BING_API_KEY}`
+        }
+
+        getReverseGeocodingUrl(lat, lng) {
+            const reverseGeocodingUrl = 'http://dev.virtualearth.net/REST/v1/Locations'
+            return `${reverseGeocodingUrl}/${lat},${lng}?key=${BING_API_KEY}`
+        }
+
+        getAndSetLatLong(address) {
+            // constants for geocoding
+            const limit = 1
+
+            if (address) {
+                const url = this.getGeocodingUrl(address, limit);
+                this.addressInput.disabled = true
+                fetch(url)
+                    .then(response => {
+                        if(!response.ok) {
+                            throw('Could not get data from geocoding service')
+                        }
+    
+                        return response.json()
+                    })
+                    .then(json => {
+                        // searchInput.value = json[0].display_name
+                        const firstResource = json.resourceSets[0].resources[0]
+                        const lat = firstResource.point.coordinates[0]
+                        const lng = firstResource.point.coordinates[1]
+                        this.map.addMarker(lat, lng)
+                        this.fillLatLongFields(lat, lng)
+                        this.addressInput.value = firstResource.name
+                        this.addressInput.disabled = false
+                    })
+            }
+        }
+
+        fillLatLongFields(lat, lng) {
+            this.latitudeInput.value = lat
+            this.longitudeInput.value = lng
+        }
     }
 
-    function addTemperatureChangeListener() {
-        temperatureField.change(function() {
-            updateSavedTemperature();
-        });
+    window.onload = function() {
+        new FlightFormApp()
     }
-
-    function updateSavedTemperature() {
-        var temperatureValue = temperatureField.val();
-        var temperatureUnitValue = temperatureUnitSelect.val();
-        temperature = temperatureValue;
-        temperatureUnit = temperatureUnitValue;
-    }
-
-    //initTemperatureField();
-});
+})();
