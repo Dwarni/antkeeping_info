@@ -1,6 +1,5 @@
 """Module for models of flights app."""
 from datetime import datetime
-import geocoder
 
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -20,9 +19,11 @@ def format_unit(value, symbol):
     """Formats a unit value as a string including its symbol."""
     return '{:.1f} {}'.format(value, symbol)
 
+
 def format_two_units(primary, secondary):
     """Formats two unit strings with the secondary unit displayed in brackets."""
     return '{} ({})'.format(primary, secondary)
+
 
 class Temperature(models.Model):
     """Temperature model."""
@@ -46,7 +47,10 @@ class Temperature(models.Model):
 
     @property
     def celsius_str(self):
-        """Returns the temperature in °C formatted as string including the unit symbol."""
+        """
+            Return the temperature in °C formatted as string
+            including the unit symbol.
+        """
         return format_unit(self.celsius, Temperature.CELSIUS_SYMBOL)
 
     @property
@@ -66,6 +70,7 @@ class Temperature(models.Model):
             return format_two_units(self.celsius_str, self.fahrenheit_str)
         return format_two_units(self.fahrenheit_str, self.celsius_str)
 
+
 class Velocity(models.Model):
     """Velocity model."""
     KMH = 'KMH'
@@ -82,14 +87,17 @@ class Velocity(models.Model):
 
     @property
     def kmh(self):
-        """Returns the velocity in km/h."""
+        """Return the velocity in km/h."""
         if self.unit == Velocity.KMH:
             return self.value
         return self.value * Velocity.MPH_TO_KMH_FACTOR
 
     @property
     def kmh_str(self):
-        """Returns the velocity in km/h formatted as string including the unit symbol."""
+        """
+            Return the velocity in km/h formatted as string
+            including the unit symbol.
+        """
         return format_unit(self.kmh, Velocity.KMH_SYMBOL)
 
     @property
@@ -101,7 +109,10 @@ class Velocity(models.Model):
 
     @property
     def mph_str(self):
-        """Returns the velocity in mph formatted as string including the unit symbol."""
+        """
+            Returns the velocity in mph formatted as string 
+            including the unit symbol.
+        """
         return format_unit(self.mph, Velocity.MPH_SYMBOL)
 
     def __str__(self):
@@ -109,9 +120,11 @@ class Velocity(models.Model):
             return format_two_units(self.kmh_str, self.mph_str)
         return format_two_units(self.mph_str, self.kmh_str)
 
+
 def validate_date_today_or_earlier(value):
     if value > datetime.today().date():
         raise ValidationError(_('Date must be today or earlier.'))
+
 
 class Flight(models.Model):
     """Model class for ant flights."""
@@ -142,14 +155,21 @@ class Flight(models.Model):
     )
 
     SPOTTING_TYPE_CHOICES_DICT = dict(SPOTTING_TYPE_CHOICES)
-    spotting_type = models.CharField(max_length=2, choices=SPOTTING_TYPE_CHOICES)
+    spotting_type = models.CharField(
+        max_length=2, choices=SPOTTING_TYPE_CHOICES)
     date = models.DateField(validators=[
-        validate_date_today_or_earlier    
+        validate_date_today_or_earlier
     ])
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
 
     # location
+    LOCATION_TYPE_CHOICES = (
+        ('ADDR', _('Address')),
+        ('LATLNG', _('Latitude/Longitude'))
+    )
+    location_type = models.CharField(
+        max_length=6, choices=LOCATION_TYPE_CHOICES, default='ADDR')
     address = models.CharField(max_length=200)
     latitude = models.FloatField()
     longitude = models.FloatField()
@@ -158,11 +178,8 @@ class Flight(models.Model):
         models.CASCADE,
         'flights'
     )
-    state_short = models.CharField(max_length=150, blank=True, null=True)
-    state_long = models.CharField(max_length=150, blank=True, null=True)
-    county = models.CharField(max_length=150, blank=True, null=True)
-    city_short = models.CharField(max_length=150, blank=True, null=True)
-    city_long = models.CharField(max_length=150, blank=True, null=True)
+    state = models.CharField(max_length=150, blank=True, null=True)
+    city = models.CharField(max_length=150, blank=True, null=True)
     habitat = TaggableManager(blank=True)
 
     @property
@@ -239,8 +256,11 @@ class Flight(models.Model):
     project = models.CharField(max_length=200, blank=True, null=True)
     external_user = models.CharField(max_length=100, blank=True, null=True)
 
+    # admin
     reviewed = models.BooleanField(default=False)
     user = models.ForeignKey(User, models.SET_NULL, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def spotting_type_verbose(self):
@@ -257,7 +277,6 @@ class Flight(models.Model):
 
         return '{} - {}'.format(self.start_time, self.end_time)
 
-
     @property
     def humidity_with_unit(self):
         """Returns the humidity value + unit as a string."""
@@ -269,46 +288,15 @@ class Flight(models.Model):
     def rain_verbose(self):
         """Returns the verbose string of the set rain option."""
         return self.RAIN_CHOICES_DICT.get(self.rain, None)
-    
+
     @property
     def sky_condition_verbose(self):
         """Returns the verbose string of the set sky condition option."""
         return self.SKY_CONDITION_CHOICES_DICT.get(self.sky_condition, None)
 
     def __str__(self):
-        return '{}: {}; {}'.format(self.date, self.ant_species.name, self.address)
-
-    def set_new_address(self, address):
-        """
-            Sets a new address. In the process additional information is queried
-            via google geocoding api and needed information is stored in the model
-            too.
-        """
-        if address is None:
-            raise ValueError(_('Pass a valid address'))
-
-        position = geocoder.google(address, key=settings.GOOGLE_API_KEY_SERVER)
-
-        # Check if api returned a valid result
-        if position.status != 'OK':
-            raise RuntimeError(_('Did not receive a valid result from geocoding API'))
-
-        # Check if at least a state was found
-        if position.state is None:
-            raise RuntimeError(_("""No state could be found. The address has to
-                contain at least a state."""))
-
-        self.address = position.address
-        self.latitude = position.lat
-        self.longitude = position.lng
-
-        country_code = position.country.lower()
-        self.country = AntRegion.objects.get(code=country_code)
-        self.state_short = position.state
-        self.state_long = position.state_long
-        self.county = position.county
-        self.city_short = position.city
-        self.city_long = position.city_long
-
-        self.full_clean()
-        self.save()
+        return '{}: {}; {}'.format(
+            self.date, 
+            self.ant_species.name,
+            self.address
+        )

@@ -1,5 +1,4 @@
 """Forms module for flights app"""
-import geocoder
 from dal import autocomplete
 
 from django import forms
@@ -9,15 +8,18 @@ from django.forms.widgets import DateInput, TimeInput
 from django.utils.translation import ugettext as _
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Field, ButtonHolder, \
+from crispy_forms.layout import Layout, Fieldset, Div, ButtonHolder, \
     Submit, HTML, Button
-from crispy_forms.bootstrap import AppendedText, FormActions
+from crispy_forms.bootstrap import AppendedText, InlineRadios
 
 from snowpenguin.django.recaptcha2.fields import ReCaptchaField
 from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
 
 from ants.models import Species, AntSpecies, AntRegion
-from flights.models import Flight, Temperature, Velocity
+
+from .models import Flight, Temperature, Velocity
+from .geocoding import geocode, reverse_geocode
+
 
 class Html5DateInput(DateInput):
     """Custom field which automatically activates html5 date input type."""
@@ -27,6 +29,7 @@ class Html5DateInput(DateInput):
 class Html5TimeInput(TimeInput):
     """Custom field which automatically activates html5 time input type."""
     input_type = 'time'
+
 
 class FlightForm(forms.ModelForm):
     """Form class for adding end updating nuptial flights."""
@@ -44,7 +47,8 @@ class FlightForm(forms.ModelForm):
     temperature = IntegerField(required=False)
     temperature_unit = ChoiceField(choices=Temperature.UNIT_CHOICES)
     wind_speed = IntegerField(min_value=0, required=False)
-    wind_speed_unit = ChoiceField(choices=Velocity.UNIT_CHOICES, required=False)
+    wind_speed_unit = ChoiceField(
+        choices=Velocity.UNIT_CHOICES, required=False)
 
     captcha = ReCaptchaField(widget=ReCaptchaWidget, label='')
 
@@ -65,36 +69,56 @@ class FlightForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Fieldset(_('What?'),
-                'species',
-                'species_note',
-                'spotting_type',
-                active=True
-            ),
+                     'species',
+                     'species_note',
+                     'spotting_type',
+                     active=True
+                     ),
             Fieldset(_('When?'),
-                'date',
-                'start_time',
-                'end_time',
-            ),
+                     'date',
+                     'start_time',
+                     'end_time',
+                     ),
             Fieldset(_('Where?'),
-                'address',
+                     Button(
+                'getCurrentLocation',
+                _('Get current location'),
+                css_class='form-group',
+                css_id='getCurrentLocationButton'
+            ),
+                InlineRadios('location_type'),
+                Div(
+                    'address',
+                    css_id='addressContainer'
+            ),
+                Div(
+                    'latitude',
+                    'longitude',
+                    Div(
+                        HTML('<small id="addressHint" class="col-lg-10"></small>'),
+                        css_class="row justify-content-end"
+                    ),
+                    css_id='gpsContainer',
+                    css_class="hidden"
+            ),
                 HTML('<div id="map"></div>'),
                 'habitat'
             ),
             Fieldset(_('Weather'),
-                'temperature',
-                'temperature_unit',
-                AppendedText('humidity', '%'),
-                'wind_speed',
-                'wind_speed_unit',
-                'rain',
-                'sky_condition'
-            ),
+                     'temperature',
+                     'temperature_unit',
+                     AppendedText('humidity', '%'),
+                     'wind_speed',
+                     'wind_speed_unit',
+                     'rain',
+                     'sky_condition'
+                     ),
             Fieldset(_('Addition information'),
-                'comment',
-                'link',
-                'project',
-                'external_user'
-            ),
+                     'comment',
+                     'link',
+                     'project',
+                     'external_user'
+                     ),
             'captcha',
             ButtonHolder(
                 Submit('submit', 'Submit'),
@@ -105,20 +129,20 @@ class FlightForm(forms.ModelForm):
         )
 
         self.country = None
-        self.state_short = None
-        self.state_long = None
-        self.county = None
-        self.city_short = None
-        self.city_long = None
-
-        self.latitude = None
-        self.longitude = None
+        self.state = None
+        self.city = None
 
     def clean(self):
         cleaned_data = super().clean()
         address = cleaned_data.get('address')
+        latitude = cleaned_data.get('latitude')
+        longitude = cleaned_data.get('longitude')
+        location_type = cleaned_data.get('location_type')
 
-        position = geocoder.google(address, key=settings.GOOGLE_API_KEY_SERVER)
+        if location_type == 'ADDR':
+            position = geocode(address)
+        else:
+            position = reverse_geocode(latitude, longitude)
 
         start_time = cleaned_data.get('start_time')
         end_time = cleaned_data.get('end_time')
@@ -131,26 +155,24 @@ class FlightForm(forms.ModelForm):
 
         if start_time is not None and end_time is not None:
             if start_time > end_time:
-                self.add_error('start_time', _('Start time has to be before end time'))
-                self.add_error('end_time', _('End time has to be after start time'))
+                self.add_error('start_time', _(
+                    'Start time has to be before end time'))
+                self.add_error('end_time', _(
+                    'End time has to be after start time'))
 
         # Check if api returned a valid result
-        if position.status != 'OK':
-            self.add_error('address', _('Did not receive a valid result from geocoding API'))
-        # Check if at least a city was found
-        # elif position.city is None:
-        #     self.add_error('address', _("""No city could be found. The address has to
-        #         contain at least a city."""))
+        if position is None:
+            self.add_error('address', _(
+                'Did not receive a valid result from geocoding API'))
         else:
-            cleaned_data['address'] = position.address
-            self.latitude = position.lat
-            self.longitude = position.lng
-            self.country = AntRegion.objects.get(code=position.country.lower())
-            self.state_short = position.state
-            self.state_long = position.state_long
-            self.county = position.county
-            self.city_short = position.city
-            self.city_long = position.city_long
+            cleaned_data['address'] = position.get('address')
+            if location_type == 'ADDR':
+                cleaned_data['latitude'] = position.get('lat')
+                cleaned_data['longitude'] = position.get('lng')
+            country_code = position.get('country_code')
+            self.country = AntRegion.objects.get(code=country_code)
+            self.state = position.get('state')
+            self.city = position.get('city')
 
         return cleaned_data
 
@@ -167,7 +189,6 @@ class FlightForm(forms.ModelForm):
         """
             The method will fill and save the passed flight object.
         """
-
         # general
         species_name = self.cleaned_data.get('species')
         species_note = self.cleaned_data.get('species_note')
@@ -178,6 +199,8 @@ class FlightForm(forms.ModelForm):
 
         # location
         address = self.cleaned_data.get('address')
+        longitude = self.cleaned_data.get('longitude')
+        latitude = self.cleaned_data.get('latitude')
         habitat = self.cleaned_data.get('habitat')
 
         # weather
@@ -195,9 +218,9 @@ class FlightForm(forms.ModelForm):
         project = self.cleaned_data.get('project')
         external_user = self.cleaned_data.get('external_user')
 
-
         # general
-        flight.ant_species = AntSpecies.objects.get_or_create_with_name(species_name)
+        flight.ant_species = AntSpecies.objects.get_or_create_with_name(
+            species_name)
         flight.species_note = species_note
         flight.spotting_type = spotting_type
         flight.date = date
@@ -207,14 +230,11 @@ class FlightForm(forms.ModelForm):
         # location
         flight.address = address
         flight.country = self.country
-        flight.state_short = self.state_short
-        flight.state_long = self.state_long
-        flight.county = self.county
-        flight.city_short = self.city_short
-        flight.city_long = self.city_long
+        flight.state = self.state
+        flight.city = self.city
 
-        flight.latitude = self.latitude
-        flight.longitude = self.longitude
+        flight.latitude = latitude
+        flight.longitude = longitude
 
         flight.reviewed = user.is_authenticated and user.is_staff
 
@@ -240,7 +260,8 @@ class FlightForm(forms.ModelForm):
                 flight.wind_speed.full_clean()
                 flight.wind_speed.save()
             else:
-                new_wind_speed = Velocity.objects.create(value=wind_speed, unit=wind_speed_unit)
+                new_wind_speed = Velocity.objects.create(
+                    value=wind_speed, unit=wind_speed_unit)
                 flight.wind_speed = new_wind_speed
 
         flight.rain = rain
@@ -261,13 +282,14 @@ class FlightForm(forms.ModelForm):
 
     class Meta:
         model = Flight
-        exclude = ['ant_species', 'latitude', 'longitude', 'country',
+        exclude = ['ant_species', 'country',
                    'state_short', 'state_long', 'county', 'city_short',
                    'city_long', 'reviewed', 'temperature', 'wind_speed']
         widgets = {
             'date': Html5DateInput,
             'start_time': Html5TimeInput,
             'end_time': Html5TimeInput,
+            'location_type': forms.RadioSelect,
             'habitat': autocomplete.TaggitSelect2(
                 url='flight_habitat_tags_autocomplete'
             )
@@ -278,8 +300,10 @@ class FlightForm(forms.ModelForm):
             'weather_comment': _('Comment')
         }
 
+
 class FlightStaffForm(FlightForm):
     """Flight form for staff members which does not show the captcha field."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields.pop('captcha')
