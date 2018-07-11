@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext as _
+from django.utils.text import slugify
 
 
 # Create your models here.
@@ -15,6 +16,7 @@ class Region(models.Model):
     )
     name = models.CharField(max_length=200)
     official_name = models.CharField(max_length=200, blank=True, null=True)
+    slug = models.SlugField(db_index=True, editable=False)
 
     type = models.CharField(max_length=100)
 
@@ -33,3 +35,9 @@ class Region(models.Model):
 
     def __str__(self):
         return '%s (%s)' % (self.name, self.type)
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        self.slug = slugify(self.name)
+        super().save(force_insert, force_update, using,
+                     update_fields)
