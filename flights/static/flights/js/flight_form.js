@@ -194,13 +194,13 @@
         }
 
         getGeocodingUrl(address, limit) {
-            const geocodingUrl = 'http://dev.virtualearth.net/REST/v1/Locations'
+            const geocodingUrl = 'https://dev.virtualearth.net/REST/v1/Locations'
             address = address.replace(/\s/g, '+');
             return `${geocodingUrl}?q=${address}&maxResults=${limit}&key=${BING_API_KEY}`
         }
 
         getReverseGeocodingUrl(lat, lng) {
-            const reverseGeocodingUrl = 'http://dev.virtualearth.net/REST/v1/Locations'
+            const reverseGeocodingUrl = 'https://dev.virtualearth.net/REST/v1/Locations'
             return `${reverseGeocodingUrl}/${lat},${lng}?key=${BING_API_KEY}`
         }
 
