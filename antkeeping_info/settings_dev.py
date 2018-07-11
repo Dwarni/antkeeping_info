@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'django_bootstrap_breadcrumbs',
     'snowpenguin.django.recaptcha2',
-    'cookielaw'
+    'cookielaw',
 ]
 
 MIDDLEWARE = [
@@ -141,9 +141,9 @@ BREADCRUMBS_TEMPLATE = "django_bootstrap_breadcrumbs/bootstrap4.html"
 # Crispy forms settings
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-# Google api key
-GOOGLE_API_KEY_SERVER = 'YOUR_KEY'
-GOOGLE_API_KEY_CLIENT = 'YOUR_KEY'
+# Bing api key
+BING_API_KEY_SERVER = 'YOUR_KEY'
+BING_API_KEY_CLIENT = 'YOUR_KEY'
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'home'
