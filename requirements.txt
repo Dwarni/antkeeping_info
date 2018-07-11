@@ -20,7 +20,6 @@ django-recaptcha2==1.0.3
 django-taggit==0.22.2
 djangorestframework==3.8.2
 future==0.16.0
-geocoder==1.38.1
 idna==2.7
 isort==4.3.4
 itypes==1.1.0
