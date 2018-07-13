@@ -12,7 +12,8 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.urls import reverse_lazy
-from django.views.generic import FormView, ListView, TemplateView, DetailView, View, DeleteView
+from django.views.generic import FormView, ListView, TemplateView, \
+    DetailView, View, DeleteView
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
@@ -71,7 +72,8 @@ class AddFlightView(FormView):
                 'start_time': flight.start_time,
                 'end_time': flight.end_time,
                 'location': flight.address,
-                'habitat': ','.join([tag.name for tag in flight.habitat.all()]),
+                'habitat': ','.join(
+                    [tag.name for tag in flight.habitat.all()]),
                 'humidity': flight.humidity,
                 'rain': flight.rain,
                 'sky_condition': flight.sky_condition,
@@ -125,7 +127,8 @@ class FlightsMapView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['years'] = [
-            d.year for d in Flight.objects.all().dates('date', 'year', order='DESC')
+            d.year for d in Flight.objects.all().dates(
+                'date', 'year', order='DESC')
         ]
         now = datetime.datetime.now()
         context['current_year'] = now.year
@@ -192,8 +195,9 @@ class FlightStatisticView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        ants = Flight.objects.values('ant_species__slug', 'ant_species__name') \
-            .distinct().order_by('ant_species__name')
+        ants = Flight.objects.values(
+                'ant_species__slug', 'ant_species__name'
+            ).distinct().order_by('ant_species__name')
         context['ants'] = ants
         return context
 
