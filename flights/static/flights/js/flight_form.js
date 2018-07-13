@@ -136,6 +136,13 @@
             this.latitudeInput.onchange = handleOnChange
             this.longitudeInput.onkeypress = handleEnterPress
             this.longitudeInput.onchange = handleOnChange
+
+            // Check if initial value was set and if yes set marker
+            const lat = this.latitudeInput.value
+            const lng = this.longitudeInput.value
+            if(lat && lng) {
+                this.map.addMarker(lat, lng)
+            }
         }
 
         handleLocationTypeChange(locationType) {
