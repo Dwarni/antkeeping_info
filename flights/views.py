@@ -25,6 +25,8 @@ from .models import Flight
 logger = logging.getLogger(__name__)
 
 # Create your views here.
+
+
 @method_decorator(xframe_options_exempt, name='dispatch')
 class AddFlightView(FormView):
     """View for adding a new flight."""
@@ -50,13 +52,13 @@ class AddFlightView(FormView):
         iframe = self.request.GET.get('iframe', None)
         kwargs['iframe'] = iframe
         return kwargs
-    
+
     def get_form_class(self):
         if self.request.user.is_staff:
             return FlightStaffForm
-        
+
         return FlightForm
-    
+
     def get_initial(self):
         copy_flight = self.request.GET.get('copy_flight', None)
 
@@ -89,10 +91,10 @@ class AddFlightView(FormView):
 
         return initial
 
-    
     def get_success_url(self):
         iframe = self.request.GET.get('iframe', None)
-        add_another_species = self.request.POST.get('add_another_species', False)
+        add_another_species = self.request.POST.get(
+            'add_another_species', False)
         add_another_flight = self.request.POST.get('add_another_flight', False)
         print(add_another_species)
 
@@ -104,7 +106,7 @@ class AddFlightView(FormView):
 
         if iframe:
             url += '?iframe=true'
-        
+
         if add_another_species:
             copy_str = 'copy_flight={}'.format(self.flight.pk)
             if '?' in url:
@@ -114,10 +116,12 @@ class AddFlightView(FormView):
 
         return url
 
+
 @method_decorator(xframe_options_exempt, name='dispatch')
 class FlightsMapView(TemplateView):
     """View for the flights map."""
     template_name = 'flights/flights_map.html'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['years'] = [
@@ -129,10 +133,12 @@ class FlightsMapView(TemplateView):
         add_iframe_to_context(context, self.request)
         return context
 
+
 class FlightsListView(ListView):
     """List view for flights."""
     model = Flight
     # queryset = Flight.objects.filter(reviewed=True)
+
     def get(self, request, *args, **kwargs):
         qs = self.get_queryset()
         year = request.GET.get('year')
@@ -153,6 +159,7 @@ class FlightInfoWindow(DetailView):
     model = Flight
     context_object_name = 'flight'
 
+
 @method_decorator(staff_member_required, name='dispatch')
 class FlightsReviewListView(ListView):
     """Displays all not yet reviewed flights."""
@@ -160,6 +167,7 @@ class FlightsReviewListView(ListView):
     template_name = "flights/flights_review.html"
     queryset = model.objects.filter(reviewed=False)
     context_object_name = 'flights'
+
 
 @method_decorator(staff_member_required, name='dispatch')
 class FlightReviewView(View):
@@ -172,10 +180,12 @@ class FlightReviewView(View):
 
         return redirect('flights_review_list')
 
+
 @method_decorator(staff_member_required, name='dispatch')
 class FlightDeleteView(DeleteView):
     model = Flight
     success_url = reverse_lazy('flights_review_list')
+
 
 class FlightStatisticView(TemplateView):
     template_name = 'flights/flight_statistic.html'
@@ -187,11 +197,15 @@ class FlightStatisticView(TemplateView):
         context['ants'] = ants
         return context
 
+
 class HabitatTagAutocomplete(autocomplete.Select2QuerySetView):
     """QuerySetView for flight habitat autocomplete."""
+
     def get_queryset(self):
-        flight_content_type = ContentType.objects.get(app_label='flights', model='flight')
-        qs = Tag.objects.filter(taggit_taggeditem_items__content_type=flight_content_type)
+        flight_content_type = ContentType.objects.get(
+            app_label='flights', model='flight')
+        qs = Tag.objects.filter(
+            taggit_taggeditem_items__content_type=flight_content_type)
 
         if self.q:
             qs = qs.filter(name__istartswith=self.q)
