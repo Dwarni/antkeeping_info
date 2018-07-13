@@ -71,7 +71,10 @@ class AddFlightView(FormView):
                 'date': flight.date,
                 'start_time': flight.start_time,
                 'end_time': flight.end_time,
-                'location': flight.address,
+                'location_type': flight.location_type,
+                'address': flight.address,
+                'latitude': flight.latitude,
+                'longitude': flight.longitude,
                 'habitat': ','.join(
                     [tag.name for tag in flight.habitat.all()]),
                 'humidity': flight.humidity,
