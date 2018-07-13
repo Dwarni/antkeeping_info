@@ -124,7 +124,11 @@ class FlightForm(forms.ModelForm):
                 Submit('submit', 'Submit'),
                 Submit('add_another_species', 'Submit and add another species'),
                 Submit('add_another_flight', 'Submit and add another flight'),
-                HTML('<a href="{}" class="btn btn-secondary active" role="button" aria-pressed="true">Cancel</a>'.format(cancel_href)),
+                HTML("""
+                        <a href="{}" class="btn btn-secondary active" role="button" aria-pressed="true">
+                            Cancel
+                        </a>
+                    """.format(cancel_href)),
             )
         )
 
@@ -198,6 +202,7 @@ class FlightForm(forms.ModelForm):
         end_time = self.cleaned_data.get('end_time')
 
         # location
+        location_type = self.cleaned_data.get('location_type')
         address = self.cleaned_data.get('address')
         longitude = self.cleaned_data.get('longitude')
         latitude = self.cleaned_data.get('latitude')
@@ -228,6 +233,7 @@ class FlightForm(forms.ModelForm):
         flight.end_time = end_time
 
         # location
+        flight.location_type = location_type
         flight.address = address
         flight.country = self.country
         flight.state = self.state
