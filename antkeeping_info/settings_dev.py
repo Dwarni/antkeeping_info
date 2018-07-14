@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'dal',
+    'dal_select2',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,6 +50,9 @@ INSTALLED_APPS = [
     'django_bootstrap_breadcrumbs',
     'snowpenguin.django.recaptcha2',
     'cookielaw',
+    'taggit',
+    'rest_framework',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
