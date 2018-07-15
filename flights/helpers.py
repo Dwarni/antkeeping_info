@@ -1,3 +1,4 @@
+
 """Module for helper functions and classes in flights app."""
 def format_unit(value, symbol):
     """Formats a unit value as a string including its symbol."""
