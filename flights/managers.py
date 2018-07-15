@@ -8,7 +8,7 @@ class FlightManager(Manager):
     """Manager for Flight model."""
     def flight_frequency_per_month(self, ant_species, country=None):
         """
-            Returns the frequency of flights per month for a specific ant species.
+            Return the frequency of flights per month for a specific ant species.
             The ant_species parameter can be the id, the slug or an object of type AntSpecies.
             If a country is provided the query will be restritcted to the specific country.
         """
