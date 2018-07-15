@@ -1,7 +1,9 @@
 {% extends 'layout.html' %}
 {% load i18n %}
 {% load static %}
-
+{% block meta %}
+    <meta name="description" content="{% trans 'Detailed information for ant species ' %}{{ object.name }}">
+{% endblock %}
 {% block css %}
     <link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}?v=5">
 {% endblock %}
@@ -116,7 +118,7 @@
 {% block script %}
     <script src="{% static 'ants/js/vendor/Chart.bundle.min.js' %}"></script>
     <script>
-        var chartData = {{ flight_frequency|safe }};
+        var chartData = {% if flight_frequency %}{{ flight_frequency|safe }}{% else %}null{% endif %};
         if(chartData) {
             window.onload = function() {
                 chartCtx = document.getElementById("flightFrequencyChart").getContext("2d"); 

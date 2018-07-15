@@ -1,0 +1,6 @@
+{% load i18n %}
+{% if name %}
+    <meta name="description" content="{% trans 'Ant species of ' %}{{ name }}">
+{% else %}
+    <meta name="description" content="{% trans 'Ant species by countries and regions.' %}">
+{% endif %}

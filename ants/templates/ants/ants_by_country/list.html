@@ -2,6 +2,15 @@
 {% load i18n %}
 {% load static %}
 {% load django_bootstrap_breadcrumbs %}
+{% block meta %}
+    {% if region %}
+        {% include "ants/ants_by_country/list_meta_description.html" with name=region.name %}
+    {% elif country %}
+        {% include "ants/ants_by_country/list_meta_description.html" with name=country.name %}
+    {% else %}
+        {% include "ants/ants_by_country/list_meta_description.html" with name=None %}
+    {% endif %}
+{% endblock %}
 {% block breadcrumbs %}
     {{ block.super }}
     {% breadcrumb "Ants By Country" "index" %}

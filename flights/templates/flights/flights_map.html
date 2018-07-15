@@ -1,6 +1,12 @@
 {% extends 'flights/flights.html' %}
 {% load i18n %}
 {% load static %}
+{% block title %}
+    {{ block.super }} - Flights map
+{% endblock %}
+{% block meta %}
+<meta name="description" content="{% trans 'A map that displays nuptial flight of ants.' %}">
+{% endblock %}
 {% block css %}
     <link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=7">
     <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet/leaflet.css" %}">
