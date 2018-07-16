@@ -150,11 +150,12 @@ class FlightsListView(ListView):
         year = request.GET.get('year')
         if year and year != 'all':
             qs = qs.filter(date__year=year)
+        qs = qs.values('id', 'latitude', 'longitude', 'ant_species__name')
         data = [{
-            'id': flight.id,
-            'lat': flight.latitude,
-            'lng': flight.longitude,
-            'ant': flight.ant_species.name
+            'id': flight.get('id'),
+            'lat': flight.get('latitude'),
+            'lng': flight.get('longitude'),
+            'ant': flight.get('ant_species__name'),
         } for flight in qs]
         return JsonResponse(data, status=200, safe=False)
 
