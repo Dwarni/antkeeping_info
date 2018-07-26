@@ -1,0 +1,17 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/vendor/cookieconsent.min.css' %}" />
+<script src="{% static 'js/vendor/cookieconsent.min.js' %}"></script>
+<script>
+window.addEventListener("load", function(){
+window.cookieconsent.initialise({
+"palette": {
+    "popup": {
+    "background": "#edeff5",
+    "text": "#838391"
+    },
+    "button": {
+    "background": "#2780E3"
+    }
+}
+})});
+</script>

@@ -1,5 +1,5 @@
 {% load static %}
-{% load cookielaw_tags %} {% load django_bootstrap_breadcrumbs %}
+{% load django_bootstrap_breadcrumbs %}
 <!DOCTYPE html>
 <html>
 
@@ -19,6 +19,8 @@
                 padding: 0;
             }
         </style>
+    {% else %}
+        {% include "snippets/cookie_consent.html" %}
     {% endif %}
 </head>
 
@@ -29,7 +31,6 @@
         </header>
     {% endif %}
     <main role="main" {% if iframe %}class="container-fluid"{% else %}class="container"{% endif %}>
-        {% cookielaw_banner %}
         {% include 'messages.html' %}
         {% block breadcrumbs %} {% clear_breadcrumbs %} {% endblock %} {% block content %} {% endblock %}
     </main>
