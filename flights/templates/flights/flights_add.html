@@ -1,6 +1,12 @@
 {% extends 'flights/flights.html' %}
 {% load i18n %}
 {% load static %}
+{% block title %}
+    {{ block.super }} - Add ant nuptial flight
+{% endblock %}
+{% block meta %}
+    <meta name="description" content="{% trans 'A form which allows you to add an ant nuptial flight you spotted.' %}">
+{% endblock %}
 {% load crispy_forms_tags %}
 {% load django_bootstrap_breadcrumbs %}
 {% load recaptcha2 %}
