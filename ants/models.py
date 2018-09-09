@@ -106,14 +106,17 @@ class AntRegion(Region):
     objects = AntRegionManager()
     countries = CountryAntRegionManager()
     states = StateAntRegionManager()
-    """Contains the region name antwiki is using in case it is different to name."""
+    """
+        Contains the region name antwiki is using in case it is different
+        to name.
+    """
     antwiki_name = models.CharField(max_length=200, blank=True, null=True)
     ant_list_complete = models.BooleanField(default=False)
 
     def get_absolute_url(self):
         if self.type == 'Country':
             return reverse('country', args=[self.code])
-        
+
         return reverse('region', args=[self.parent.code, self.code])
 
     @property
@@ -122,7 +125,8 @@ class AntRegion(Region):
         country_name = self.name
         if self.antwiki_name:
             country_name = self.antwiki_name
-        return 'http://www.antwiki.org/wiki/{}'.format(country_name.replace(' ', '_'))
+        return 'http://www.antwiki.org/wiki/{}' \
+            .format(country_name.replace(' ', '_'))
 
 
 class Distribution(models.Model):
@@ -203,7 +207,10 @@ class Species(TaxonomicRank):
 
     @property
     def common_names(self):
-        """Returns query set which contains all common names of the specific species."""
+        """
+            Return query set which contains all common names of the specific
+            species.
+        """
         return self.commonname_set.all()
 
     @property
@@ -218,11 +225,13 @@ class Species(TaxonomicRank):
         verbose_name = _('Species')
         verbose_name_plural = _('Species')
 
+
 class SizeField(models.DecimalField):
     """Field which stores the size of an ant."""
     MAX_DIGITS = 6
     MAX_DECIMAL_PLACES = 2
     MIN_SIZE = Decimal('0.01')
+
     def __init__(self, *args, **kwargs):
         kwargs['max_digits'] = self.MAX_DIGITS
         kwargs['decimal_places'] = self.MAX_DECIMAL_PLACES
@@ -399,7 +408,7 @@ class AntSpecies(Species):
     )
 
     def get_absolute_url(self):
-        """Returns the url to detail page."""
+        """Return the url to detail page."""
         return reverse('ant_detail', args=[self.slug])
 
     objects = AntSpeciesManager()
