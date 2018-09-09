@@ -1,7 +1,9 @@
 from django.contrib import admin
+from django.core.cache import caches
 from django.utils.translation import ugettext as _
 from ants.models import AntRegion, AntSize, AntSpecies, CommonName, \
     Distribution, SpeciesDescription, Family, Genus, InvalidName, SubFamily
+from regions.models import Region
 
 
 class AntSizeInline(admin.StackedInline):
@@ -17,6 +19,16 @@ class DescriptionInline(admin.StackedInline):
 class DistributionInline(admin.StackedInline):
     model = Distribution
     extra = 0
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "region" and hasattr(self, "cached_regions"):
+            field.choices = self.cached_regions
+        return field
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('region')
 
 
 class InvalidNameInline(admin.StackedInline):
@@ -51,6 +63,14 @@ class AntSpeciesAdmin(BaseAdmin):
         DistributionInline,
         DescriptionInline, AntSizeInline,
         InvalidNameInline, CommonNameInline]
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        for inline in self.get_inline_instances(request, obj):
+            if isinstance(inline, DistributionInline):
+                inline.cached_regions = [
+                    (i.pk, str(i)) for i in Region.objects.all()
+                ]
+            yield inline.get_formset(request, obj), inline
 
 
 @admin.register(Family)
