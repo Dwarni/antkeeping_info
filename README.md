@@ -13,7 +13,6 @@ The goal of Antkeeping.info is to provide ant keepers around the world with all 
 3. Create a database user, a database schema and set permissions correctly
 4. Copy settings_dev.py to settings.py
 5. Edit settings.py and edit db-settings
-6. Migrate database:
 
 Windows:
  ```
@@ -23,13 +22,3 @@ Linux:
  ```
   python3 manage.py migrate
  ```
-6. Load data:
-
-Windows:
-  ```
-  python .\manage.py loaddata .\antkeeping_info\fixtures\data.json
-  ```
-Linux:
-   ```
-  python3 ./manage.py loaddata ./antkeeping_info/fixtures/data.json
-  ```
