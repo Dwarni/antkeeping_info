@@ -1,0 +1,8 @@
+{% load i18n %}
+<div class="row justify-content-center">
+    <div class="col-md-12 text-center">
+        <span class="display-1 d-block">{{ error_code }}</span>
+        <div class="mb-4 lead">{% trans error_message %}</div>
+        <a href="/" class="btn btn-link">{% trans 'Back to Home' %}</a>
+    </div>
+</div>
