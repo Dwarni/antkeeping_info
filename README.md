@@ -9,10 +9,14 @@ The goal of Antkeeping.info is to provide ant keepers around the world with all 
 * PostgreSQL (Other databases are possible for testing, but settings have to be changed)
 # Setup
 1. Clone the repository
-2. Create a new python virtual environment using the requirements.txt file
-3. Create a database user, a database schema and set permissions correctly
-4. Copy settings_dev.py to settings.py
-5. Edit settings.py and edit db-settings
+2. Create a new python virtual environment
+3. Install packages with:
+ ```
+  pip install -r requirements/dev.txt
+ ```
+4. Create a database user, a database schema and set permissions correctly
+5. Copy settings_dev.py to settings.py
+6. Edit settings.py and edit db-settings
 
 Windows:
  ```
