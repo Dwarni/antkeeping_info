@@ -9,7 +9,7 @@
     <title>{%block title %}Antkeeping.info{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     {% block meta %}{% endblock %}
-    <link rel="stylesheet" href="{% static "css/vendor/bootstrap_cosmo.min.css" %}">
+    <link rel="stylesheet" href="{% static "css/vendor/bootstrap_cosmo.min.css" %}?v=2">
     <link rel="stylesheet" href="{% static "css/layout.css" %}?v=6"> 
     {% block css %} {% endblock %}
     <script src="{% static "js/vendor/jquery-3.3.1.min.js" %}"></script>
@@ -44,7 +44,7 @@
             </div>
         </footer>
     {% endif %}
-    <script src="{% static "js/vendor/bootstrap.bundle.min.js" %}"></script>
+    <script src="{% static "js/vendor/bootstrap.bundle.min.js" %}?v=2"></script>
     {% block script %} {% endblock %}
 </body>
 </html>
