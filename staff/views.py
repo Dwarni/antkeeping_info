@@ -13,6 +13,17 @@ from flights.views import staff_member_required
 
 from .forms import AddAntspeciesToRegionForm
 
+
+def add_distribution(ant_species, ant_region):
+    Distribution.objects.create(species=ant_species, region=ant_region)   
+    # check if parent object has this species too
+    parent_region = ant_region.parent
+    if parent_region and not Distribution.objects.filter(
+            species=ant_species,
+            region=parent_region).exists():
+        add_distribution(ant_species, parent_region)
+
+
 # Create your views here.
 @method_decorator(staff_member_required, name='dispatch')
 class AddAntspeciesToRegionView(FormView):
@@ -48,8 +59,8 @@ class AddAntspeciesToRegionView(FormView):
                     invalid_species.append(species_name)
                 elif not Distribution.objects.filter(
                         species=ant_species, region=ant_region
-                    ).exists():
-                    Distribution.objects.create(species=ant_species, region=ant_region)
+                        ).exists():
+                    add_distribution(ant_species, ant_region)
                     added_species.append(ant_species.name)
 
         if invalid_species:
