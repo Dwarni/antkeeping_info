@@ -84,8 +84,13 @@ class CountryAntList(AntList):
         regions = AntRegion.states.with_ants_and_country(self.country.code)
         context['regions'] = regions
 
-        if regions.count() > 0:
-            context['regions_type'] = regions[0].type
+        regions_count = regions.count()
+        if regions_count > 0:
+            # I pick the type of last entry since United states has one
+            # district and otherwise states. If I picked first one it
+            # would be labeled District, which is more wrong than
+            # labeling just the single district as a state.
+            context['regions_type'] = regions[regions_count - 1].type
 
         context['url'] = self.request.build_absolute_uri(reverse('index'))
         context['url_country'] = self.request.build_absolute_uri(
