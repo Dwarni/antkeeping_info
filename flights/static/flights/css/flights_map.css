@@ -1,10 +1,10 @@
 #map {
     width: 100%;
-    height: calc(100vh - 250px);
+    height: calc(100vh - 260px);
 }
 
 #map.iframe {
-    height: calc(100vh - 60px);
+    height: calc(100vh - 70px);
 }
 
 @media (max-width: 970px) {
