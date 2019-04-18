@@ -7,8 +7,8 @@ django-crispy-forms==1.7.2
 django-recaptcha2==1.4.1
 django-taggit==1.1.0
 djangorestframework==3.9.2
-psycopg2==2.8.1
-psycopg2-binary==2.8.1
+psycopg2==2.8.2
+psycopg2-binary==2.8.2
 pycountry==18.12.8
 python-memcached==1.59
 requests==2.21.0
