@@ -83,7 +83,7 @@ class FlightForm(forms.ModelForm):
                      Button(
                 'getCurrentLocation',
                 _('Get current location'),
-                css_class='form-group',
+                css_class='form-group, btn-primary',
                 css_id='getCurrentLocationButton'
             ),
                 InlineRadios('location_type'),
