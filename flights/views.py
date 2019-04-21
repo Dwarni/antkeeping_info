@@ -18,6 +18,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
+from django.views.decorators.cache import never_cache
 
 from ants.views import add_iframe_to_context
 from .forms import FlightForm, FlightStaffForm
@@ -140,6 +141,7 @@ class FlightsMapView(TemplateView):
         return context
 
 
+@method_decorator(never_cache, name='dispatch')
 class FlightsListView(ListView):
     """List view for flights."""
     model = Flight
@@ -168,6 +170,7 @@ class FlightInfoWindow(DetailView):
 
 
 @method_decorator(staff_member_required, name='dispatch')
+@method_decorator(never_cache, name='dispatch')
 class FlightsReviewListView(ListView):
     """Displays all not yet reviewed flights."""
     model = Flight
