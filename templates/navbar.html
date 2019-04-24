@@ -1,6 +1,10 @@
+{% load static %}
 {% load i18n %}
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
-    <a class="navbar-brand" href="{% url "home" %}">Antkeeping.info α</a>
+    <a class="navbar-brand" href="{% url "home" %}">
+        <img src="{% static "img/logo.svg" %}" width="30" height="30" alt="" class="d-inline-block align-top">
+        &nbsp;Antkeeping.info
+    </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
