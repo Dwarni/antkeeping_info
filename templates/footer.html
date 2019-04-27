@@ -1,0 +1,16 @@
+{% load static %}
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+        <div class="text-muted d-inline col-sm-8">
+            <a href="{% url 'legal' %}">Legal Notice</a> |
+            <a href="{% url 'privacy' %}">Privacy Policy</a>
+        </div>
+        <div class="text-sm-right d-inline col-sm-4">
+            <a target="_blank" rel="noopener noreferrer" href="https://www.antkeeping.wiki" title="Antkeeping.wiki">
+                <img src="{% static "img/antkeeping-wiki-logo.png" %}" height="45" width="45">
+            </a>
+        </div>
+        </div>
+    </div>
+</footer>

@@ -52,21 +52,7 @@
         {% block breadcrumbs %} {% clear_breadcrumbs %} {% endblock %} {% block content %} {% endblock %}
     </main>
     {% if iframe is None or iframe == False %}
-        <footer class="footer">
-            <div class="container">
-                <div class="row">
-                <div class="text-muted d-inline col">
-                    <a href="{% url 'legal' %}">Legal Notice</a> |
-                    <a href="{% url 'privacy' %}">Privacy Policy</a>
-                </div>
-                <div class="text-right d-inline col">
-                    <a target="_blank" rel="noopener noreferrer" href="https://www.antkeeping.wiki" title="Antkeeping.wiki">
-                        <img src="{% static "img/antkeeping-wiki-logo.png" %}" height="45" width="45">
-                    </a>
-                </div>
-                </div>
-            </div>
-        </footer>
+        {% include "footer.html" %}
     {% endif %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
