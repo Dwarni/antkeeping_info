@@ -215,7 +215,9 @@ class Species(TaxonomicRank):
 
     @property
     def common_names_str(self):
-        """Returns all common names of the specific species seperated by ','."""
+        """
+            Return all common names of the specific species seperated by ','.
+        """
         if self.common_names.exists():
             return ', '.join(str(name) for name in self.common_names)
         else:
@@ -350,7 +352,7 @@ class AntSpecies(Species):
     @property
     def flight_months_str(self):
         """Returns the nuptial flight months as a string."""
-        if self.flight_months is None:
+        if self.flight_months.exists() is False:
             return NO_INFORMATION
         else:
             return ', '.join(str(month) for month in self.flight_months.all())
