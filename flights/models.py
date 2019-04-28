@@ -16,12 +16,17 @@ from .managers import FlightManager
 
 # Create your models here.
 def format_unit(value, symbol):
-    """Formats a unit value as a string including its symbol."""
+    """
+    Format a unit value as a string including its symbol.
+    """
     return '{:.1f} {}'.format(value, symbol)
 
 
 def format_two_units(primary, secondary):
-    """Formats two unit strings with the secondary unit displayed in brackets."""
+    """
+    Format two unit strings with the secondary unit
+    displayed in brackets.
+    """
     return '{} ({})'.format(primary, secondary)
 
 
@@ -62,7 +67,10 @@ class Temperature(models.Model):
 
     @property
     def fahrenheit_str(self):
-        """Returns the temperature in °F formatted as string including the unit symbol."""
+        """
+        Return the temperature in °F formatted as string including
+        the unit symbol.
+        """
         return format_unit(self.fahrenheit, Temperature.FAHRENHEIT_SYMBOL)
 
     def __str__(self):
@@ -110,7 +118,7 @@ class Velocity(models.Model):
     @property
     def mph_str(self):
         """
-            Returns the velocity in mph formatted as string 
+            Returns the velocity in mph formatted as string
             including the unit symbol.
         """
         return format_unit(self.mph, Velocity.MPH_SYMBOL)
@@ -296,7 +304,7 @@ class Flight(models.Model):
 
     def __str__(self):
         return '{}: {}; {}'.format(
-            self.date, 
+            self.date,
             self.ant_species.name,
             self.address
         )

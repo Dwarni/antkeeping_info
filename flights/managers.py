@@ -4,6 +4,7 @@ from collections import OrderedDict
 from django.db.models import Count, Manager, Q
 from ants.models import AntSpecies
 
+
 class FlightManager(Manager):
     """Manager for Flight model."""
     def flight_frequency_per_month(self, ant_species, country=None):

@@ -6,6 +6,7 @@ from django.conf import settings
 from django.forms import IntegerField, ChoiceField
 from django.forms.widgets import DateInput, TimeInput
 from django.utils.translation import ugettext as _
+from django.urls import reverse_lazy
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Div, ButtonHolder, \
@@ -15,7 +16,7 @@ from crispy_forms.bootstrap import AppendedText, InlineRadios
 from snowpenguin.django.recaptcha2.fields import ReCaptchaField
 from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
 
-from ants.models import Species, AntSpecies, AntRegion
+from ants.models import Genus, Species, AntSpecies, AntRegion
 
 from .models import Flight, Temperature, Velocity
 from .geocoding import geocode, reverse_geocode
@@ -37,10 +38,6 @@ class FlightForm(forms.ModelForm):
     # general
     test_data = forms.BooleanField(
         required=False
-    )
-    species = forms.CharField(
-        max_length=40,
-        validators=Species.name_validators
     )
 
     # weather
@@ -69,7 +66,7 @@ class FlightForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Fieldset(_('What?'),
-                     'species',
+                     'ant_species',
                      'species_note',
                      'spotting_type',
                      active=True
@@ -95,7 +92,8 @@ class FlightForm(forms.ModelForm):
                     'latitude',
                     'longitude',
                     Div(
-                        HTML('<small id="addressHint" class="col-lg-10"></small>'),
+                        HTML("""<small id="addressHint" class="col-lg-10">
+                             </small>"""),
                         css_class="row justify-content-end"
                     ),
                     css_id='gpsContainer',
@@ -122,10 +120,12 @@ class FlightForm(forms.ModelForm):
             'captcha',
             ButtonHolder(
                 Submit('submit', 'Submit'),
-                Submit('add_another_species', 'Submit and add another species'),
+                Submit('add_another_species',
+                       'Submit and add another species'),
                 Submit('add_another_flight', 'Submit and add another flight'),
                 HTML("""
-                        <a href="{}" class="btn btn-secondary active" role="button" aria-pressed="true">
+                        <a href="{}" class="btn btn-secondary active"
+                        role="button" aria-pressed="true">
                             Cancel
                         </a>
                     """.format(cancel_href)),
@@ -194,7 +194,7 @@ class FlightForm(forms.ModelForm):
             The method will fill and save the passed flight object.
         """
         # general
-        species_name = self.cleaned_data.get('species')
+        ant_species = self.cleaned_data.get('ant_species')
         species_note = self.cleaned_data.get('species_note')
         spotting_type = self.cleaned_data.get('spotting_type')
         date = self.cleaned_data.get('date')
@@ -224,8 +224,7 @@ class FlightForm(forms.ModelForm):
         external_user = self.cleaned_data.get('external_user')
 
         # general
-        flight.ant_species = AntSpecies.objects.get_or_create_with_name(
-            species_name)
+        flight.ant_species = ant_species
         flight.species_note = species_note
         flight.spotting_type = spotting_type
         flight.date = date
@@ -288,16 +287,31 @@ class FlightForm(forms.ModelForm):
 
     class Meta:
         model = Flight
-        exclude = ['ant_species', 'country',
+        exclude = ['country',
                    'state_short', 'state_long', 'county', 'city_short',
                    'city_long', 'reviewed', 'temperature', 'wind_speed']
         widgets = {
+            'ant_species': autocomplete.ModelSelect2(
+                url=reverse_lazy('ant_species_autocomplete'),
+                attrs={
+                    # Only trigger autocompletion after 3 characters have been typed
+                    'data-minimum-input-length': 3,
+                    'data-theme': 'bootstrap4',
+                    'data-width': '100%'
+                    },
+                ),
             'date': Html5DateInput,
             'start_time': Html5TimeInput,
             'end_time': Html5TimeInput,
             'location_type': forms.RadioSelect,
             'habitat': autocomplete.TaggitSelect2(
-                url='flight_habitat_tags_autocomplete'
+                url='flight_habitat_tags_autocomplete',
+                attrs={
+                    # Only trigger autocompletion after 3 characters have been typed
+                    'data-minimum-input-length': 3,
+                    'data-theme': 'bootstrap4',
+                    'data-width': '100%'
+                },
             )
         }
 

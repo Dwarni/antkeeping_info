@@ -102,7 +102,6 @@ class AddFlightView(FormView):
         add_another_species = self.request.POST.get(
             'add_another_species', False)
         add_another_flight = self.request.POST.get('add_another_flight', False)
-        print(add_another_species)
 
         url = None
         if add_another_species or add_another_flight:
@@ -119,7 +118,6 @@ class AddFlightView(FormView):
                 url += '&' + copy_str
             else:
                 url += '?' + copy_str
-
         return url
 
 
