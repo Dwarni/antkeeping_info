@@ -2,6 +2,7 @@
     Module for all models of ants app.
 """
 import json
+from dal import autocomplete
 from django.shortcuts import get_object_or_404, reverse
 
 from django.views.generic.list import ListView
@@ -36,7 +37,7 @@ class AntList(ListView):
     context_object_name = 'ants'
     template_name = 'ants/ants_by_country/list.html'
 
-    def get_context_data(self, **kwargs): # pylint: disable=W0221
+    def get_context_data(self, **kwargs):  # pylint: disable=W0221
         context = super().get_context_data(**kwargs)
         add_iframe_to_context(context, self.request)
         return context
@@ -73,7 +74,7 @@ class CountryAntList(AntList):
 
     def get_queryset(self):
         self.set_country()
-        return AntSpecies.objects.by_country(self.country.code)
+        return AntSpecies.objects.by_country_code(self.country.code)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -118,7 +119,7 @@ class RegionAntList(CountryAntList):
     def get_queryset(self):
         self.set_region()
         self.set_country()
-        query_set = AntSpecies.objects.by_region(
+        query_set = AntSpecies.objects.by_region_code(
             code=self.region.code
         )
         return query_set
@@ -161,11 +162,15 @@ class AntSpeciesDetail(DetailView):
 
     def __get_flight_frequency(self, ant_species):
         has_flights = Flight.objects.filter(ant_species=ant_species).exists()
-        
+
         if has_flights:
-            flight_frequency = Flight.objects.flight_frequency_per_month(ant_species)
-            return json.dumps([value for key, value in flight_frequency.items()], separators=(',',':'))
-        
+            flight_frequency = Flight \
+                                .objects \
+                                .flight_frequency_per_month(ant_species)
+            return json.dumps([value for key,
+                               value in flight_frequency.items()],
+                              separators=(',', ':'))
+
         return None
 
     def get_context_data(self, **kwargs):
@@ -176,7 +181,7 @@ class AntSpeciesDetail(DetailView):
         countries = AntRegion.countries.filter(distribution__species=ant.id)
         regions = {}
 
-        for country in countries: # pylint: disable=E1133
+        for country in countries:  # pylint: disable=E1133
             region_query = AntRegion.objects \
                 .filter(parent__code=country.code) \
                 .filter(distribution__species__id=ant.id)
@@ -202,3 +207,11 @@ class AntSpeciesDetail(DetailView):
         context['flight_frequency'] = self.__get_flight_frequency(ant)
 
         return context
+
+
+class AntSpeciesAutocomplete(autocomplete.Select2QuerySetView):
+    """QuerySetView for flight habitat autocomplete."""
+
+    def get_queryset(self):
+        qs = AntSpecies.objects.filter(name__icontains=self.q)
+        return qs
