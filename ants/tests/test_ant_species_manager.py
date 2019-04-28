@@ -85,7 +85,20 @@ class AntSpeciesManagerTestCase(TestCase):
         self.assertEqual(existing_genus.name, new_ant2.genus.name)
         """Check if genus was created too and if both genus names are equal"""
 
-    def test_by_country(self):
+    def test_get_or_create_with_genus_or_species_id(self):
+        species_name = 'Lasius sp.'
+        genus_name = 'Lasius'
+        genus = Genus.objects.get_or_create_with_name('Lasius')
+
+        self.assertFalse(AntSpecies.objects.name_exists(species_name))
+        species = self.manager.get_or_create_with_genus_or_species_id(genus.pk, None)
+        self.assertEqual(species.name, species_name)
+        self.assertTrue(AntSpecies.objects.name_exists(species_name))
+        species2 = self.manager.get_or_create_with_genus_or_species_id(genus.pk, None)
+        self.assertEqual(species2.name, species_name)
+        self.assertEqual(species.pk, species2.pk)
+
+    def test_by_country_code(self):
         new_country = AntRegion.objects.create(
             name='Test Country',
             code='test',
@@ -99,13 +112,13 @@ class AntSpeciesManagerTestCase(TestCase):
         Distribution.objects.create(species=ant3, region=new_country)
 
         new_country = AntRegion.objects.get(name='Test Country')
-        ants = [ant.name for ant in AntSpecies.objects.by_country('test')]
+        ants = [ant.name for ant in AntSpecies.objects.by_country_code('test')]
         self.assertEqual(len(ants), 3)
         self.assertTrue(ant1.name in ants)
         self.assertTrue(ant2.name in ants)
         self.assertTrue(ant3.name in ants)
 
-    def test_by_region(self):
+    def test_by_region_code(self):
         region_name = 'Test Region'
         region_code = 'test'
         country = AntRegion.objects.create(
@@ -128,7 +141,7 @@ class AntSpeciesManagerTestCase(TestCase):
         Distribution.objects.create(species=ant3, region=new_region)
 
         new_region = AntRegion.objects.get(code=region_code)
-        ants = [ant.name for ant in AntSpecies.objects.by_region(region_code)]
+        ants = [ant.name for ant in AntSpecies.objects.by_region_code(region_code)]
         self.assertEqual(len(ants), 3)
         self.assertTrue(ant1.name in ants)
         self.assertTrue(ant2.name in ants)
