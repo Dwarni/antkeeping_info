@@ -180,6 +180,12 @@ class Distribution(models.Model):
         return str(self.region)
 
 
+class SpeciesMeta(TaxonomicRankMeta):
+    verbose_name = _('Species')
+    verbose_name_plural = _('Species')
+    ordering = ('genus__name', 'ordering', 'name')
+
+
 class Species(TaxonomicRank):
     """Model which represents a taxonomic rank of type 'Species'."""
     name_validators = [
@@ -198,6 +204,10 @@ class Species(TaxonomicRank):
         models.SET_NULL,
         blank=True,
         null=True
+    )
+    ordering = models.IntegerField(
+        db_index=True,
+        default=1
     )
 
     @property
@@ -223,9 +233,8 @@ class Species(TaxonomicRank):
         else:
             return NO_INFORMATION
 
-    class Meta(TaxonomicRankMeta):
-        verbose_name = _('Species')
-        verbose_name_plural = _('Species')
+    class Meta(SpeciesMeta):
+        pass
 
 
 class SizeField(models.DecimalField):
@@ -415,9 +424,8 @@ class AntSpecies(Species):
 
     objects = AntSpeciesManager()
 
-    class Meta(TaxonomicRankMeta):
-        verbose_name = _('Species')
-        verbose_name_plural = _('Species')
+    class Meta(SpeciesMeta):
+        pass
 
 
 class CommonName(models.Model):
