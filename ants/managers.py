@@ -7,6 +7,9 @@ from django.db.models import Manager
 
 class TaxonomicRankManager(Manager):
     """Manager for TaxonomicRankModel."""
+
+    use_in_migrations = True
+
     def name_exists(self, name):
         """Checks if the Taxonomic Rank with the specific name exits."""
         return self.get_queryset().filter(name=name).exists()
@@ -27,12 +30,17 @@ class TaxonomicRankManager(Manager):
 
 class GenusManager(TaxonomicRankManager):
     """Manager for GenusModel"""
-    pass
+    def by_country_code(self, code):
+        return self.get_queryset() \
+            .filter(species__distribution__region__type='Country') \
+            .filter(species__distribution__region__code=code) \
+            .distinct()
 
 
 class AntSpeciesManager(TaxonomicRankManager):
     """Manager for AntSpeciesModel."""
-    def add_with_name(self, name):
+
+    def add_with_name(self, name, genus_model=None):
         """
             Adds an ant species with the specific name.
             The method will extract the genus name from the species name.
@@ -42,25 +50,40 @@ class AntSpeciesManager(TaxonomicRankManager):
         """
         ant = self.get_queryset().create(name=name)
         genus_name = name.split(' ')[0]
-        genus_model = apps.get_model('ants', 'Genus')
+        if genus_model is None:
+            genus_model = apps.get_model('ants', 'Genus')
         genus = genus_model.objects.get_or_create_with_name(genus_name)
         ant.genus = genus
         ant.full_clean()
         ant.save()
         return ant
 
-    def get_or_create_with_name(self, name):
+    def get_or_create_with_name(self, name, genus_model=None):
         """
-            Returns an existing ant species or creates a new one with specific name.
-            The method will also automatically assign a genus to the ant species and
-            if needed, also create a new one first.
+            Returns an existing ant species or creates a new one with specific
+            name.
+            The method will also automatically assign a genus to the ant
+            species and if needed, also create a new one first.
         """
         if self.name_exists(name):
             return self.get_by_name(name)
         else:
-            return self.add_with_name(name)
+            return self.add_with_name(name, genus_model)
 
-    def by_country(self, code):
+    def get_or_create_with_genus_or_species_id(self, genus_id, species_id):
+        """
+            Return an existing ant species or create a new one if only genus'
+            id was provided.
+        """
+        if species_id:
+            return self.get_queryset().get(pk=species_id)
+        else:
+            genus_model = apps.get_model('ants', 'Genus')
+            genus = genus_model.objects.get(pk=genus_id)
+            new_name = genus.name + ' sp.'
+            return self.get_or_create_with_name(new_name)
+
+    def by_country_code(self, code):
         """
             Returns a QuerySet which only contains ants of the country
             with the specific code.
@@ -70,7 +93,18 @@ class AntSpeciesManager(TaxonomicRankManager):
             .filter(distribution__region__code=code) \
             .distinct()
 
-    def by_region(self, code):
+    def by_country_code_and_genus(self, code, genus):
+        """
+        Return a QuerySet which contains only ants which occur in the
+        specific country and belog to the specific genus.
+        """
+        return self.get_queryset() \
+            .filter(distribution__region__type='Country') \
+            .filter(distribution__region__code=code) \
+            .filter(genus__name=genus) \
+            .distinct()
+
+    def by_region_code(self, code):
         """
             Returns a QuerySet which only contains ants of the region
             with the specific code. Only regions which parent's type is
