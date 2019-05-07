@@ -285,6 +285,13 @@ class FlightForm(forms.ModelForm):
 
         return flight
 
+    MODEL_SELECT_ATTRS = {
+        # Only trigger autocompletion after 3 characters have been typed
+        'data-minimum-input-length': 3,
+        'data-theme': 'bootstrap4',
+        'data-width': '100%',
+    }
+
     class Meta:
         model = Flight
         exclude = ['country',
@@ -293,12 +300,7 @@ class FlightForm(forms.ModelForm):
         widgets = {
             'ant_species': autocomplete.ModelSelect2(
                 url=reverse_lazy('ant_species_autocomplete'),
-                attrs={
-                    # Only trigger autocompletion after 3 characters have been typed
-                    'data-minimum-input-length': 3,
-                    'data-theme': 'bootstrap4',
-                    'data-width': '100%'
-                    },
+                attrs=MODEL_SELECT_ATTRS
                 ),
             'date': Html5DateInput,
             'start_time': Html5TimeInput,
@@ -306,12 +308,7 @@ class FlightForm(forms.ModelForm):
             'location_type': forms.RadioSelect,
             'habitat': autocomplete.TaggitSelect2(
                 url='flight_habitat_tags_autocomplete',
-                attrs={
-                    # Only trigger autocompletion after 3 characters have been typed
-                    'data-minimum-input-length': 3,
-                    'data-theme': 'bootstrap4',
-                    'data-width': '100%'
-                },
+                attrs=MODEL_SELECT_ATTRS
             )
         }
 
