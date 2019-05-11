@@ -32,6 +32,14 @@ class Html5TimeInput(TimeInput):
     input_type = 'time'
 
 
+MODEL_SELECT_ATTRS = {
+        # Only trigger autocompletion after 3 characters have been typed
+        'data-minimum-input-length': 3,
+        'data-theme': 'bootstrap4',
+        'data-width': '100%',
+    }
+
+
 class FlightForm(forms.ModelForm):
     """Form class for adding end updating nuptial flights."""
 
@@ -284,13 +292,6 @@ class FlightForm(forms.ModelForm):
         flight.habitat.add(*habitat)
 
         return flight
-
-    MODEL_SELECT_ATTRS = {
-        # Only trigger autocompletion after 3 characters have been typed
-        'data-minimum-input-length': 3,
-        'data-theme': 'bootstrap4',
-        'data-width': '100%',
-    }
 
     class Meta:
         model = Flight
