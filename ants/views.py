@@ -132,29 +132,6 @@ class RegionAntList(CountryAntList):
         return context
 
 
-class AntSpeciesSearch(AntList):
-    """Search view for ant species"""
-    def __init__(self):
-        self.search_item = None
-
-    def get_queryset(self):
-        query_set = None
-        self.search_item = self.request.GET.get('search_item')
-
-        if self.search_item:
-            query_set = AntSpecies.objects.filter(
-                Q(name__icontains=self.search_item) |
-                Q(commonname__name__icontains=self.search_item) |
-                Q(invalidname__name__icontains=self.search_item)).distinct()
-
-        return query_set
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search_term'] = self.search_item
-        return context
-
-
 class AntSpeciesDetail(DetailView):
     """Detail view of an ant species."""
     model = AntSpecies
