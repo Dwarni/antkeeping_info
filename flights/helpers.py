@@ -1,24 +1,30 @@
-
 """Module for helper functions and classes in flights app."""
+
+
 def format_unit(value, symbol):
     """Formats a unit value as a string including its symbol."""
     return '{:.1f} {}'.format(value, symbol)
 
+
 def format_two_units(primary, secondary):
-    """Formats two unit strings with the secondary unit displayed in brackets."""
+    """
+        Formats two unit strings with the secondary unit displayed
+        in brackets.
+    """
     return '{} ({})'.format(primary, secondary)
 
 
 class Temperature():
     """Class for storing and converting temperature."""
     CELSIUS = 'C'
-    CELSIUS_SYMBOL = '℃' # unicode symbol is used.
+    CELSIUS_SYMBOL = '℃'  # unicode symbol is used.
     FAHRENHEIT = 'F'
-    FAHRENHEIT_SYMBOL = '℉' # unicode symbol is used.
+    FAHRENHEIT_SYMBOL = '℉'  # unicode symbol is used.
     CHOICES = (
         (CELSIUS, CELSIUS_SYMBOL),
         (FAHRENHEIT, FAHRENHEIT_SYMBOL)
     )
+
     def __init__(self, value, unit=CELSIUS):
         self.value = value
         self.unit = unit
@@ -32,7 +38,10 @@ class Temperature():
 
     @property
     def celsius_str(self):
-        """Returns the temperature in °C formatted as string including the unit symbol."""
+        """
+            Returns the temperature in °C formatted as string including
+            the unit symbol.
+        """
         return format_unit(self.celsius, Temperature.CELSIUS_SYMBOL)
 
     @property
@@ -44,7 +53,10 @@ class Temperature():
 
     @property
     def fahrenheit_str(self):
-        """Returns the temperature in °F formatted as string including the unit symbol."""
+        """
+            Returns the temperature in °F formatted as string including
+            the unit symbol.
+        """
         return format_unit(self.fahrenheit, Temperature.FAHRENHEIT_SYMBOL)
 
     def __str__(self):
@@ -64,6 +76,7 @@ class Velocity():
         (MPH, MPH_SYMBOL)
     )
     MPH_TO_KMH_FACTOR = 1.609344
+
     def __init__(self, value, unit=KMH):
         self.value = value
         self.unit = unit
@@ -77,7 +90,10 @@ class Velocity():
 
     @property
     def kmh_str(self):
-        """Returns the velocity in km/h formatted as string including the unit symbol."""
+        """
+            Returns the velocity in km/h formatted as string including
+            the unit symbol.
+        """
         return format_unit(self.kmh, Velocity.KMH_SYMBOL)
 
     @property
@@ -89,7 +105,10 @@ class Velocity():
 
     @property
     def mph_str(self):
-        """Returns the velocity in mph formatted as string including the unit symbol."""
+        """
+            Returns the velocity in mph formatted as string including
+            the unit symbol.
+        """
         return format_unit(self.mph, Velocity.MPH_SYMBOL)
 
     def __str__(self):
