@@ -11,7 +11,7 @@ urlpatterns = [
         'review/', views.FlightsReviewListView.as_view(),
         name='flights_review_list'),
     path(
-        '<int:pk>/info-window', views.FlightInfoWindow.as_view(), 
+        '<int:pk>/info-window', views.FlightInfoWindow.as_view(),
         name='flight_info_window'),
     path(
         '<int:pk>/review', views.FlightReviewView.as_view(),
