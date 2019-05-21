@@ -5,7 +5,7 @@ from ants.models import AntSpecies, Genus
 from ants.migration_operations import add_generic_species_for_each_genus
 
 
-class AntSpeciesManagerTestCase(TestCase):
+class AddGenericSpeciesForGenusTestCase(TestCase):
     def setUp(self):
         Genus.objects.get_or_create_with_name('Lasius')
         Genus.objects.get_or_create_with_name('Myrmica')
