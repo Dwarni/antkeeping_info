@@ -4,6 +4,7 @@ Module for views of users app.
 from django.views.generic import UpdateView
 from .forms import ProfileForm
 
+
 # Create your views here.
 class UserProfileView(UpdateView):
     """User profile view."""

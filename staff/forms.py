@@ -6,6 +6,7 @@ from crispy_forms.layout import Layout, Submit
 
 from ants.models import AntRegion
 
+
 class AddAntspeciesToRegionForm(forms.Form):
     """Form for adding a list of species to a region."""
     region = forms.ModelChoiceField(queryset=AntRegion.objects.all())

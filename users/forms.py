@@ -9,6 +9,7 @@ from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit
 from snowpenguin.django.recaptcha2.fields import ReCaptchaField
 from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
 
+
 class SaveLayout(Layout):
     """Layout class with a 'Save'-Button at the end."""
     def __init__(self, *fields):
@@ -19,9 +20,11 @@ class SaveLayout(Layout):
             )
         )
 
+
 class CustomAuthentificationForm(auth_forms.AuthenticationForm):
     """Log in form."""
     captcha = ReCaptchaField(widget=ReCaptchaWidget, label='')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
@@ -37,6 +40,7 @@ class CustomAuthentificationForm(auth_forms.AuthenticationForm):
             )
         )
 
+
 class ProfileForm(ModelForm):
     """User profile form."""
     def __init__(self, *args, **kwargs):
@@ -49,9 +53,11 @@ class ProfileForm(ModelForm):
                 'last_name'
             )
         )
+
     class Meta:
         model = auth_models.User
         fields = ['first_name', 'last_name']
+
 
 class RegistrationForm(auth_forms.UserCreationForm):
     """User registration form."""

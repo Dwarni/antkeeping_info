@@ -15,7 +15,7 @@ from .forms import AddAntspeciesToRegionForm
 
 
 def add_distribution(ant_species, ant_region):
-    Distribution.objects.create(species=ant_species, region=ant_region)   
+    Distribution.objects.create(species=ant_species, region=ant_region)
     # check if parent object has this species too
     parent_region = ant_region.parent
     if parent_region and not Distribution.objects.filter(
@@ -49,9 +49,10 @@ class AddAntspeciesToRegionView(FormView):
                 ).first()
 
                 if not ant_species and create_missing_species:
-                    """Try to create the missing species if checkbox was set."""
+                    # Try to create the missing species if checkbox was set.
                     try:
-                        ant_species = AntSpecies.objects.get_or_create_with_name(species_name)
+                        ant_species = AntSpecies.objects \
+                            .get_or_create_with_name(species_name)
                     except ValidationError:
                         ant_species = None
 
@@ -69,7 +70,9 @@ class AddAntspeciesToRegionView(FormView):
             )
             messages.warning(self.request, message_str)
         if added_species:
-            messages.success(self.request, _('Added species: {} to region: {}'.format(', '.join(added_species), ant_region.name)))
+            messages.success(self.request, _('Added species: {} to region: {}'
+                                             .format(', '.join(added_species),
+                                                     ant_region.name)))
         else:
             messages.warning(self.request, _('No species were added'))
 
