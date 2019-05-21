@@ -8,6 +8,7 @@ from django.core.management import BaseCommand
 
 from ants.models import AntRegion, AntSpecies, Distribution
 
+
 def simple_get(url):
     """
     Attempts to get the content at `url` by making an HTTP GET request.
@@ -22,7 +23,8 @@ def simple_get(url):
                 return None
 
     except RequestException as request_exception:
-        log_error('Error during requests to {0} : {1}'.format(url, str(request_exception)))
+        log_error('Error during requests to {0} : {1}'
+                  .format(url, str(request_exception)))
         return None
 
 
@@ -31,9 +33,9 @@ def is_good_response(resp):
     Returns true if the response seems to be HTML, false otherwise
     """
     content_type = resp.headers['Content-Type'].lower()
-    return (resp.status_code == 200
-            and content_type is not None
-            and content_type.find('html') > -1)
+    return (resp.status_code == 200 and
+            content_type is not None and
+            content_type.find('html') > -1)
 
 
 def log_error(error):
@@ -44,6 +46,7 @@ def log_error(error):
     """
     print(error)
 
+
 def add_distribution(species_name, country):
     species = AntSpecies.objects.get_or_create_with_name(species_name)
     if not species.distribution_set.filter(region=country).exists():
@@ -51,8 +54,12 @@ def add_distribution(species_name, country):
         return True
     return False
 
+
 class Command(BaseCommand):
-    """The command imports all species for a specific country from antwiki.org"""
+    """
+        The command imports all species for a specific country
+        from antwiki.org
+    """
     help = 'Imports ant species which occur in a country from antwiki.org'
 
     def add_arguments(self, parser):
@@ -64,7 +71,8 @@ class Command(BaseCommand):
         errors = []
         if country_code == 'all':
             # get all countries with not complete ant list
-            countries = AntRegion.objects.filter(ant_list_complete=False,type='Country')
+            countries = AntRegion.objects.filter(
+                ant_list_complete=False, type='Country')
         else:
             countries = AntRegion.objects.filter(code=country_code)
 
@@ -78,10 +86,12 @@ class Command(BaseCommand):
                     splitted_text = element.text.split()
                     current_genus = splitted_text[0]
                     if last_genus is not None and current_genus < last_genus:
-                        # In antwiki species which aren't native anymore are at the bottom
+                        # In antwiki species which aren't native anymore are
+                        # at the bottom
                         break
 
-                    if len(splitted_text) == 2: # we don't want subspecies in antkeeping.info
+                    # we don't want subspecies in antkeeping.info
+                    if len(splitted_text) == 2:
                         print(element.text, sep=' ', end='', flush=True)
                         if add_distribution(' '.join(splitted_text), country):
                             print('...added')
@@ -92,14 +102,12 @@ class Command(BaseCommand):
                 country.ant_list_complete = True
                 country.save()
             else:
-                error = 'Error getting species for Country: {}, URL: {} is not valid'.format(country.name, antwiki_url)
+                error = ('Error getting species for Country: {}, URL: {}'
+                         ' is not valid'
+                         .format(country.name, antwiki_url))
                 errors.append(error)
                 print(error)
-        
+
         with open('import_species_errors', 'w') as error_file:
             for error in errors:
                 error_file.write(error + '\n')
-
-
-
-
