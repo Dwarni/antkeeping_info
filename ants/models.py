@@ -440,7 +440,7 @@ class CommonName(models.Model):
     class Meta:
         verbose_name = _('Common name')
         verbose_name_plural = _('Common names')
-        ordering = ['name']
+        ordering = ['language', 'name']
 
     def __str__(self):
         return '%s (%s)' % (self.name, dict(LANG_CHOICES)[self.language])
@@ -454,6 +454,7 @@ class InvalidName(models.Model):
     class Meta:
         verbose_name = _('Invalid name')
         verbose_name_plural = _('Invalid names')
+        ordering = ['name']
 
     def __str__(self):
         return self.name
