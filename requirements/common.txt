@@ -2,7 +2,7 @@ django-coreapi==2.3.0
 Django==2.2.1
 django-autocomplete-light==3.3.4
 django-bootstrap-breadcrumbs==0.9.1
-django-cors-headers==3.0.1
+django-cors-headers==3.0.2
 django-crispy-forms==1.7.2
 django-recaptcha2==1.4.1
 django-taggit==1.1.0
