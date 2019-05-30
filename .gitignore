@@ -1,11 +1,11 @@
 *.pyc
 *~
+.env
 __pycache__
 venv
 env.ps1
 .vscode
 db.sqlite3
 .DS_Store
-antkeeping_info/settings.py
 import_species_errors
 node_modules/
