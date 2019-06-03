@@ -1,6 +1,6 @@
 django-coreapi==2.3.0
-Django==2.2.1
-django-autocomplete-light==3.3.4
+Django==2.2.2
+django-autocomplete-light==3.3.5
 django-bootstrap-breadcrumbs==0.9.1
 django-cors-headers==3.0.2
 django-crispy-forms==1.7.2
