@@ -15,14 +15,15 @@ The goal of Antkeeping.info is to provide ant keepers around the world with all 
   pip install -r requirements/dev.txt
  ```
 4. Create a database user, a database schema and set permissions correctly
-5. Copy settings_dev.py to settings.py
-6. Edit settings.py and edit db-settings
+5. Copy .env.example to .env
+6. Edit .env
+7. Switch to virtual environment
+8. Run migrations:
 
-Windows:
  ```
   python manage.py migrate
  ```
-Linux:  
- ```
-  python3 manage.py migrate
- ```
+9. Run dev server
+```
+ python manage.py runserver
+```
