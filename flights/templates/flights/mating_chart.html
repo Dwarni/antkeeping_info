@@ -10,7 +10,8 @@
             </div>
             <div class="col-md order-md-1">
                 <div v-if="loading" class="spinner-grow text-primary"></div>
-                <mating-chart-table v-else></mating-chart-table>
+                <mating-chart-table v-else-if="filteredFlightEntries.length > 0"></mating-chart-table>
+                <p v-else>No entries</p>
             </div>
         </div>
         <mating-chart-pagination></mating-chart-pagination>

@@ -24,6 +24,7 @@ const store = new Vuex.Store({
             state.filterVisible = !state.filterVisible
         },
         updateNameFilter(state, name) {
+            state.currentPage = 1
             state.nameFilter = name
         },
         updateCountryFilter(state, countryFilter) {
@@ -43,7 +44,16 @@ const store = new Vuex.Store({
             state.states = states
         },
         updateFlyingNow(state, flyingNow) {
+            state.currentPage = 1
             state.flyingNow = flyingNow
+        },
+        resetFilter(state) {
+            state.currentPage = 1
+            state.nameFilter = ''
+            state.flyingNow = false
+            state.countryFilter = 'all'
+            state.stateFilter = 'all'
+            state.states = []
         },
         updateCurrentPage(state, currentPage) {
             state.currentPage = currentPage
@@ -107,15 +117,23 @@ const store = new Vuex.Store({
             commit('loadingOff')
         },
         fetchStates({ commit, state }) {
-            commit('loadingOn')
-            fetch(`/api/regions/?with-flight-months=true&parent=${state.countryFilter}`)
-                .then(response => {
-                    return response.json()
-                })
-                .then(json => {
-                    commit('setStates', json)
-                })
-            commit('loadingOff')
+            if(state.countryFilter !== 'all') {
+                commit('loadingOn')
+                fetch(`/api/regions/?with-flight-months=true&parent=${state.countryFilter}`)
+                    .then(response => {
+                        return response.json()
+                    })
+                    .then(json => {
+                        commit('setStates', json)
+                    })
+                commit('loadingOff')
+            } else {
+                commit('setStates', [])
+            }
+        },
+        resetFilter({ commit, dispatch}) {
+            commit('resetFilter')
+            dispatch('fetchFlightEntries')
         }
     },
     getters: {
@@ -285,6 +303,9 @@ Vue.component('mating-chart-filter', {
                     </option>
                 </select>
             </div>
+            <div class="mb-3">
+                <button type="button" class="btn btn-warning" @click="resetFilter">Reset</button>
+            </div>
         </div>
     `,
     created: function() {
@@ -292,6 +313,7 @@ Vue.component('mating-chart-filter', {
     },
     computed: Vuex.mapState(['countries', 'states', 'nameFilter', 'countryFilter', 'stateFilter', 'flyingNow']),
     methods: {
+        ...Vuex.mapActions(['resetFilter']),
         updateNameFilter(e) {
             this.$store.commit('updateNameFilter', e.target.value)
         },
@@ -316,9 +338,10 @@ var app = new Vue({
     created: function() {
         this.$store.dispatch('fetchFlightEntries')
     },
-    computed: Vuex.mapState([
-        'loading', 'filterVisible'
-    ]),
+    computed: {
+        ...Vuex.mapState(['loading', 'filterVisible']),
+        ...Vuex.mapGetters(['filteredFlightEntries'])
+    },
     methods: Vuex.mapMutations([
         'toggleFilter'
     ])
