@@ -11,7 +11,7 @@ const store = new Vuex.Store({
         stateFilter: 'all',
         flyingNow: false,
         currentPage: 1,
-        entriesPerPage: 20,
+        entriesPerPage: 30,
     },
     mutations: {
         loadingOn(state) {
