@@ -27,7 +27,7 @@
      inkscape:window-height="1017"
      inkscape:window-width="1920"
      showgrid="false"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer2"
      inkscape:document-units="px"
      inkscape:cy="167.14286"
      inkscape:cx="-82.224623"
@@ -545,17 +545,7 @@
   <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="Background">
-    <rect
-       style="display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3.77952766;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect3349"
-       width="400"
-       height="400"
-       x="0.19685364"
-       y="0.19685364"
-       rx="30"
-       ry="30" />
-  </g>
+     inkscape:label="Background" />
   <g
      inkscape:label="Mag glass"
      inkscape:groupmode="layer"
