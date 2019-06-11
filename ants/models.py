@@ -134,7 +134,7 @@ class Distribution(models.Model):
         A model which describes the destribution of an ant species.
     """
     species = models.ForeignKey(
-        'Species',
+        'AntSpecies',
         on_delete=models.CASCADE
     )
     region = models.ForeignKey(
