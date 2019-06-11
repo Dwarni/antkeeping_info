@@ -1,0 +1,20 @@
+.may-fly {
+    background-color: lightgreen;
+}
+
+.may-not-fly {
+    filter: blur(1px);
+    opacity: 0.3;
+}
+
+.month-column {
+    text-align: center;
+}
+
+.name-column {
+    font-style: italic;
+}
+
+.month-header {
+    width: 50px;
+}

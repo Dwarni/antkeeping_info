@@ -220,3 +220,7 @@ class HabitatTagAutocomplete(autocomplete.Select2QuerySetView):
             qs = qs.filter(name__istartswith=self.q)
 
         return qs.distinct().order_by('name')
+
+
+class MatingChartView(TemplateView):
+    template_name = 'flights/mating_chart.html'

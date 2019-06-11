@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block content %}
+    <h3>Ant Mating Chart</h3>
+    <div id="mating-chart">
+        <button v-on:click="toggleFilter()" class="btn btn-light mb-2"><img width="15px" src="{% static 'flights/img/filter.svg' %}?v=1"></button>
+        <div class="row mb-4">
+            <div v-if="filterVisible" class="col-md-3 order-md-2 mb-4">
+                <mating-chart-filter></mating-chart-filter>
+            </div>
+            <div class="col-md order-md-1">
+                <div v-if="loading" class="spinner-grow text-primary"></div>
+                <mating-chart-table v-else></mating-chart-table>
+            </div>
+        </div>
+        <mating-chart-pagination></mating-chart-pagination>
+    </div>
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static "flights/css/mating_chart.css" %}?v=1">
+{% endblock %}
+{% block script %}
+{% if debug %}
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+{% else %}
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+{% endif %}
+<script src="{% static 'flights/js/vendor/vuex.js' %}?v=1"></script>
+<script src="{% static 'flights/js/mating_chart.js' %}?v=1"></script>
+{% endblock %}
