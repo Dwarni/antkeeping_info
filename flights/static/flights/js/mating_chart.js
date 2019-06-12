@@ -139,8 +139,10 @@ const store = new Vuex.Store({
     getters: {
         filteredFlightEntries: state => {
             let filteredFlightEntries = state.flightEntries
+            const currentMonth = new Date().getMonth() + 1
             if(state.flyingNow === true) {
-                filteredFlightEntries = filteredFlightEntries.filter(flightEntry => flightEntry.flight_months.includes(6))
+                filteredFlightEntries = filteredFlightEntries
+                                            .filter(flightEntry => flightEntry.flight_months.includes(currentMonth))
             }
             const nameFilterLower = state.nameFilter.toLowerCase()
             if(nameFilterLower !== '' && nameFilterLower.length >= 3) {
