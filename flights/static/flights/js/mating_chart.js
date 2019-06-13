@@ -77,9 +77,6 @@ const store = new Vuex.Store({
             const baseURL = '/api/ants/nuptial-flight-months/'
             let url = baseURL
             let params = {}
-            if(state.nameFilter !== '') {
-                params.name = state.nameFilter
-            }
 
             if(state.countryFilter != 'all') {
                 params.region = state.countryFilter
@@ -93,8 +90,9 @@ const store = new Vuex.Store({
             var query = Object.keys(params)
                 .map(k => esc(k) + '=' + esc(params[k]))
                 .join('&');
-
-            url += `?${query}`
+            if(query.length > 0) {
+                url += `?${query}`
+            }
 
             fetch(url)
                 .then(response => {
