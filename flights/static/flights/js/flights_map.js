@@ -39,10 +39,10 @@
 
         initMap() {
             this._map = L.map('map')
-                .setView([51.505, -0.09], 2);
+                .setView([45, 10], 2);
             this.initBingLayer()
             this.initClusterGroup()
-            this.focusOnCurrentPosition(4)
+            //this.focusOnCurrentPosition(4)
             this.updateMap();    
         }
 
