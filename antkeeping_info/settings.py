@@ -161,6 +161,7 @@ BREADCRUMBS_TEMPLATE = "django_bootstrap_breadcrumbs/bootstrap4.html"
 # Crispy forms settings
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
+LOGIN_URL = '/users/login'
 
 # Bing api key
 BING_API_KEY_SERVER = env('BING_API_KEY_SERVER')
@@ -199,7 +200,10 @@ CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_SECONDS = 300
 CACHE_MIDDLEWARE_KEY_PREFIX = 'AKI'
 
-# prod settings
+# Email
+
+EMAIL_CONFIG = env.email_url('EMAIL_URL')
+vars().update(EMAIL_CONFIG)
 
 # prod settings
 
