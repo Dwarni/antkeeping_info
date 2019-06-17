@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 {% load i18n %}
 {% load static %}
+{% load ants %}
 {% block meta %}
     <meta name="description" content="{% trans 'Detailed information for ant species ' %}{{ object.name }}">
 {% endblock %}
@@ -27,7 +28,7 @@
         {{ object.genus }} 🡺
         {{ object.name }}</span>
     {% else %}
-        {% trans 'No information' %}
+        {{ DEFAULT_NONE_STR }}
     {% endif %}
 </section>
 <section class="ant-detail-section">
@@ -59,6 +60,14 @@
         </tr>
         <tr>
             <th>
+                {% trans 'Colony founding' %}:
+            </th>
+            <td>
+                {{ object.get_founding_display|format_value }}
+            </td>
+        </tr>
+        <tr>
+            <th>
                 Links:
             </th>
             <td>
@@ -68,25 +77,7 @@
     </table>
 </section>
 <section class="ant-detail-section">
-    <h2>{% trans 'Keeping parameters' %}</h2>
-    <table class="ant-detail-info-table">
-        <tr>
-            <th>
-                {% trans 'Hibernation required' %}:
-            </th>
-            <td>
-                {{ object.get_hibernation_display|default_if_none:"No information." }}
-            </td>
-        </tr>
-        <tr>
-            <th>
-                {% trans 'Nutrition' %}:
-            </th>
-            <td>
-                {{ object.get_nutrition_display|default_if_none:"No information." }}
-            </td>
-        </tr>
-    </table>
+    {% include 'ants/antspecies_detail/antspecies_detail_keeping_parameters.html' %}
 </section>
 <section class="ant-detail-section">
     <h2>{% trans 'Further information' %}</h2>

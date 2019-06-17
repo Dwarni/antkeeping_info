@@ -4,9 +4,11 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.core.validators import MinValueValidator, RegexValidator, \
-    ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator, \
+    RegexValidator, ValidationError
 from django.db import models
+from django.contrib.postgres import validators as psql_validators
+from django.contrib.postgres import fields as psql_fields
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 from django.urls import reverse
@@ -14,10 +16,10 @@ from django.urls import reverse
 from regions.models import Region
 from ants.managers import AntRegionManager, CountryAntRegionManager, \
     AntSizeManager, AntSpeciesManager, GenusManager, StateAntRegionManager
+from ants.helpers import format_integer_range, DEFAULT_NONE_STR
 
 
 # Create your models here.
-NO_INFORMATION = _('No information.')
 
 LANG_CHOICES = sorted(
     [(lang_code, _(lang_name)) for lang_code, lang_name in settings.LANGUAGES],
@@ -231,7 +233,7 @@ class Species(TaxonomicRank):
         if self.common_names.exists():
             return ', '.join(str(name) for name in self.common_names)
         else:
-            return NO_INFORMATION
+            return DEFAULT_NONE_STR
 
     class Meta(SpeciesMeta):
         pass
@@ -342,7 +344,7 @@ class AntSpecies(Species):
     def colony_structure_str(self):
         """Returns the colony structure as a string."""
         if self.colony_structure is None:
-            return NO_INFORMATION
+            return DEFAULT_NONE_STR
         else:
             return dict(self.COLONY_STRUCTURE_CHOICES)[self.colony_structure]
 
@@ -350,6 +352,31 @@ class AntSpecies(Species):
         blank=True,
         null=True,
         verbose_name=_('Worker polymorphism')
+    )
+
+    # founding
+    CLAUSTRAL = 'c'
+    SEMI_CLAUSTRAL = 'sc'
+    SOCIAL_PARASITIC = 'sp'
+    SOCIAL_PARASITIC_CAN_OPEN_PUPAE = 'spp'
+
+    FOUNDING_CHOICES = (
+        (CLAUSTRAL, _('claustral (queen does not need any food)')),
+        (SEMI_CLAUSTRAL, _('semi-claustral (queen needs to be fed during '
+                           'founding)')),
+        (SOCIAL_PARASITIC, _('social parasitic (queen needs workers of '
+                             'suitable ant species)')),
+        (SOCIAL_PARASITIC_CAN_OPEN_PUPAE,
+            _('social parasitic (founding can be '
+              'done with pupae of suitable ant species)'))
+    )
+
+    founding = models.CharField(
+        max_length=3,
+        blank=True,
+        null=True,
+        choices=FOUNDING_CHOICES,
+        verbose_name=_('Founding')
     )
 
     flight_months = models.ManyToManyField(
@@ -362,7 +389,7 @@ class AntSpecies(Species):
     def flight_months_str(self):
         """Returns the nuptial flight months as a string."""
         if self.flight_months.exists() is False:
-            return NO_INFORMATION
+            return DEFAULT_NONE_STR
         else:
             return ', '.join(str(month) for month in self.flight_months.all())
 
@@ -393,9 +420,10 @@ class AntSpecies(Species):
     )
 
     LONG_HIBERNATION = 'LONG'
-    LONG_HIBERNATION_TEXT = _('yes, around 6 months')
+    LONG_HIBERNATION_TEXT = _('yes: end of september until end of march')
     SHORT_HIBERNATION = 'SHORT'
-    SHORT_HIBERNATION_TEXT = _('yes, around 3 months')
+    SHORT_HIBERNATION_TEXT = _('yes: end of november until end of'
+                               ' february')
     NO_HIBERNATION = 'NO'
     NO_HIBERNATION_TEXT = _('No')
 
@@ -418,6 +446,46 @@ class AntSpecies(Species):
         verbose_name=_('Information complete')
     )
 
+    INT_RANGE_HELP_TEXT = _('Note that the upper value is not included '
+                            'so if you want to enter 25 - 28 you have '
+                            'to enter 25 - 29')
+
+    nest_temperature = psql_fields.IntegerRangeField(
+        blank=True,
+        null=True,
+        validators=[psql_validators.RangeMinValueValidator(0),
+                    psql_validators.RangeMaxValueValidator(41)],
+        verbose_name=_('Nest temperature (℃)'),
+        help_text=INT_RANGE_HELP_TEXT
+    )
+
+    nest_humidity = psql_fields.IntegerRangeField(
+        blank=True,
+        null=True,
+        validators=[psql_validators.RangeMinValueValidator(0),
+                    psql_validators.RangeMaxValueValidator(100)],
+        verbose_name=_('Nest relative humidity (%)'),
+        help_text=INT_RANGE_HELP_TEXT
+    )
+
+    outworld_temperature = psql_fields.IntegerRangeField(
+        blank=True,
+        null=True,
+        validators=[psql_validators.RangeMinValueValidator(0),
+                    psql_validators.RangeMaxValueValidator(41)],
+        verbose_name=_('Outworld temperature (℃)'),
+        help_text=INT_RANGE_HELP_TEXT
+    )
+
+    outworld_humidity = psql_fields.IntegerRangeField(
+        blank=True,
+        null=True,
+        validators=[psql_validators.RangeMinValueValidator(0),
+                    psql_validators.RangeMaxValueValidator(100)],
+        verbose_name=_('Outworld relative humidty (%)'),
+        help_text=INT_RANGE_HELP_TEXT
+    )
+
     def get_absolute_url(self):
         """Return the url to detail page."""
         return reverse('ant_detail', args=[self.slug])
@@ -426,6 +494,13 @@ class AntSpecies(Species):
 
     class Meta(SpeciesMeta):
         pass
+
+
+class AntSpeciesDistribution(AntSpecies):
+    class Meta(SpeciesMeta):
+        verbose_name = _('Species distribution')
+        verbose_name_plural = _('Species distributions')
+        proxy = True
 
 
 class CommonName(models.Model):

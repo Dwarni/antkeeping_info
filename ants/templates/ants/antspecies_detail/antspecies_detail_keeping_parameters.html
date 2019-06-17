@@ -1,0 +1,52 @@
+{% load i18n %}
+<h2>{% trans 'Keeping parameters' %}</h2>
+<table class="ant-detail-info-table">
+    <tr>
+        <th>
+            {% trans 'Nutrition' %}:
+        </th>
+        <td>
+            {{ object.get_nutrition_display|format_value }}
+        </td>
+    </tr>
+    <tr>
+        <th>
+            {% trans 'Nest temperature' %}:
+        </th>
+        <td>
+            {{ object.nest_temperature|format_int_range:"℃" }}
+        </td>
+    </tr>
+    <tr>
+        <th>
+            {% trans 'Nest humidity' %}:
+        </th>
+        <td>
+            {{ object.nest_humidity|format_int_range:"%" }}
+        </td>
+    </tr>
+    <tr>
+        <th>
+            {% trans 'Outworld temperature' %}:
+        </th>
+        <td>
+            {{ object.outworld_temperature|format_int_range:"℃" }}
+        </td>
+    </tr>
+    <tr>
+        <th>
+            {% trans 'Outworld humidity' %}:
+        </th>
+        <td>
+            {{ object.outworld_humidity|format_int_range:"%" }}
+        </td>
+    </tr>
+    <tr>
+        <th>
+            {% trans 'Hibernation required' %}:
+        </th>
+        <td>
+            {{ object.get_hibernation_display|format_value }}
+        </td>
+    </tr>
+</table>

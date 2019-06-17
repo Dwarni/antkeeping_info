@@ -13,6 +13,7 @@ from django.db.models import Q
 
 from .models import AntRegion, AntSize, AntSpecies, InvalidName
 from flights.models import Flight
+from ants.helpers import DEFAULT_NONE_STR
 
 
 # Create your views here.
@@ -129,6 +130,7 @@ class RegionAntList(CountryAntList):
         context['region_code'] = self.region.code
         context['region'] = self.region
         context['ant_list_complete'] = self.region.ant_list_complete
+        contest['DEFAULT_NONE_STR'] = DEFAULT_NONE_STR
         return context
 
 

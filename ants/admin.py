@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.core.cache import caches
 from django.utils.translation import ugettext as _
-from ants.models import AntRegion, AntSize, AntSpecies, CommonName, \
-    Distribution, SpeciesDescription, Family, Genus, InvalidName, SubFamily
+from ants.models import AntRegion, AntSize, AntSpecies, \
+     AntSpeciesDistribution, CommonName, Distribution, \
+     SpeciesDescription, Family, Genus, InvalidName, \
+     SubFamily
 from regions.models import Region
 
 
@@ -52,25 +54,25 @@ class AntSpeciesAdmin(BaseAdmin):
         (_('General'), {'fields': ['name', 'genus',
                                    'colony_structure',
                                    'worker_polymorphism',
-                                   'flight_months']}),
+                                   'flight_months', 'founding']}),
         (_('Keeping parameters'), {'fields': [
-            'hibernation', 'nutrition'
+            'nutrition', 'nest_temperature', 'nest_humidity',
+            'outworld_temperature', 'outworld_humidity', 'hibernation'
         ]})
     ]
     search_fields = ['name']
 
     inlines = [
-        DistributionInline,
         DescriptionInline, AntSizeInline,
         InvalidNameInline, CommonNameInline]
 
-    def get_formsets_with_inlines(self, request, obj=None):
-        for inline in self.get_inline_instances(request, obj):
-            if isinstance(inline, DistributionInline):
-                inline.cached_regions = [
-                    (i.pk, str(i)) for i in Region.objects.all()
-                ]
-            yield inline.get_formset(request, obj), inline
+
+@admin.register(AntSpeciesDistribution)
+class AntSpeciesDistributionAdmin(BaseAdmin):
+    search_fields = ['name']
+    fields = ['name']
+    readonly_fields = ['name']
+    inlines = [DistributionInline]
 
 
 @admin.register(Family)

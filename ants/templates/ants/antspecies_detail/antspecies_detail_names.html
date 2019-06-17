@@ -25,7 +25,7 @@
                 {% for invalid_name in invalid_names %}
                 {{ invalid_name.name }}{{ forloop.last|yesno:",&#44;"|safe }}
                 {% empty %}
-                {% trans 'No information' %}.
+                {{ DEFAULT_NONE_STR }}
                 {% endfor %}
             </td>
         </tr>

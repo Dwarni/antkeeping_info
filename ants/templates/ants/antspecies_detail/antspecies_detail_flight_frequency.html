@@ -2,8 +2,8 @@
 <div class="tab-pane" id="flightFrequency" role="tabpanel">
     {% if flight_frequency %}
         <canvas id="flightFrequencyChart">
-        </canvas
+        </canvas>
     {% else %}
-        <p>No information.</p>
+        <p>{{ DEFAULT_NONE_STR }}</p>
     {% endif %}
 </div>
