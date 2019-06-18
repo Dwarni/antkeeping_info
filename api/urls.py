@@ -32,5 +32,6 @@ urlpatterns = [
 #              ))
 
 urlpatterns.append(
-     path('docs/', include_docs_urls(title='Antkeeping.info API Documentation'))
+     path('docs/', include_docs_urls(title='Antkeeping.info API Documentation',
+          public=True))
 )
