@@ -130,7 +130,7 @@ class RegionAntList(CountryAntList):
         context['region_code'] = self.region.code
         context['region'] = self.region
         context['ant_list_complete'] = self.region.ant_list_complete
-        contest['DEFAULT_NONE_STR'] = DEFAULT_NONE_STR
+        context['DEFAULT_NONE_STR'] = DEFAULT_NONE_STR
         return context
 
 
