@@ -25,13 +25,13 @@ urlpatterns = [
          views.AntsByRegionView.as_view(), name='api_ants_by_region')
 ]
 
-# if settings.DEBUG is True:
-#     urlpatterns.append(
-#         path('docs/',
-#              include_docs_urls(title='Antkeeping.info API Documentation')
-#              ))
+if settings.DEBUG is True:
+    urlpatterns.append(
+        path('docs/',
+             include_docs_urls(title='Antkeeping.info API Documentation')
+             ))
 
-urlpatterns.append(
-     path('docs/', include_docs_urls(title='Antkeeping.info API Documentation',
-          public=True))
-)
+# urlpatterns.append(
+#      path('docs/', include_docs_urls(title='Antkeeping.info API Documentation',
+#           public=True))
+# )
