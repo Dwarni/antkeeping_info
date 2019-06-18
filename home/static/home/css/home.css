@@ -5,3 +5,7 @@
 .card-image {
     margin-top: 10px;
 }
+
+.card {
+    min-width: 300px;
+}
