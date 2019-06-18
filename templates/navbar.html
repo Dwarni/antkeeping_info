@@ -28,7 +28,12 @@
                     <a class="dropdown-item" href="{% url "flights_review_list" %}">{% trans "Review" %}</a>
                   {% endif %}
                 </div>
-              </li>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" target="_blank" rel="noopener noreferrer" href="https://discord.gg/xuuQnGt" title="Antkeeping.info on Discord">
+                    Discord (Chat)
+                </a>
+            </li>
         </ul>
         <div class="navbar-nav ml-auto">
             <form class="form-inline" action="{% url 'search' %}" method="GET">
