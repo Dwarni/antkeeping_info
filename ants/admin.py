@@ -51,10 +51,12 @@ class BaseAdmin(admin.ModelAdmin):
 class AntSpeciesAdmin(BaseAdmin):
     filter_horizontal = ['flight_months']
     fieldsets = [
-        (_('General'), {'fields': ['name', 'genus',
+        (_('General'), {'fields': ['name', 'genus', 'information_complete',
                                    'colony_structure',
                                    'worker_polymorphism',
-                                   'flight_months', 'founding']}),
+                                   'founding']}),
+        (_('Nuptial flight'), {'fields': ['flight_months', 'flight_hour_range',
+                                          'flight_climate']}),
         (_('Keeping parameters'), {'fields': [
             'nutrition', 'nest_temperature', 'nest_humidity',
             'outworld_temperature', 'outworld_humidity', 'hibernation'

@@ -183,6 +183,12 @@ Vue.component('mating-chart-row', {
                 v-bind:flight-months="flightEntry.flight_months"
                 v-bind:key="n"
                 ></mating-chart-month-column>
+            <td v-if="flightEntry.flight_hour_range" title="Hours of the day" class="pr-1"><i class="fas fa-clock"></i> {{ flightEntry.flight_hour_range.lower }}-{{ flightEntry.flight_hour_range.upper - 1 }}</td>
+            <td v-if="flightEntry.flight_climate">
+                <i v-if="flightEntry.flight_climate === 'm'" title="Moderate climate" class="fas fa-thermometer-half"></i>
+                <i v-else-if="flightEntry.flight_climate === 'w'" title="Warm climate" class="fas fa-thermometer-full"></i>
+                <div v-else title="Sticky climate"><i class="fas fa-thermometer-full"></i><i  class="fas fa-tint"></i></div>
+            </td>
         </tr>
     `
 })
@@ -223,12 +229,6 @@ Vue.component('mating-chart-month-column', {
 Vue.component('mating-chart-table', {
     template: `
     <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th v-for="i in 12" class="month-column month-header"></th>
-            </tr>
-        </thead>
         <tbody>
             <mating-chart-row 
                 v-for="flightEntry in flightEntriesCurrentPage" 

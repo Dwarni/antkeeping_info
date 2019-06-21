@@ -319,6 +319,11 @@ class AntSize(models.Model):
     objects = AntSizeManager()
 
 
+INT_RANGE_HELP_TEXT = _('Note that the upper value is not included '
+                        'so if you want to enter 25 - 28 you have '
+                        'to enter 25 - 29')
+
+
 class AntSpecies(Species):
     """Model of an ant species."""
     # colony
@@ -385,6 +390,32 @@ class AntSpecies(Species):
         verbose_name=_('Nuptial flight months'),
     )
 
+    flight_hour_range = psql_fields.IntegerRangeField(
+        blank=True,
+        null=True,
+        verbose_name=_('Flight hour range'),
+        validators=[
+            psql_validators.RangeMinValueValidator(1),
+            psql_validators.RangeMaxValueValidator(25)],
+        help_text=INT_RANGE_HELP_TEXT
+    )
+
+    MODERATE = 'm'
+    WARM = 'w'
+    STICKY = 's'
+    FLIGHT_CLIMATE_CHOICES = (
+        (MODERATE, _('Moderate temperature')),
+        (WARM, _('Warm temperature')),
+        (STICKY, _('Sticky weather'))
+    )
+    flight_climate = models.CharField(
+        blank=True,
+        null=True,
+        max_length=1,
+        choices=FLIGHT_CLIMATE_CHOICES,
+        verbose_name=_('Flight climate')
+    )
+
     @property
     def flight_months_str(self):
         """Returns the nuptial flight months as a string."""
@@ -445,10 +476,6 @@ class AntSpecies(Species):
         default=False,
         verbose_name=_('Information complete')
     )
-
-    INT_RANGE_HELP_TEXT = _('Note that the upper value is not included '
-                            'so if you want to enter 25 - 28 you have '
-                            'to enter 25 - 29')
 
     nest_temperature = psql_fields.IntegerRangeField(
         blank=True,

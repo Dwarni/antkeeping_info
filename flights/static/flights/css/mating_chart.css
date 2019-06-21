@@ -9,12 +9,9 @@
 
 .month-column {
     text-align: center;
+    width: 40px;
 }
 
 .name-column {
     font-style: italic;
-}
-
-.month-header {
-    width: 50px;
 }

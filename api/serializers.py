@@ -1,5 +1,6 @@
 """Serializer module for api app."""
 from rest_framework.serializers import ModelSerializer
+from drf_extra_fields.fields import IntegerRangeField
 
 from ants.models import AntSpecies, AntRegion, Genus
 
@@ -8,7 +9,9 @@ class AntsWithNuptialFlightsListSerializer(ModelSerializer):
     """Serializer for a list of ants with nuptial flight months."""
     class Meta:
         model = AntSpecies
-        fields = ('id', 'name', 'flight_months')
+        flight_hour_range = IntegerRangeField(source='flight_hour_range')
+        fields = ('id', 'name', 'flight_months',
+                  'flight_climate', 'flight_hour_range')
         read_only_fields = fields
 
 
