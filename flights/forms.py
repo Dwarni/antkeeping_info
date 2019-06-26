@@ -163,9 +163,9 @@ class FlightForm(forms.ModelForm):
         if start_time is not None and end_time is not None:
             if start_time > end_time:
                 self.add_error('start_time', _(
-                    'Start time has to be before end time'))
+                    'Start time has to be before or equal to end time'))
                 self.add_error('end_time', _(
-                    'End time has to be after start time'))
+                    'End time has to be after or equal to start time'))
 
         # Check if api returned a valid result
         if position is None:
