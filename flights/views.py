@@ -87,11 +87,11 @@ class AddFlightView(FormView):
                 'external_user': flight.external_user
             }
 
-            if flight.temperature:
+            if flight.temperature is not None:
                 initial['temperature'] = flight.temperature.value
                 initial['temperature_unit'] = flight.temperature.unit
 
-            if flight.wind_speed:
+            if flight.wind_speed is not None:
                 initial['wind_speed'] = flight.wind_speed.value
                 initial['wind_speed_unit'] = flight.wind_speed.unit
 
