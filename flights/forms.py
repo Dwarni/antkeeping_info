@@ -43,11 +43,6 @@ MODEL_SELECT_ATTRS = {
 class FlightForm(forms.ModelForm):
     """Form class for adding end updating nuptial flights."""
 
-    # general
-    test_data = forms.BooleanField(
-        required=False
-    )
-
     # weather
     temperature = IntegerField(required=False)
     temperature_unit = ChoiceField(choices=Temperature.UNIT_CHOICES)
