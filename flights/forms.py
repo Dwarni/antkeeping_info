@@ -57,6 +57,10 @@ class FlightForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         iframe = kwargs.pop('iframe', None)
         super().__init__(*args, **kwargs)
+
+        if not settings.RECAPTCHA_ENABLED:
+            self.fields.pop('captcha')
+
         self.helper.form_class = 'form-horizontal'
         self.helper.form_id = 'flightForm'
         self.helper.label_class = 'col-lg-2'
@@ -319,5 +323,6 @@ class FlightStaffForm(FlightForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields.pop('captcha')
-        self.helper.layout.fields.remove('captcha')
+        if 'captcha' in self.fields:
+            self.fields.pop('captcha')
+            self.helper.layout.fields.remove('captcha')
