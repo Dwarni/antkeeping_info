@@ -1,4 +1,6 @@
-from django.db.models import Q
+from django.db.models import Q, F
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 import coreapi
 import coreschema
@@ -8,7 +10,7 @@ from rest_framework.response import Response
 
 from ants.models import AntSpecies, AntRegion, Genus
 
-from .serializers import RegionListSerializer, \
+from .serializers import RegionSerializer, RegionListSerializer, \
     AntsWithNuptialFlightsListSerializer, AntListSerializer, \
     AntSpeciesNameSerializer, GenusNameSerializer
 
@@ -58,6 +60,37 @@ class NuptialFlightMonths(generics.ListAPIView):
             ants = ants.filter(distribution__region__pk=region)
 
         return ants.distinct()
+
+
+class RegionView(APIView):
+    """
+        Return a specific region.
+    """
+    # serializer_class = AntListSerializer
+    schema = AutoSchema(manual_fields=[
+        coreapi.Field(
+            "region",
+            required=True,
+            location='path',
+            schema=coreschema.String(
+                description='ID, slug or code of a region.')
+        )
+    ])
+
+    def get(self, request, region):
+        regions = AntRegion.objects
+        try:
+            int(region)
+            regions = regions.filter(pk=region)
+        except ValueError:
+            code_query = Q(code=region)
+            slug_query = Q(slug=region)
+            regions = regions.filter(code_query | slug_query)
+        finally:
+            region = get_object_or_404(regions)
+
+        serializer = RegionSerializer(region, many=False)
+        return Response(serializer.data)
 
 
 class RegionsView(generics.ListAPIView):
@@ -137,11 +170,24 @@ class AntsByRegionView(APIView):
             location='path',
             schema=coreschema.String(
                 description='ID, slug or code of a region.')
+        ),
+        coreapi.Field(
+            "antSpeciesName",
+            required=False,
+            location='query',
+            schema=coreschema.String(
+                description='The passed ant species name is used '
+                            'to filter the list.')
         )
     ])
 
     def get(self, request, region):
+        ant_species_name = self.request.query_params.get(
+            'antSpeciesName', None)
         ants = AntSpecies.objects
+
+        if ant_species_name is not None:
+            ants = ants.filter(name__icontains=ant_species_name)
 
         try:
             int(region)
@@ -154,9 +200,13 @@ class AntsByRegionView(APIView):
             ants = ants.values(
                 'id',
                 'name',
-                'distribution__native',
-                'distribution__protected',
-                'distribution__red_list_status')
+                native=F('distribution__native'),
+                protected=F('distribution__protected'),
+                red_list_status=F('distribution__red_list_status'))
+
+            if len(ants) == 0:
+                raise Http404
+
             return Response(ants)
 
 
