@@ -265,6 +265,9 @@ class Flight(models.Model):
 
     @property
     def link_host(self):
+        if self.link is None or self.link == '':
+            return None
+
         return parse_hostname(self.link)
 
     project = models.CharField(max_length=200, blank=True, null=True)
