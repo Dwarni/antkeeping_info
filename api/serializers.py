@@ -15,6 +15,14 @@ class AntsWithNuptialFlightsListSerializer(ModelSerializer):
         read_only_fields = fields
 
 
+class RegionSerializer(ModelSerializer):
+    """Serializer for a region."""
+    class Meta:
+        model = AntRegion
+        fields = ('id', 'name', 'slug', 'type', 'code', 'parent')
+        read_only_fields = fields
+
+
 class RegionListSerializer(ModelSerializer):
     """Serializer for a list of regions."""
     class Meta:
