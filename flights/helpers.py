@@ -1,5 +1,7 @@
 """Module for helper functions and classes in flights app."""
 
+from urllib.parse import urlparse
+
 
 def format_unit(value, symbol):
     """Formats a unit value as a string including its symbol."""
@@ -115,3 +117,12 @@ class Velocity():
         if self.unit == Velocity.KMH:
             return format_two_units(self.kmh_str, self.mph_str)
         return format_two_units(self.mph_str, self.kmh_str)
+
+
+def parse_hostname(uri):
+    parsed_uri = urlparse(uri)
+
+    if parsed_uri is not None:
+        return '{0.scheme}://{0.hostname}'.format(parsed_uri)
+
+    return None

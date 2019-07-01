@@ -12,6 +12,7 @@ from taggit.managers import TaggableManager
 
 from ants.models import AntSpecies, AntRegion
 from .managers import FlightManager
+from .helpers import parse_hostname
 
 
 # Create your models here.
@@ -261,6 +262,11 @@ class Flight(models.Model):
     # additional information
     comment = models.TextField(max_length=255, blank=True, null=True)
     link = models.URLField(blank=True, null=True)
+
+    @property
+    def link_host(self):
+        return parse_hostname(self.link)
+
     project = models.CharField(max_length=200, blank=True, null=True)
     external_user = models.CharField(max_length=100, blank=True, null=True)
 
