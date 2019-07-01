@@ -8,8 +8,10 @@ from taggit.models import Tag
 
 from django.conf import settings
 from django.contrib import messages
+from django.db.models import Func, Value
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Count, F
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import FormView, ListView, TemplateView, \
@@ -224,3 +226,99 @@ class HabitatTagAutocomplete(autocomplete.Select2QuerySetView):
 
 class MatingChartView(TemplateView):
     template_name = 'flights/mating_chart.html'
+
+
+class RegexpReplace(Func):
+    function = 'REGEXP_REPLACE'
+
+    def __init__(self, expression, pattern, replacement, **extra):
+        if not hasattr(pattern, 'resolve_expression'):
+            if not isinstance(pattern, str):
+                raise TypeError("'pattern' must be a string")
+            pattern = Value(pattern)
+        if not hasattr(replacement, 'resolve_expression'):
+            if not isinstance(replacement, str):
+                raise TypeError("'replacement' must be a string")
+            replacement = Value(replacement)
+        expressions = [expression, pattern, replacement]
+        super().__init__(*expressions, **extra)
+
+
+class TopLists(TemplateView):
+    template_name = 'flights/top_lists/top_lists.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        qs = Flight.objects
+        self.add_top_external_users(qs, context)
+        self.add_top_external_websites(qs, context)
+        self.add_top_species(qs, context)
+        self.add_top_countries(qs, context)
+
+        return context
+
+    def add_top_external_users(self, query_set, context):
+        flights = (query_set
+                   .filter(external_user__isnull=False)
+                   .order_by('external_user', 'link', 'date'))
+
+        external_users = []
+        last_username = None
+        last_hostname = None
+        for flight in flights:
+            if (flight.external_user != last_username or
+                    flight.link_host != last_hostname):
+                last_username = flight.external_user
+                last_hostname = flight.link_host
+                external_user = {}
+                external_user['name'] = last_username
+                external_user['hostname'] = last_hostname
+                external_user['flight_count'] = 0
+                external_users.append(external_user)
+
+            last_external_user = external_users[-1]
+            last_external_user['flight_count'] += 1
+
+        external_users.sort(
+            key=lambda external_user: external_user['flight_count'],
+            reverse=True)
+        context['external_users'] = external_users[:10]
+        context['max_flights'] = external_users[0]['flight_count']
+
+    def add_top_external_websites(self, query_set, context):
+        flights = (query_set
+                   .filter(link__isnull=False)
+                   .order_by('link', 'date'))
+
+        websites = []
+        last_website_name = None
+        for flight in flights:
+            if flight.link_host != last_website_name:
+                last_website_name = flight.link_host
+                website = {}
+                website['name'] = last_website_name
+                website['count'] = 0
+                websites.append(website)
+
+            last_website = websites[-1]
+            last_website['count'] += 1
+
+        websites.sort(key=lambda website: website['count'], reverse=True)
+        context['top_websites'] = websites
+        context['top_websites_max_reports'] = websites[0]['count']
+
+    def add_top_species(self, query_set, context):
+        species = (query_set
+                   .values(name=F('ant_species__name'))
+                   .annotate(count=Count('name'))
+                   .order_by('-count'))[:10]
+        context['top_species'] = species
+        context['top_species_max_reports'] = species.first()['count']
+
+    def add_top_countries(self, query_set, context):
+        countries = (query_set
+                     .values(name=F('country__name'))
+                     .annotate(count=Count('name'))
+                     .order_by('-count'))[:10]
+        context['top_countries'] = countries
+        context['top_countries_max_reports'] = countries.first()['count']

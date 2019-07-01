@@ -1,0 +1,57 @@
+{% extends 'flights/flights.html' %}
+{% load i18n %}
+{% load static %}
+{% load django_bootstrap_breadcrumbs %}
+{% load flights %}
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "Flight reports top list" "flights_top_lists" %}
+{% endblock %}
+{% block content %}
+    {# {{ block.super }} #}
+    <h1>Flight spottings top lists</h1>
+    <p>Here you can find some top lists based on the reported flight spottings.</p>
+    <h2>Top 10 ant species</h2>
+    <p>The following list shows you which ant species spottings have been reported most often.</p>
+    <ol>
+        {% for species in top_species %}
+        <li><h6 class="text-dark">{{species.name}}</h6>
+            {% include "flights/top_lists/top_lists_bar_chart.html" with value=species.count max_value=top_species_max_reports %}
+        </li>
+        {% endfor %}
+    </ol>
+    <h2>Top 10 countries</h2>
+    <p>The following list shows you in which countries the most flights have been reported.</p>
+    <ol>
+        {% for country in top_countries %}
+        <li><h6 class="text-dark">{{country.name}}</h6>
+            {% include "flights/top_lists/top_lists_bar_chart.html" with value=country.count max_value=top_countries_max_reports %}
+        </li>
+        {% endfor %}
+    </ol>
+    <h2>Top 10 external users</h2>
+    <p>A lot of the flight reports you see on the map were actually not reported directly on antkeeping.info but have been reported on external websites.
+        The following list shows you the names of the external users which reported the most flights.
+    </p>
+    <ol>
+        {% for external_user in external_users %}
+        <li><h6 class="text-dark">{{external_user.name}} (<a rel="external" href="{{ external_user.hostname }}">{{ external_user.hostname }}</a>)</h6>
+            {% include "flights/top_lists/top_lists_bar_chart.html" with value=external_user.flight_count max_value=max_flights %}
+        </li>
+        {% endfor %}
+    </ol>
+    <h2>Top 10 websites</h2>
+    <p>A lot of the flight reports you see on the map were actually not reported directly on antkeeping.info but have been reported on external websites.
+        The following list shows you the top 10 websites which provided the flight spotting data.
+    </p>
+    <ol>
+        {% for website in top_websites %}
+        <li><h6 class="text-dark">{{website.name}}</h6>
+            {% include "flights/top_lists/top_lists_bar_chart.html" with value=website.count max_value=top_websites_max_reports %}
+        </li>
+        {% endfor %}
+    </ol>
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'flights/css/top_lists.css' %}?v=1">
+{% endblock %}

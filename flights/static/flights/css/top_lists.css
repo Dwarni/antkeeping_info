@@ -1,0 +1,11 @@
+.bar-chart {
+    display: flex;
+    height: 30px;
+    justify-content: center;
+}
+.bar-chart-text {
+    display: inline-flex;
+    height: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+}

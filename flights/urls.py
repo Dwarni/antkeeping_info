@@ -23,5 +23,9 @@ urlpatterns = [
     path(
         'habitat-tags-autocomplete', views.HabitatTagAutocomplete.as_view(),
         name='flight_habitat_tags_autocomplete'
+    ),
+    path(
+        'top-lists', views.TopLists.as_view(),
+        name='flights_top_lists'
     )
 ]
