@@ -287,7 +287,7 @@ class TopLists(TemplateView):
 
     def add_top_external_websites(self, query_set, context):
         flights = (query_set
-                   .filter(link__isnull=False)
+                   .exclude(link__isnull=True)
                    .order_by('link', 'date'))
 
         websites = []
@@ -300,8 +300,9 @@ class TopLists(TemplateView):
                 website['count'] = 0
                 websites.append(website)
 
-            last_website = websites[-1]
-            last_website['count'] += 1
+            if len(websites) > 1:
+                last_website = websites[-1]
+                last_website['count'] += 1
 
         websites.sort(key=lambda website: website['count'], reverse=True)
         context['top_websites'] = websites
