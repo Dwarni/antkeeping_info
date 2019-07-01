@@ -21,6 +21,8 @@ urlpatterns = [
          name='api_ants_by_genus'
          ),
     path('regions/', views.RegionsView.as_view(), name='api_regions'),
+    path('regions/<str:region>/',
+         views.RegionView.as_view(), name='api_region'),
     path('regions/<str:region>/ants/',
          views.AntsByRegionView.as_view(), name='api_ants_by_region')
 ]
