@@ -187,7 +187,7 @@ class AntsByRegionView(APIView):
         ants = AntSpecies.objects
 
         if ant_species_name is not None:
-            ants = ants.filter(name__icontains=ant_species_name)
+            ants = ants.search_by_name(ant_species_name)
 
         try:
             int(region)

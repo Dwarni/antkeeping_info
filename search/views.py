@@ -20,11 +20,7 @@ class SearchView(TemplateView):
         query_string = self.request.GET.get('q', None)
         query_string = query_string.replace('+', ' ')
 
-        ant_species = AntSpecies.objects.filter(
-            Q(name__icontains=query_string) |
-            Q(commonname__name__icontains=query_string) |
-            Q(invalidname__name__icontains=query_string)
-        ).exclude(name__endswith='sp.').distinct()
+        ant_species = AntSpecies.objects.search_by_name(query_string)
 
         context['ant_species'] = ant_species
 

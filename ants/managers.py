@@ -2,7 +2,7 @@
     Module which stores all the mangers of ant app.
 """
 from django.apps import apps
-from django.db.models import Manager
+from django.db.models import Manager, Q
 
 
 class TaxonomicRankManager(Manager):
@@ -114,6 +114,18 @@ class AntSpeciesManager(TaxonomicRankManager):
             .filter(distribution__region__parent__type='Country') \
             .filter(distribution__region__code=code) \
             .distinct()
+
+    def search_by_name(self, search_name):
+        """
+            Return a QuerySet which only contains ants that contain
+            the search_name either in their name, invalid names or 
+            common names.
+        """
+        return self.get_queryset().filter(
+            Q(name__icontains=search_name) |
+            Q(commonname__name__icontains=search_name) |
+            Q(invalidname__name__icontains=search_name)
+        ).exclude(name__endswith='sp.').distinct()
 
 
 class AntSizeManager(Manager):
