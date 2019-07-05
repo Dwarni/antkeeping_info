@@ -9,7 +9,11 @@
     <link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}?v=5">
 {% endblock %}
 {% block content %}
-<h1 class="taxonomy">{{ object.name }}</h1>
+<h1 class="taxonomy">{{ object.name }}
+    {% if user.is_staff %}
+    <small><a href="{% url 'admin:ants_antspecies_change' object.id %}"><i class="fas fa-edit text-primary"></i></a></small>
+    {% endif %}
+</h1>
 {% if object.information_complete == False %}
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
         {% trans 'Species information is not complete yet!' %}
