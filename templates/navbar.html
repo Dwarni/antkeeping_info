@@ -1,5 +1,6 @@
 {% load static %}
 {% load i18n %}
+{% load admin_urls %}
 <nav class="navbar navbar-expand-md fixed-top navbar-light bg-light">
     <a class="navbar-brand" href="{% url "home" %}">
         <img src="{% static "img/logo.svg" %}?v=2" width="30" height="30" alt="" class="d-inline-block align-top">
@@ -29,6 +30,17 @@
                   {% endif %}
                 </div>
             </li>
+            {% if user.is_staff %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="flightsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  {% trans "Staff" %}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="flightsDropdown">
+                  <a class="dropdown-item" href="{% url 'admin:index' %}">{% trans "Admin page" %}</a>
+                  <a class="dropdown-item" href="{% url 'staff_add_antspecies_to_region' %}">{% trans "Add ant species to region" %}</a>
+                </div>
+            </li>
+            {% endif %}
             <li class="nav-item">
                 <a class="nav-link" target="_blank" rel="noopener noreferrer" href="https://discord.gg/xuuQnGt" title="Antkeeping.info on Discord">
                     Discord (Chat)
