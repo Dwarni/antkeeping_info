@@ -11,7 +11,7 @@
 {% block content %}
 <h1 class="taxonomy">{{ object.name }}
     {% if user.is_staff %}
-    <small><a href="{% url 'admin:ants_antspecies_change' object.id %}"><i class="fas fa-edit text-primary"></i></a></small>
+    <small><a title="{% trans 'Edit species' %}" href="{% url 'admin:ants_antspecies_change' object.id %}"><i class="fas fa-edit text-primary"></i></a></small>
     {% endif %}
 </h1>
 {% if object.information_complete == False %}
