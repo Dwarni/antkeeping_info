@@ -84,6 +84,9 @@ class DistributionForAntSerializer(serializers.ModelSerializer):
 
 class AntSizeSerializer(serializers.ModelSerializer):
     """Serializer for AntSize object."""
+    minimum = serializers.FloatField()
+    maximum = serializers.FloatField()
+
     class Meta:
         model = ant_models.AntSize
         fields = ('type', 'minimum', 'maximum')
