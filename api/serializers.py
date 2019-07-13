@@ -82,6 +82,14 @@ class DistributionForAntSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class AntSizeSerializer(serializers.ModelSerializer):
+    """Serializer for AntSize object."""
+    class Meta:
+        model = ant_models.AntSize
+        fields = ('type', 'minimum', 'maximum')
+        read_only_fields = fields
+
+
 class AntSpeciesDetailSerializer(serializers.ModelSerializer):
     """Serializer for details of a specific ant."""
     genus = GenusSerializer(many=False, read_only=True)
@@ -93,6 +101,7 @@ class AntSpeciesDetailSerializer(serializers.ModelSerializer):
     flight_climate = serializers.SerializerMethodField()
     hibernation = serializers.SerializerMethodField()
     nutrition = serializers.SerializerMethodField()
+    sizes = AntSizeSerializer(many=True, read_only=True)
 
     def get_colony_structure(self, obj):
         return obj.get_colony_structure_display()
