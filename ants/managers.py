@@ -124,7 +124,7 @@ class AntSpeciesManager(TaxonomicRankManager):
         return self.get_queryset().filter(
             Q(name__icontains=search_name) |
             Q(commonname__name__icontains=search_name) |
-            Q(invalidname__name__icontains=search_name)
+            Q(invalid_names__name__icontains=search_name)
         ).exclude(name__endswith='sp.').distinct()
 
 
