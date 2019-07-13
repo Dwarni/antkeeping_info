@@ -22,11 +22,7 @@
                 {% trans 'Invalid names' %}:
             </th>
             <td>
-                {% for invalid_name in invalid_names %}
-                {{ invalid_name.name }}{{ forloop.last|yesno:",&#44;"|safe }}
-                {% empty %}
-                {{ DEFAULT_NONE_STR }}
-                {% endfor %}
+                {{ object.invalid_names_str }}
             </td>
         </tr>
     </table>

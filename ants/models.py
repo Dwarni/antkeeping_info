@@ -236,6 +236,16 @@ class Species(TaxonomicRank):
             return ', '.join(str(name) for name in self.common_names)
         else:
             return DEFAULT_NONE_STR
+    
+    @property
+    def invalid_names_str(self):
+        """
+            Return all invalid names of the specific species seperated by ','.
+        """
+        if self.invalid_names.exists():
+            return ', '.join(str(name) for name in self.invalid_names.all())
+        else:
+            return DEFAULT_NONE_STR
 
     class Meta(SpeciesMeta):
         pass
@@ -545,7 +555,7 @@ class CommonName(models.Model):
     class Meta:
         verbose_name = _('Common name')
         verbose_name_plural = _('Common names')
-        ordering = ['language', 'name']
+        ordering = ['name']
 
     def __str__(self):
         return '%s (%s)' % (self.name, dict(LANG_CHOICES)[self.language])
