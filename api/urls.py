@@ -10,8 +10,9 @@ from . import views
 urlpatterns = [
     path('ants/nuptial-flight-months/',
          views.NuptialFlightMonths.as_view(),
-         name='api_ants_nuptial_flight_month'
-         ),
+         name='api_ants_nuptial_flight_month'),
+    path('ants/<str:ant_species>/',
+         views.AntSpeciesDetailView.as_view(), name='api_ant_species_detail'),
     path('genera/',
          views.GeneraListView.as_view(),
          name='api_genera'

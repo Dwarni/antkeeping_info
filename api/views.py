@@ -12,7 +12,8 @@ from ants.models import AntSpecies, AntRegion, Genus
 
 from .serializers import RegionSerializer, RegionListSerializer, \
     AntsWithNuptialFlightsListSerializer, AntListSerializer, \
-    AntSpeciesNameSerializer, GenusNameSerializer
+    AntSpeciesDetailSerializer, AntSpeciesNameSerializer, \
+    GenusNameSerializer
 
 
 def get_months_array(flight_months):
@@ -60,6 +61,36 @@ class NuptialFlightMonths(generics.ListAPIView):
             ants = ants.filter(distribution__region__pk=region)
 
         return ants.distinct()
+
+
+class AntSpeciesDetailView(APIView):
+    """
+        Return a specific ant species.
+    """
+    schema = AutoSchema(manual_fields=[
+        coreapi.Field(
+            "ant_species",
+            required=True,
+            location='path',
+            schema=coreschema.String(
+                description='ID, slug or name of an ant species.')
+        )
+    ])
+
+    def get(self, request, ant_species):
+        ant_species_qs = AntSpecies.objects
+        try:
+            int(ant_species)
+            ant_species_qs = ant_species_qs.filter(pk=ant_species)
+        except ValueError:
+            slug_query = Q(slug=ant_species)
+            name_query = Q(name=ant_species)
+            ant_species_qs = ant_species_qs.filter(name_query | slug_query)
+        finally:
+            ant_species_object = get_object_or_404(ant_species_qs)
+
+        serializer = AntSpeciesDetailSerializer(ant_species_object, many=False)
+        return Response(serializer.data) 
 
 
 class RegionView(APIView):
