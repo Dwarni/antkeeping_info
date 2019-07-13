@@ -137,10 +137,12 @@ class Distribution(models.Model):
     """
     species = models.ForeignKey(
         'AntSpecies',
+        related_name='distribution',
         on_delete=models.CASCADE
     )
     region = models.ForeignKey(
         'regions.Region',
+        related_name='distribution',
         on_delete=models.CASCADE
     )
     native = models.NullBooleanField(
@@ -551,7 +553,9 @@ class CommonName(models.Model):
 class InvalidName(models.Model):
     """Model for an invalid name of a species."""
     name = models.CharField(max_length=200)
-    species = models.ForeignKey(Species, on_delete=models.CASCADE)
+    species = models.ForeignKey(Species,
+                                related_name='invalid_names',
+                                on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = _('Invalid name')
