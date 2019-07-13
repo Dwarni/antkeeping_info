@@ -291,7 +291,8 @@ class AntSize(models.Model):
     )
     minimum = SizeField(verbose_name=_('Minimum (mm)'))
     maximum = SizeField(verbose_name=_('Maximum (mm)'))
-    ant_species = models.ForeignKey('AntSpecies', on_delete=models.CASCADE)
+    ant_species = models.ForeignKey('AntSpecies', related_name='sizes',
+                                     on_delete=models.CASCADE)
 
     @staticmethod
     def calc_img_width(size):
