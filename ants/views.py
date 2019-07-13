@@ -171,10 +171,10 @@ class AntSpeciesDetail(DetailView):
         context['countries'] = countries
         context['regions'] = regions
 
-        common_names = ant.commonname_set.all()
+        common_names = ant.common_names.all()
         context['common_names'] = common_names
 
-        invalid_names = InvalidName.objects.filter(species__id=ant.id)
+        invalid_names = ant.invalid_names.all()
         context['invalid_names'] = invalid_names
         worker_size = AntSize.objects.by_ant_and_type(ant.id, AntSize.WORKER)
         queen_size = AntSize.objects.by_ant_and_type(ant.id, AntSize.QUEEN)
