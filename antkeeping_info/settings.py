@@ -67,7 +67,8 @@ INSTALLED_APPS = [
     'snowpenguin.django.recaptcha2',
     'taggit',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'sorl.thumbnail',
 ]
 
 MIDDLEWARE = [
@@ -151,10 +152,14 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     str(root.path('global_static/')),
 ]
-STATIC_ROOT = None
+STATIC_ROOT = ''
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = ''
 
 if PUBLIC_ROOT is not None:
     STATIC_ROOT = PUBLIC_ROOT('static/')
+    MEDIA_ROOT = PUBLIC_ROOT('media/')
 
 # Django breadcrumbs
 BREADCRUMBS_TEMPLATE = "django_bootstrap_breadcrumbs/bootstrap4.html"
@@ -253,3 +258,10 @@ if not DEBUG:
             },
         },
     }
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
+CELERY_BEAT_SCHEDULE = {
+    'task-number-one': {
+        'task': 'flights.tasks.hello_world',
+        'schedule': 30.0
+    }
+}
