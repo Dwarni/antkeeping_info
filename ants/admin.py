@@ -57,7 +57,7 @@ class BaseAdmin(AdminImageMixin, admin.ModelAdmin):
 class AntSpeciesAdmin(BaseAdmin):
     filter_horizontal = ['flight_months']
     fieldsets = [
-        (_('General'), {'fields': ['name', 'genus', 'main_image',
+        (_('General'), {'fields': ['name', 'genus',
                                    'information_complete',
                                    'colony_structure',
                                    'worker_polymorphism',

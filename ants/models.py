@@ -528,12 +528,9 @@ class AntSpecies(Species):
         help_text=INT_RANGE_HELP_TEXT
     )
 
-    main_image = models.ForeignKey(
-        'AntSpeciesImage',
-        models.SET_NULL,
-        blank=True,
-        null=True
-    )
+    @property
+    def main_image(self):
+        return self.images.filter(main_image=True).first()
 
     def get_absolute_url(self):
         """Return the url to detail page."""
@@ -598,6 +595,10 @@ class Image(models.Model):
     alt = models.TextField(
         'Alternative text',
         blank=True
+    )
+    main_image = models.BooleanField(
+        'Main image',
+        default=False
     )
 
     class Meta:
