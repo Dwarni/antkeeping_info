@@ -45,7 +45,7 @@ class AddAntspeciesToRegionView(FormView):
         for species_name in re.findall(r'[A-Z][a-z]+\s[a-z]+[\.]?', species):
             if '.' not in species_name:
                 ant_species = AntSpecies.objects.filter(
-                    Q(name=species_name) | Q(invalidname__name=species_name)
+                    Q(name=species_name) | Q(invalid_names__name=species_name)
                 ).first()
 
                 if not ant_species and create_missing_species:
