@@ -34,9 +34,6 @@
     <h2>{% trans 'Taxonomy' %}</h2>
 <span class="taxonomy">
     {% if object.genus is not None %}
-        {% if object.genus.sub_family.family %}
-            {{ object.genus.sub_family.family }} 🡺
-        {% endif %}
         {% if object.genus.sub_family %}
             {{ object.genus.sub_family }} 🡺
         {% endif %}
