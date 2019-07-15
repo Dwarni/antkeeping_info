@@ -29,7 +29,7 @@
     <link rel="stylesheet" href="{% static 'css/vendor/bootstrap.min.css' %}?v=4">
     <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/solid.min.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=7"> 
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=8"> 
     {% block css %} {% endblock %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
     {% if iframe %}
@@ -49,6 +49,8 @@
             {% include "navbar.html" %}
         </header>
     {% endif %}
+    <!-- Return to Top -->
+    <a href="javascript:" id="return-to-top"><i class="fas fa-chevron-up"></i></a>
     <main role="main" {% if iframe %}class="container-fluid"{% else %}class="container"{% endif %}>
         {% include 'messages.html' %}
         {% block breadcrumbs %} {% clear_breadcrumbs %} {% endblock %} {% block content %} {% endblock %}
@@ -58,6 +60,7 @@
     {% endif %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="{% static 'js/layout.js' %}?v=1"></script>
     {% block script %} {% endblock %}
 </body>
 </html>

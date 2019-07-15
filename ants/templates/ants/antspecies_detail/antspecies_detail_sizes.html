@@ -1,9 +1,8 @@
 {% load i18n %}
 {% load static %}
-<div class="tab-pane" id="sizes" role="tabpanel">
-    <div class="ant-sizes-container">
-        {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=worker_size header="Worker" only %}
-        {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=queen_size header="Queen" only %}
-        {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=male_size header="Male" only %}
-    </div>
+<h2>{% trans 'Sizes' %}</h2>
+<div class="ant-sizes-container">
+    {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=worker_size header="Worker" only %}
+    {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=queen_size header="Queen" only %}
+    {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=male_size header="Male" only %}
 </div>

@@ -1,29 +1,6 @@
 {% load i18n %}
-<div class="tab-pane" id="names" role="tabpanel">
-    <table class="ant-detail-info-table">
-        <tr>
-            <th>
-                {% trans 'Binomial name' %}:
-            </th>
-            <td class="taxonomy">
-                {{ object.name }}
-            </td>
-        </tr>
-        <tr>
-            <th>
-                {% trans 'Common names' %}:
-            </th>
-            <td>
-                {{ object.common_names_str }}
-            </td>
-        </tr>
-        <tr>
-            <th>
-                {% trans 'Invalid names' %}:
-            </th>
-            <td>
-                {{ object.invalid_names_str }}
-            </td>
-        </tr>
-    </table>
-</div>
+<h2>{% trans 'Names' %}</h2>
+<h3>{% trans 'Invalid names' %}</h3>
+<p>{{ object.invalid_names_str }}</p>
+<h3>{% trans 'Common names' %}</h3>
+<p>{{ object.common_names_str }}</p>

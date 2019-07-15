@@ -1,12 +1,13 @@
 {% extends 'layout.html' %}
 {% load i18n %}
 {% load static %}
+{% load thumbnail %}
 {% load ants %}
 {% block meta %}
     <meta name="description" content="{% trans 'Detailed information for ant species ' %}{{ object.name }}">
 {% endblock %}
 {% block css %}
-    <link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}?v=5">
+    <link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}?v=6">
 {% endblock %}
 {% block content %}
 <h1 class="taxonomy">{{ object.name }}
@@ -20,6 +21,16 @@
     </div>
 {% endif %}
 <section class="ant-detail-section">
+    {% if object.main_image is not None %}
+        <figure class="figure">
+        {% thumbnail object.main_image.image_file "640" crop="center" as im %}
+            <a href="{{ object.main_image.image_file.url }}">
+                <img class="figure-image img-fluid rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ object.main_image.alt }}">
+            </a>
+        {% endthumbnail %}
+            <figcaption class="figure-caption">{{ object.main_image.caption }}</figcaption>
+        </figure>
+    {% endif %}
     <h2>{% trans 'Taxonomy' %}</h2>
 <span class="taxonomy">
     {% if object.genus is not None %}
@@ -84,30 +95,16 @@
     {% include 'ants/antspecies_detail/antspecies_detail_keeping_parameters.html' %}
 </section>
 <section class="ant-detail-section">
-    <h2>{% trans 'Further information' %}</h2>
-<!-- Nav tabs -->
-<ul class="nav nav-tabs" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" data-toggle="tab" href="#distribution" role="tab">{% trans 'Distribution' %}</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" data-toggle="tab" href="#names" role="tab">{% trans 'Names' %}</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" data-toggle="tab" href="#sizes" role="tab">{% trans 'Sizes' %}</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" data-toggle="tab" href="#flightFrequency" role="tab">{% trans 'Flight frequency' %}</a>
-    </li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content">
-    {% include 'ants/antspecies_detail/antspecies_detail_names.html' %}
-    {% include 'ants/antspecies_detail/antspecies_detail_sizes.html' %}
     {% include 'ants/antspecies_detail/antspecies_detail_distribution.html' %}
+</section>
+<section class="ant-detail-section">
+    {% include 'ants/antspecies_detail/antspecies_detail_names.html' %}
+</section>
+<section class="ant-detail-section">
+    {% include 'ants/antspecies_detail/antspecies_detail_sizes.html' %}
+</section>
+<section class="ant-detail-section">
     {% include 'ants/antspecies_detail/antspecies_detail_flight_frequency.html' %}
-</div>
 </section>
 {% endblock %}
 {% block script %}

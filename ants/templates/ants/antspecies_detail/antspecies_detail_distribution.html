@@ -1,14 +1,15 @@
 {% load i18n %}
 {% load static %}
 {% load ants %}
-<div class="tab-pane active" id="distribution" role="tabpanel">
-    {% if countries %}
-    <ul>
+<h2>{% trans 'Distribution' %}</h2>
+{% if countries %}
+    <ul id="distribution-list">
         {% for country in countries %}
-            {% include "ants/antspecies_detail/antspecies_detail_country.html" with country=country regions=regions|get_item:country.code %}
+            <li>   
+                <a href="{% url "country" country.code %}">{{ country.name }}</a>
+            </li>
         {% endfor %}
     </ul>
-    {% else %}
+{% else %}
     <p>{{ DEFAULT_NONE_STR }}</p>
-    {% endif %}
-</div>
+{% endif %}

@@ -13,6 +13,8 @@ from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 from django.urls import reverse
 
+from sorl.thumbnail import ImageField
+
 from regions.models import Region
 from ants.managers import AntRegionManager, CountryAntRegionManager, \
     AntSizeManager, AntSpeciesManager, GenusManager, StateAntRegionManager
@@ -302,7 +304,7 @@ class AntSize(models.Model):
     minimum = SizeField(verbose_name=_('Minimum (mm)'))
     maximum = SizeField(verbose_name=_('Maximum (mm)'))
     ant_species = models.ForeignKey('AntSpecies', related_name='sizes',
-                                     on_delete=models.CASCADE)
+                                    on_delete=models.CASCADE)
 
     @staticmethod
     def calc_img_width(size):
@@ -526,6 +528,13 @@ class AntSpecies(Species):
         help_text=INT_RANGE_HELP_TEXT
     )
 
+    main_image = models.ForeignKey(
+        'AntSpeciesImage',
+        models.SET_NULL,
+        blank=True,
+        null=True
+    )
+
     def get_absolute_url(self):
         """Return the url to detail page."""
         return reverse('ant_detail', args=[self.slug])
@@ -575,3 +584,34 @@ class InvalidName(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Image(models.Model):
+    """Abstract model for an image."""
+    image_file = ImageField(
+        'Image file',
+        upload_to='images'
+    )
+    caption = models.TextField(
+        blank=True,
+    )
+    alt = models.TextField(
+        'Alternative text',
+        blank=True
+    )
+
+    class Meta:
+        abstract = True
+
+
+class AntSpeciesImage(Image):
+    """Model for an image of an ant species."""
+    ant_species = models.ForeignKey(
+        AntSpecies,
+        models.CASCADE,
+        related_name='images'
+    )
+
+    class Meta:
+        verbose_name = _('Ant species image')
+        verbose_name_plural = _('Ant species images')

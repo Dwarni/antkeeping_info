@@ -1,9 +1,8 @@
 {% load i18n %}
-<div class="tab-pane" id="flightFrequency" role="tabpanel">
-    {% if flight_frequency %}
-        <canvas id="flightFrequencyChart">
-        </canvas>
-    {% else %}
-        <p>{{ DEFAULT_NONE_STR }}</p>
-    {% endif %}
-</div>
+<h2>{% trans 'Flight Distribution' %}</h2>
+{% if flight_frequency %}
+    <canvas id="flightFrequencyChart">
+    </canvas>
+{% else %}
+    <p>{{ DEFAULT_NONE_STR }}</p>
+{% endif %}

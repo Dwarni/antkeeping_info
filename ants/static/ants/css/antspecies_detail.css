@@ -80,3 +80,17 @@ a.region-toggle-button:hover {
     display:flex;
     align-items: center;
 }
+
+#distribution-list {
+    display: inline;
+    list-style: none;
+    padding-inline-start: initial;
+  }
+  
+#distribution-list li {
+display: inline;
+}
+  
+#distribution-list li + li:before {
+content: ", ";
+}
