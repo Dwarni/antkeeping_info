@@ -51,6 +51,7 @@ class AntSpeciesImageInline(AdminImageMixin, admin.StackedInline):
 
 class BaseAdmin(AdminImageMixin, admin.ModelAdmin):
     list_display = ('name',)
+    search_fields = ['name']
 
 
 @admin.register(AntSpecies)
@@ -69,7 +70,6 @@ class AntSpeciesAdmin(BaseAdmin):
             'outworld_temperature', 'outworld_humidity', 'hibernation'
         ]})
     ]
-    search_fields = ['name']
 
     inlines = [
         DescriptionInline, AntSpeciesImageInline, AntSizeInline,
