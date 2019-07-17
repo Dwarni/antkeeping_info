@@ -8,7 +8,7 @@ django-environ>=0.4.5
 django-extra-fields>=1.2.3
 django-recaptcha2==1.4.1
 django-taggit==1.1.0
-djangorestframework==3.9.4
+djangorestframework>=3.0.0
 image>=1.5.27
 psycopg2==2.8.3
 psycopg2-binary==2.8.3
