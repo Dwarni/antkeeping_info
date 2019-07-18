@@ -528,6 +528,17 @@ class AntSpecies(Species):
         help_text=INT_RANGE_HELP_TEXT
     )
 
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='created_ant_species',
+        null=True, blank=True, on_delete=models.SET_NULL)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='updated_ant_species',
+        null=True, blank=True, on_delete=models.SET_NULL)
+
     @property
     def main_image(self):
         return self.images.filter(main_image=True).first()
