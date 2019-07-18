@@ -596,6 +596,15 @@ class Image(models.Model):
         'Alternative text',
         blank=True
     )
+    source_url = models.URLField(
+        'Image source',
+        blank=True
+    )
+    source_caption = models.CharField(
+        'Source caption',
+        max_length=200,
+        blank=True
+    )
     main_image = models.BooleanField(
         'Main image',
         default=False

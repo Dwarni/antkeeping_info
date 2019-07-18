@@ -1,7 +1,6 @@
 {% extends 'layout.html' %}
 {% load i18n %}
 {% load static %}
-{% load thumbnail %}
 {% load ants %}
 {% block meta %}
     <meta name="description" content="{% trans 'Detailed information for ant species ' %}{{ object.name }}">
@@ -21,16 +20,7 @@
     </div>
 {% endif %}
 <section class="ant-detail-section">
-    {% if object.main_image is not None %}
-        <figure class="figure">
-        {% thumbnail object.main_image.image_file "640" crop="center" as im %}
-            <a href="{{ object.main_image.image_file.url }}">
-                <img class="figure-image img-fluid rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ object.main_image.alt }}">
-            </a>
-        {% endthumbnail %}
-            <figcaption class="figure-caption">{{ object.main_image.caption }}</figcaption>
-        </figure>
-    {% endif %}
+    {% include 'ants/antspecies_detail/antspecies_detail_main_image.html' with main_image=object.main_image %}
     <h2>{% trans 'Taxonomy' %}</h2>
 <span class="taxonomy">
     {% if object.genus is not None %}
