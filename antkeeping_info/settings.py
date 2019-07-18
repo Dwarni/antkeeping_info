@@ -265,3 +265,5 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': 30.0
     }
 }
+
+THUMBNAIL_QUALITY = 80
