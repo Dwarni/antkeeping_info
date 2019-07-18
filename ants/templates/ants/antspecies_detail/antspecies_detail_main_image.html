@@ -1,7 +1,7 @@
 {% load thumbnail %}
 {% if main_image is not None %}
     <figure class="figure">
-    {% thumbnail main_image.image_file "640" crop="center" as im %}
+    {% thumbnail main_image.image_file "480" crop="center" as im %}
         <a href="{{ main_image.image_file.url }}">
             <img class="figure-image img-fluid rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ main_image.alt }}">
         </a>
