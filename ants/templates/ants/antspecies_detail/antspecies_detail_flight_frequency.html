@@ -1,7 +1,7 @@
 {% load i18n %}
 <h2>{% trans 'Flight Distribution' %}</h2>
 {% if flight_frequency %}
-    <canvas id="flightFrequencyChart">
+    <canvas class="mt-3" id="flightFrequencyChart">
     </canvas>
 {% else %}
     <p>{{ DEFAULT_NONE_STR }}</p>
