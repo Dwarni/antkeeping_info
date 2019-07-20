@@ -123,7 +123,8 @@ class AntSpeciesDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ant_models.AntSpecies
-        exclude = ('ordering',)
+        exclude = ('ordering', 'created_by', 'created_at', 'updated_by',
+                   'updated_at')
 
 
 class AntsWithNuptialFlightsListSerializer(serializers.ModelSerializer):
