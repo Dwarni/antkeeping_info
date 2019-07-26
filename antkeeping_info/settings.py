@@ -259,11 +259,6 @@ if not DEBUG:
         },
     }
 CELERY_BROKER_URL = env('CELERY_BROKER_URL')
-CELERY_BEAT_SCHEDULE = {
-    'task-number-one': {
-        'task': 'flights.tasks.hello_world',
-        'schedule': 30.0
-    }
-}
+CELERY_TIMEZONE = 'Europe/Berlin'
 
 THUMBNAIL_QUALITY = 80
