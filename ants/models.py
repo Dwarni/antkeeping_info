@@ -116,6 +116,13 @@ class AntRegion(Region):
     """
     antwiki_name = models.CharField(max_length=200, blank=True, null=True)
     ant_list_complete = models.BooleanField(default=False)
+    antmaps_id = models.CharField(
+        db_index=True,
+        max_length=10,
+        blank=True,
+        null=True,
+        help_text=_('The id of the region used by antmaps.org.')
+    )
 
     def get_absolute_url(self):
         if self.type == 'Country':
