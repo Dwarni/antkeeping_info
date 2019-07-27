@@ -1,3 +1,4 @@
+celery==4.3.0
 django-coreapi==2.3.0
 Django==2.2.3
 django-autocomplete-light==3.4.1
