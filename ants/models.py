@@ -150,7 +150,7 @@ class Distribution(models.Model):
         on_delete=models.CASCADE
     )
     region = models.ForeignKey(
-        'regions.Region',
+        'AntRegion',
         related_name='distribution',
         on_delete=models.CASCADE
     )
