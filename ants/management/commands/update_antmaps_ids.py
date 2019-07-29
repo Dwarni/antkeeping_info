@@ -5,7 +5,7 @@ from ants.services.antmaps import update_antmaps_ids
 
 class Command(BaseCommand):
     """
-        The command updates adds/updates all antmaps region ids.
+        The command adds/updates all antmaps region ids.
     """
     help = 'Add/Update antmaps.org region ids.'
 
