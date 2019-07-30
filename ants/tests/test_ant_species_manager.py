@@ -58,6 +58,17 @@ class AntSpeciesManagerTestCase(TestCase):
             )
         """Trying to add name 'Lasius' should raise a ValidationError"""
 
+        with transaction.atomic():
+            self.assertRaises(
+                ValidationError,
+                self.manager.add_with_name,
+                name='Lasius niger binorius'
+            )
+            self.assertFalse(
+                self.manager.filter(name='Lasius niger binorius').exists()
+            )
+        """Trying to add name 'Lasius niger binoarius' should raise a ValidationError"""
+
     def test_get_or_create_with_name(self):
         self.assertIsNotNone(
             self.manager.get_or_create_with_name(self.test_name)

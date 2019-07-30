@@ -3,6 +3,7 @@
 """
 from django.apps import apps
 from django.db.models import Manager, Q
+from django.db import transaction
 
 
 class TaxonomicRankManager(Manager):
@@ -40,6 +41,7 @@ class GenusManager(TaxonomicRankManager):
 class AntSpeciesManager(TaxonomicRankManager):
     """Manager for AntSpeciesModel."""
 
+    @transaction.atomic
     def add_with_name(self, name, genus_model=None):
         """
             Adds an ant species with the specific name.
