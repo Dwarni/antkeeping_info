@@ -2,6 +2,7 @@
 Forms module for users app.
 """
 from django.forms import ModelForm
+from django.conf import settings
 from django.contrib.auth import forms as auth_forms
 from django.contrib.auth import models as auth_models
 from crispy_forms.helper import FormHelper
@@ -28,17 +29,21 @@ class CustomAuthentificationForm(auth_forms.AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.layout_fieldset = Fieldset(
+            'Log In',
+            'username',
+            'password',
+            'captcha'
+        )
         self.helper.layout = Layout(
-            Fieldset(
-                'Log In',
-                'username',
-                'password',
-                'captcha'
-            ),
+            self.layout_fieldset,
             ButtonHolder(
                 Submit('Log In', 'Log In')
             )
         )
+        if not settings.RECAPTCHA_ENABLED:
+            self.fields.pop('captcha')
+            self.layout_fieldset.pop()
 
 
 class ProfileForm(ModelForm):
