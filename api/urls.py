@@ -25,7 +25,12 @@ urlpatterns = [
     path('regions/<str:region>/',
          views.RegionView.as_view(), name='api_region'),
     path('regions/<str:region>/ants/',
-         views.AntsByRegionView.as_view(), name='api_ants_by_region')
+         views.AntsByRegionView.as_view(), name='api_ants_by_region'),
+    path('regions/<str:region>/ants/diff/<str:region2>/',
+         views.AntsByRegionDiffView.as_view(), name='api_ants_by_region_diff'),
+    path('regions/<str:region>/ants/common/<str:region2>/',
+         views.AntsByRegionCommonView.as_view(),
+         name='api_ants_by_region_common')
 ]
 
 if settings.DEBUG is True:
@@ -35,6 +40,7 @@ if settings.DEBUG is True:
              ))
 
 # urlpatterns.append(
-#      path('docs/', include_docs_urls(title='Antkeeping.info API Documentation',
+#      path('docs/',
+#           include_docs_urls(title='Antkeeping.info API Documentation',
 #           public=True))
 # )

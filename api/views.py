@@ -1,4 +1,4 @@
-from django.db.models import Q, F
+from django.db.models import Q, F, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -8,7 +8,7 @@ from rest_framework.schemas import AutoSchema
 from rest_framework import generics
 from rest_framework.response import Response
 
-from ants.models import AntSpecies, AntRegion, Genus
+from ants.models import AntSpecies, Distribution, AntRegion, Genus
 
 from .serializers import RegionSerializer, RegionListSerializer, \
     AntsWithNuptialFlightsListSerializer, AntListSerializer, \
@@ -90,7 +90,7 @@ class AntSpeciesDetailView(APIView):
             ant_species_object = get_object_or_404(ant_species_qs)
 
         serializer = AntSpeciesDetailSerializer(ant_species_object, many=False)
-        return Response(serializer.data) 
+        return Response(serializer.data)
 
 
 class RegionView(APIView):
@@ -167,7 +167,10 @@ class RegionsView(generics.ListAPIView):
     def get_queryset(self):
         regions = AntRegion.objects.all()
         with_ants = self.request.query_params.get('with-ants', None)
-        with_flight_months = self.request.query_params.get('with-flight-months', None)
+        with_flight_months = (self.request
+                                  .query_params.get(
+                                      'with-flight-months',
+                                      None))
         region_type = self.request.query_params.get('type', None)
         parent = self.request.query_params.get('parent', None)
 
@@ -187,6 +190,18 @@ class RegionsView(generics.ListAPIView):
             regions = regions.filter(parent=parent)
 
         return regions.distinct()
+
+
+def get_region_query(region):
+    region_query = None
+    try:
+        int(region)
+        region_query = Q(region__pk=region)
+    except ValueError:
+        code_query = Q(region__code=region)
+        slug_query = Q(region__slug__iexact=region)
+        region_query = code_query | slug_query
+    return region_query
 
 
 class AntsByRegionView(APIView):
@@ -239,6 +254,87 @@ class AntsByRegionView(APIView):
                 raise Http404
 
             return Response(ants)
+
+
+def get_species_in_query(region_query):
+    return Q(species__in=Subquery(Distribution
+                                  .objects
+                                  .filter(region_query)
+                                  .values('species__pk')))
+
+
+class AntsByRegionDiffView(APIView):
+    """
+        Return a list of ants which occur in the specific region
+        but not in the second region.
+    """
+    # serializer_class = AntListSerializer
+    schema = AutoSchema(manual_fields=[
+        coreapi.Field(
+            "region",
+            required=True,
+            location='path',
+            schema=coreschema.String(
+                description='ID, slug or code of a region.')
+        ),
+        coreapi.Field(
+            "region2",
+            required=True,
+            location='path',
+            schema=coreschema.String(
+                description='ID, slug or code of a region.')
+        ),
+    ])
+
+    def get(self, request, region, region2):
+        region_query = get_region_query(region)
+        region2_query = get_region_query(region2)
+        species_in_query = get_species_in_query(region2_query)
+
+        ants = (Distribution
+                .objects
+                .filter(region_query)
+                .exclude(species_in_query)
+                .order_by('species__name')
+                .values(species_name=F('species__name')))
+
+        return Response(ants)
+
+
+class AntsByRegionCommonView(APIView):
+    """
+        Return a list of ants which occur in both regions.
+    """
+    # serializer_class = AntListSerializer
+    schema = AutoSchema(manual_fields=[
+        coreapi.Field(
+            "region",
+            required=True,
+            location='path',
+            schema=coreschema.String(
+                description='ID, slug or code of a region.')
+        ),
+        coreapi.Field(
+            "region2",
+            required=True,
+            location='path',
+            schema=coreschema.String(
+                description='ID, slug or code of a region.')
+        ),
+    ])
+
+    def get(self, request, region, region2):
+        region_query = get_region_query(region)
+        region2_query = get_region_query(region2)
+        species_in_query = get_species_in_query(region2_query)
+
+        ants = (Distribution
+                .objects
+                .filter(region_query, species_in_query)
+                .order_by('species__name')
+                .values(species_name=F('species__name')))
+
+        return Response(ants)
 
 
 class AntsByGenusView(generics.ListAPIView):
