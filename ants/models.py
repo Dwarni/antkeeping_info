@@ -269,8 +269,6 @@ class SizeField(models.DecimalField):
     def __init__(self, *args, **kwargs):
         kwargs['max_digits'] = self.MAX_DIGITS
         kwargs['decimal_places'] = self.MAX_DECIMAL_PLACES
-        kwargs['null'] = True
-        kwargs['blank'] = True
         kwargs['validators'] = [
             MinValueValidator(self.MIN_SIZE)
         ]
@@ -309,7 +307,7 @@ class AntSize(models.Model):
         choices=ANT_TYPE_CHOICES
     )
     minimum = SizeField(verbose_name=_('Minimum (mm)'))
-    maximum = SizeField(verbose_name=_('Maximum (mm)'))
+    maximum = SizeField(verbose_name=_('Maximum (mm)'), blank=True, null=True)
     ant_species = models.ForeignKey('AntSpecies', related_name='sizes',
                                     on_delete=models.CASCADE)
 
@@ -330,10 +328,15 @@ class AntSize(models.Model):
         return self.calc_img_width(self.maximum)
 
     def clean(self):
-        if self.minimum > self.maximum:
-            raise ValidationError(
-                _('Minimum size may not be greater than maximum size!')
-            )
+        super().clean()
+        if self.minimum is not None and self.maximum is None:
+            self.maximum = self.minimum
+
+        if self.minimum is not None and self.maximum is not None:
+            if self.minimum > self.maximum:
+                raise ValidationError(
+                    _('Minimum size may not be greater than maximum size!')
+                )
 
     def __str__(self):
         return self.ANT_SIZE_STRINGS.get(self.type)
