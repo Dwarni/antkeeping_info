@@ -98,7 +98,7 @@ class FamilyAdmin(BaseAdmin):
 
 @admin.register(Genus)
 class GenusAdmin(BaseAdmin):
-    pass
+    list_filter = ('sub_family',)
 
 
 @admin.register(SubFamily)
