@@ -245,7 +245,7 @@ class Species(TaxonomicRank):
             return ', '.join(str(name) for name in self.common_names)
         else:
             return DEFAULT_NONE_STR
-    
+
     @property
     def invalid_names_str(self):
         """
