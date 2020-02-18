@@ -41,6 +41,7 @@ urlpatterns = [
         TemplateView.as_view(template_name='privacy_policy.html'),
         name='privacy'
     ),
+    path('api/', include('api.urls')),
     path('tinymce/', include('tinymce.urls'))
 ]
 
