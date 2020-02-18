@@ -12,6 +12,7 @@ from django.contrib.postgres import fields as psql_fields
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 from django.urls import reverse
+from tinymce.models import HTMLField
 
 from sorl.thumbnail import ImageField
 
@@ -31,7 +32,7 @@ LANG_CHOICES = sorted(
 class SpeciesDescription(models.Model):
     """A textual description of an ant species"""
     language = models.CharField(max_length=7, choices=LANG_CHOICES)
-    description = models.TextField()
+    description = HTMLField()
     species = models.ForeignKey('Species', on_delete=models.CASCADE)
 
 

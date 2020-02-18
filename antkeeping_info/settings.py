@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'sorl.thumbnail',
+    'tinymce'
 ]
 
 MIDDLEWARE = [
@@ -262,3 +263,10 @@ CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_TIMEZONE = 'Europe/Berlin'
 
 THUMBNAIL_QUALITY = 80
+
+TINYMCE_DEFAULT_CONFIG = {
+    'plugins': "table,paste,searchreplace",
+    'theme': "advanced",
+    'cleanup_on_startup': True,
+    'custom_undo_redo_levels': 10,
+}
