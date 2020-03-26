@@ -355,7 +355,7 @@ class AntSpecies(Species):
     # colony
     MONOGYNOUS = 'MONO'
     POLYGYNOUS = 'POLY'
-    OLIGOGYNOUS = 'OLIGO'
+    OLIGOGYNOUS = 'OLIG'
 
     COLONY_STRUCTURE_CHOICES = (
         (MONOGYNOUS, _('Monogynous')),
