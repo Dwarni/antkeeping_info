@@ -1,10 +1,10 @@
 celery==4.4.0
 django-coreapi==2.3.0
-Django==2.2.10
+Django == 3.*
 django-autocomplete-light==3.5.1
-django-bootstrap-breadcrumbs==0.9.1
+django-bootstrap-breadcrumbs ~= 0.9
 django-cors-headers==3.2.1
-django-crispy-forms==1.8.1
+django-crispy-forms ~= 1.8
 django-environ>=0.4.5
 django-extra-fields==2.0.3
 django-recaptcha2==1.4.1
@@ -12,8 +12,8 @@ django-taggit==1.2.0
 django-tinymce==2.8.0
 djangorestframework==3.11.0
 image>=1.5.27
-psycopg2==2.8.4
-psycopg2-binary==2.8.4
+psycopg2 ~= 2.8
+psycopg2-binary ~= 2.8
 pycountry==18.12.8
 python-memcached==1.59
 redis==3.3.11
