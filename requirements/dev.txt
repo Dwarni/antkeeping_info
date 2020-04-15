@@ -1,4 +1,4 @@
 -r common.txt
 
-pep8==1.7.1
-autopep8==1.5
+autopep8==1.5.*
+flake8>=3.7
