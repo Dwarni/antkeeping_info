@@ -2,16 +2,13 @@ from django.db.models import Q, F, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-import coreapi
-import coreschema
-from rest_framework.schemas import AutoSchema
 from rest_framework import generics
 from rest_framework.response import Response
 
 from ants.models import AntSpecies, Distribution, AntRegion, Genus
 
 from .serializers import RegionSerializer, RegionListSerializer, \
-    AntsWithNuptialFlightsListSerializer, AntListSerializer, \
+    AntsWithNuptialFlightsListSerializer, \
     AntSpeciesDetailSerializer, AntSpeciesNameSerializer, \
     GenusNameSerializer
 
@@ -31,22 +28,6 @@ class NuptialFlightMonths(generics.ListAPIView):
         including these months.
     """
     serializer_class = AntsWithNuptialFlightsListSerializer
-    schema = AutoSchema(manual_fields=[
-        coreapi.Field(
-            "name",
-            required=False,
-            location="query",
-            schema=coreschema.String(
-                description='Filter ants by passed name'),
-        ),
-        coreapi.Field(
-            "region",
-            required=False,
-            location="query",
-            schema=coreschema.Number(
-                description='Display only ants, which occur in that region')
-        ),
-    ])
 
     def get_queryset(self):
         ants = AntSpecies.objects.filter(
@@ -67,15 +48,6 @@ class AntSpeciesDetailView(APIView):
     """
         Return a specific ant species.
     """
-    schema = AutoSchema(manual_fields=[
-        coreapi.Field(
-            "ant_species",
-            required=True,
-            location='path',
-            schema=coreschema.String(
-                description='ID, slug or name of an ant species.')
-        )
-    ])
 
     def get(self, request, ant_species):
         ant_species_qs = AntSpecies.objects
@@ -98,15 +70,6 @@ class RegionView(APIView):
         Return a specific region.
     """
     # serializer_class = AntListSerializer
-    schema = AutoSchema(manual_fields=[
-        coreapi.Field(
-            "region",
-            required=True,
-            location='path',
-            schema=coreschema.String(
-                description='ID, slug or code of a region.')
-        )
-    ])
 
     def get(self, request, region):
         regions = AntRegion.objects
@@ -129,40 +92,6 @@ class RegionsView(generics.ListAPIView):
         Return a list of all existing regions.
     """
     serializer_class = RegionListSerializer
-    schema = AutoSchema(manual_fields=[
-        coreapi.Field(
-            "with-ants",
-            required=False,
-            location="query",
-            schema=coreschema.Boolean(
-                description='Displays only regions with ant species in \
-                    database.'),
-        ),
-        coreapi.Field(
-            "with-flight-months",
-            required=False,
-            location="query",
-            schema=coreschema.Boolean(
-                description='Displays only regions with ant that have \
-                    flight months in db'),
-        ),
-        coreapi.Field(
-            "type",
-            required=False,
-            location="query",
-            schema=coreschema.String(
-                description='Display only regions of specific type.')
-        ),
-        coreapi.Field(
-            "parent",
-            required=False,
-            location="query",
-            schema=coreschema.Integer(
-                description='Display only regions with \
-                    specific parent region.'),
-        ),
-    ]
-    )
 
     def get_queryset(self):
         regions = AntRegion.objects.all()
@@ -209,23 +138,6 @@ class AntsByRegionView(APIView):
         Return a list of ants which occur in the specific region.
     """
     # serializer_class = AntListSerializer
-    schema = AutoSchema(manual_fields=[
-        coreapi.Field(
-            "region",
-            required=True,
-            location='path',
-            schema=coreschema.String(
-                description='ID, slug or code of a region.')
-        ),
-        coreapi.Field(
-            "antSpeciesName",
-            required=False,
-            location='query',
-            schema=coreschema.String(
-                description='The passed ant species name is used '
-                            'to filter the list.')
-        )
-    ])
 
     def get(self, request, region):
         ant_species_name = self.request.query_params.get(
@@ -269,22 +181,6 @@ class AntsByRegionDiffView(APIView):
         but not in the second region.
     """
     # serializer_class = AntListSerializer
-    schema = AutoSchema(manual_fields=[
-        coreapi.Field(
-            "region",
-            required=True,
-            location='path',
-            schema=coreschema.String(
-                description='ID, slug or code of a region.')
-        ),
-        coreapi.Field(
-            "region2",
-            required=True,
-            location='path',
-            schema=coreschema.String(
-                description='ID, slug or code of a region.')
-        ),
-    ])
 
     def get(self, request, region, region2):
         region_query = get_region_query(region)
@@ -306,22 +202,6 @@ class AntsByRegionCommonView(APIView):
         Return a list of ants which occur in both regions.
     """
     # serializer_class = AntListSerializer
-    schema = AutoSchema(manual_fields=[
-        coreapi.Field(
-            "region",
-            required=True,
-            location='path',
-            schema=coreschema.String(
-                description='ID, slug or code of a region.')
-        ),
-        coreapi.Field(
-            "region2",
-            required=True,
-            location='path',
-            schema=coreschema.String(
-                description='ID, slug or code of a region.')
-        ),
-    ])
 
     def get(self, request, region, region2):
         region_query = get_region_query(region)
@@ -342,15 +222,6 @@ class AntsByGenusView(generics.ListAPIView):
         Return a list of ant species of the specific genus.
     """
     serializer_class = AntSpeciesNameSerializer
-    schema = AutoSchema(manual_fields=[
-        coreapi.Field(
-            "id",
-            required=True,
-            location='path',
-            schema=coreschema.String(
-                description='ID of genus')
-        )
-    ])
 
     def get_queryset(self):
         id = self.kwargs['id']
