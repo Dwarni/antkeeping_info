@@ -8,6 +8,9 @@ from rest_framework.documentation import include_docs_urls
 from . import views
 
 urlpatterns = [
+    path('ants/',
+         views.AntSpeciesListView.as_view(),
+         name='api_ant_species'),
     path('ants/nuptial-flight-months/',
          views.NuptialFlightMonths.as_view(),
          name='api_ants_nuptial_flight_month'),

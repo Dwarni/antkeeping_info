@@ -236,6 +236,9 @@ class GeneraListView(generics.ListAPIView):
         Return a list of genera.
     """
     serializer_class = GenusNameSerializer
+    queryset = Genus.objects.all()
 
-    def get_queryset(self):
-        return Genus.objects.all()
+
+class AntSpeciesListView(generics.ListAPIView):
+    serializer_class = AntSpeciesNameSerializer
+    queryset = AntSpecies.objects.all()
