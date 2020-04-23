@@ -2,67 +2,69 @@
 {% load i18n %}
 {% load static %}
 {% block title %}
-    {{ block.super }} - Flights map
+{{ block.super }} - Flights map
 {% endblock %}
 {% block meta %}
 <meta name="description" content="{% trans 'A map on which you can see ant nuptial flight spottings.' %}">
 {% endblock %}
 {% block css %}
-    <link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=8">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
-        integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-        crossorigin=""/>
-    <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.css" %}">
-    <link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.Default.css" %}">
+<link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=8">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin="" />
+<link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.css" %}">
+<link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.Default.css" %}">
 {% endblock %}
 {% block content %}
-    {{ block.super }}
-        <div>
-            <div class="form-row">
-                <div class="col-lg-2">
-                    <div class="form-group">
-                        <select id="yearSelect" class="form-control">
-                            <option value="all">{% trans "All Years" %}</option>
-                            {% for year in years %}
-                                <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
-                            {% endfor %}
-                        </select>
+{{ block.super }}
+<div>
+    <div class="form-row">
+        <div class="col-lg-2">
+            <div class="form-group">
+                <select id="yearSelect" class="form-control">
+                    <option value="all">{% trans "All Years" %}</option>
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="form-group">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text search-icon">⌕</div>
                     </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <div class="input-group-text search-icon">⌕</div>
-                            </div>
-                            <input type="text" class="form-control" id="antSearchInput" placeholder="{% trans 'Search' %}">
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="form-group">
-                        {% if iframe %}
-                            <a href="{% url 'flight_add' %}?iframe=true" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
-                        {% else %}
-                            <a href="{% url 'flight_add' %}" id="addSpottingButton" class="btn btn-primary" role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
-                        {% endif %}
-                    </div>
+                    <input type="text" class="form-control" id="antSearchInput" placeholder="{% trans 'Search' %}">
                 </div>
             </div>
         </div>
-    <div id="map" {% if iframe %} class="iframe" {% endif %}></div>
-    <div id="flightInfoModal" class="modal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-          <div id="flightInfoModalContent" class="modal-content">
-          </div>
+        <div class="col">
+            <div class="form-group">
+                {% if iframe %}
+                <a href="{% url 'flight_add' %}?iframe=true" id="addSpottingButton" class="btn btn-primary"
+                    role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
+                {% else %}
+                <a href="{% url 'flight_add' %}" id="addSpottingButton" class="btn btn-primary" role="button"
+                    aria-pressed="true">{% trans 'Add Spotting' %}</a>
+                {% endif %}
+            </div>
         </div>
-      </div>
+    </div>
+</div>
+<div id="map" {% if iframe %} class="iframe" {% endif %}></div>
+<div id="flightInfoModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div id="flightInfoModalContent" class="modal-content">
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block script %}
-    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
-        integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
-        crossorigin=""></script>
-    <script src="{% static 'flights/js/vendor/leaflet-bing-layer.min.js' %}"></script>
-    <script src="{% static 'flights/js/vendor/leaflet.markercluster.js' %}"></script>
-    <script src="{% static 'flights/js/flights_map.js' %}?v=15" bingApiKey="{{ BING_API_KEY }}"></script>
+<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+    integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+    crossorigin=""></script>
+<script src="{% static 'flights/js/vendor/leaflet-bing-layer.min.js' %}"></script>
+<script src="{% static 'flights/js/vendor/leaflet.markercluster.js' %}"></script>
+<script src="{% static 'flights/js/flights_map.js' %}?v=15" bingApiKey="{{ BING_API_KEY }}"></script>
 {% endblock %}
