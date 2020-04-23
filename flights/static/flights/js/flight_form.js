@@ -20,10 +20,10 @@
         }
 
         addMarker(lat, lng) {
-            if(this.marker) {
+            if (this.marker) {
                 this.map.removeLayer(this.marker)
             }
-    
+
             this.marker = L.marker([lat, lng]).addTo(this.map)
             this.map.setView(this.marker.getLatLng(), 14);
         }
@@ -38,12 +38,12 @@
             const maxZoom = 17
 
             const getCurrentLocationButtonId = 'getCurrentLocationButton'
-            const locationRadioId = 'id_id_location_type_0_1'
-            const gpsCoordinatesRadioId = 'id_id_location_type_0_2'
-            
+            const locationRadioId = 'id_location_type_1'
+            const gpsCoordinatesRadioId = 'id_location_type_2'
+
             const addressContainerId = 'addressContainer'
             const addressInputId = 'id_address'
-            
+
             const gpsContainerId = 'gpsContainer'
             const latInputId = 'id_latitude'
             const lngInputId = 'id_longitude'
@@ -51,9 +51,9 @@
             const formId = 'flightForm'
 
             this.map = new Map('map', minZoom, maxZoom, tileUrl, osmAttrib)
-            
+
             this.disableFormDefaultAction(formId)
-            
+
             this.initGetCurrentLocationButton(getCurrentLocationButtonId)
             this.initAddressInput(addressInputId)
             this.initLocationDivs(addressContainerId, gpsContainerId)
@@ -102,7 +102,7 @@
             this.locationRadio.onclick = clickHandler
             this.gpsCoordinatesRadio.onclick = clickHandler
 
-            if(this.locationRadio.checked) {
+            if (this.locationRadio.checked) {
                 this.handleLocationTypeChange(this.locationRadio.value)
             } else {
                 this.handleLocationTypeChange(this.gpsCoordinatesRadio.value)
@@ -115,22 +115,22 @@
             this.longitudeInput = document.getElementById(lngInputId)
 
 
-            
-            const handleLatLongInput = () => { 
+
+            const handleLatLongInput = () => {
                 const lat = this.latitudeInput.value
                 const lng = this.longitudeInput.value
 
-                if(lat && lng) {
+                if (lat && lng) {
                     this.setLatLng(lat, lng)
                 }
             }
             const handleEnterPress = e => {
                 if (e.keyCode === 13) {
                     handleLatLongInput()
-                }    
+                }
             }
             const handleOnChange = e => {
-                handleLatLongInput()    
+                handleLatLongInput()
             }
             this.latitudeInput.onkeypress = handleEnterPress
             this.latitudeInput.onchange = handleOnChange
@@ -140,14 +140,14 @@
             // Check if initial value was set and if yes set marker
             const lat = this.latitudeInput.value
             const lng = this.longitudeInput.value
-            if(lat && lng) {
+            if (lat && lng) {
                 this.map.addMarker(lat, lng)
             }
         }
 
         handleLocationTypeChange(locationType) {
             const hiddenClassName = 'hidden'
-            if(locationType === 'ADDR') {
+            if (locationType === 'ADDR') {
                 this.addressContainer.classList.remove(hiddenClassName)
                 this.gpsContainer.classList.add(hiddenClassName)
             } else {
@@ -187,8 +187,8 @@
             const url = this.getReverseGeocodingUrl(lat, lng)
             fetch(url)
                 .then(response => {
-                    if(!response.ok) {
-                        throw('Could not get data from reverse geocoding service')    
+                    if (!response.ok) {
+                        throw ('Could not get data from reverse geocoding service')
                     }
 
                     return response.json()
@@ -196,7 +196,7 @@
                 .then(json => {
                     this.addressInput.value = json.resourceSets[0].resources[0].name
                 })
-            
+
             this.map.addMarker(lat, lng)
         }
 
@@ -220,10 +220,10 @@
                 this.addressInput.disabled = true
                 fetch(url)
                     .then(response => {
-                        if(!response.ok) {
-                            throw('Could not get data from geocoding service')
+                        if (!response.ok) {
+                            throw ('Could not get data from geocoding service')
                         }
-    
+
                         return response.json()
                     })
                     .then(json => {
@@ -245,7 +245,7 @@
         }
     }
 
-    window.onload = function() {
+    window.onload = function () {
         new FlightFormApp()
     }
 })();
