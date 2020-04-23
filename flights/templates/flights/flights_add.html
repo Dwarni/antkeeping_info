@@ -2,36 +2,36 @@
 {% load i18n %}
 {% load static %}
 {% block title %}
-    {{ block.super }} - Add ant nuptial flight
+{{ block.super }} - Add ant nuptial flight
 {% endblock %}
 {% block meta %}
-    <meta name="description" content="{% trans 'A form which allows you to add an ant nuptial flight you spotted.' %}">
+<meta name="description" content="{% trans 'A form which allows you to add an ant nuptial flight you spotted.' %}">
 {% endblock %}
 {% load crispy_forms_tags %}
 {% load django_bootstrap_breadcrumbs %}
 {% load recaptcha2 %}
 {% block breadcrumbs %}
-    {{ block.super }}
-    {% breadcrumb "Add Spotting" "flight_add" %}
+{{ block.super }}
+{% breadcrumb "Add Spotting" "flight_add" %}
 {% endblock %}
 {% block content %}
-    {{ block.super }}
-    {% crispy form %}
-    {# Needs to be included here because css placed in header won't work since it is overridden by default values #}
-    <link rel="stylesheet" href="{% static "flights/css/vendor/select2-bootstrap4.min.css" %}?v=3">
+{{ block.super }}
+{% crispy form %}
+{# Needs to be included here because css placed in header won't work since it is overridden by default values #}
+<link rel="stylesheet" href="{% static "flights/css/vendor/select2-bootstrap4.min.css" %}?v=3">
 {% endblock %}
 {% block script %}
-    {% recaptcha_init %}
-    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
-        integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
-        crossorigin="">
+{% recaptcha_init %}
+<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+    integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+    crossorigin="">
     </script>
-    <script src="{% static 'flights/js/vendor/leaflet-bing-layer.min.js' %}"></script>
-    <script src="{% static 'flights/js/flight_form.js' %}?v=11" bingApiKey="{{ BING_API_KEY }}"></script>
+<script src="{% static 'flights/js/vendor/leaflet-bing-layer.min.js' %}"></script>
+<script src="{% static 'flights/js/flight_form.js' %}?v=12" bingApiKey="{{ BING_API_KEY }}"></script>
 {% endblock %}
 {% block css %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
-        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-        crossorigin=""/>
-    <link rel="stylesheet" href="{% static "flights/css/flights_add.css" %}?v=2">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+    crossorigin="" />
+<link rel="stylesheet" href="{% static "flights/css/flights_add.css" %}?v=2">
 {% endblock %}
