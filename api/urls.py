@@ -1,7 +1,7 @@
 """
     url module for api app
 """
-from django.urls import path
+from django.urls import path, include
 
 from . import views
 
@@ -31,5 +31,6 @@ urlpatterns = [
          views.AntsByRegionDiffView.as_view(), name='api_ants_by_region_diff'),
     path('regions/<str:region>/ants/common/<str:region2>/',
          views.AntsByRegionCommonView.as_view(),
-         name='api_ants_by_region_common')
+         name='api_ants_by_region_common'),
+    path('flights/', include('api.flights.urls'))
 ]
