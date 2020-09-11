@@ -155,12 +155,12 @@ class Distribution(models.Model):
         related_name='distribution',
         on_delete=models.CASCADE
     )
-    native = models.NullBooleanField(
+    native = models.BooleanField(
         blank=True,
         null=True,
         verbose_name=_('Native')
     )
-    protected = models.NullBooleanField(
+    protected = models.BooleanField(
         blank=True,
         null=True,
         verbose_name=_('Protected by law')
@@ -379,7 +379,7 @@ class AntSpecies(Species):
         else:
             return dict(self.COLONY_STRUCTURE_CHOICES)[self.colony_structure]
 
-    worker_polymorphism = models.NullBooleanField(
+    worker_polymorphism = models.BooleanField(
         blank=True,
         null=True,
         verbose_name=_('Worker polymorphism')
