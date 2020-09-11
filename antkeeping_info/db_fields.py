@@ -37,7 +37,7 @@ BigIntegerRangeField = create_bounded_range_field(
     1
 )
 FloatRangeField = create_bounded_range_field(
-    ranges.FloatRangeField,
+    ranges.DecimalRangeField,
     sys.float_info.min
 )
 IntegerRangeField = create_bounded_range_field(
