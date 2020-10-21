@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'search',
     'staff',
     'api',
+    'terms',
     'crispy_forms',
     'django_bootstrap_breadcrumbs',
     'snowpenguin.django.recaptcha2',
