@@ -20,39 +20,39 @@ def get_entities():
 
 @transaction.atomic
 def update_antmaps_ids():
-        try:
-            entities = get_entities()
-            regions_updated = []
-            regions_not_found = []
-            multiple_regions = []
-            for entity in entities:
-                entity_display = entity['display']
-                try:
-                    ant_region = AntRegion.objects.get(name=entity_display)
-                    ant_region.antmaps_id = entity['key']
-                    ant_region.save()
-                    regions_updated.append(entity_display)
-                except ObjectDoesNotExist:
-                    regions_not_found.append(entity_display)
-                except MultipleObjectsReturned:
-                    multiple_regions.append(entity_display)
+    try:
+        entities = get_entities()
+        regions_updated = []
+        regions_not_found = []
+        multiple_regions = []
+        for entity in entities:
+            entity_display = entity['display']
+            try:
+                ant_region = AntRegion.objects.get(name=entity_display)
+                ant_region.antmaps_id = entity['key']
+                ant_region.save()
+                regions_updated.append(entity_display)
+            except ObjectDoesNotExist:
+                regions_not_found.append(entity_display)
+            except MultipleObjectsReturned:
+                multiple_regions.append(entity_display)
 
-            print('regions updated: {}, regions not found: {}, '
-                  'multiple regions returned: {}'.format(
-                    len(regions_updated),
-                    len(regions_not_found),
-                    len(multiple_regions)))
-        except requests.exceptions.HTTPError as e:
-            print('HTTP Error: {}'.format(e))
-        except requests.exceptions.RequestException:
-            print('Connection error')
+        print('regions updated: {}, regions not found: {}, '
+              'multiple regions returned: {}'.format(
+                  len(regions_updated),
+                  len(regions_not_found),
+                  len(multiple_regions)))
+    except requests.exceptions.HTTPError as e:
+        print('HTTP Error: {}'.format(e))
+    except requests.exceptions.RequestException:
+        print('Connection error')
 
 
 def get_species(entity_id):
     species_json = get_json(
         ('https://antmaps.org/api/v01/species.json?bentity_id={}'
             .format(entity_id))
-        )['species']
+    )['species']
     return list(map(lambda s: s['display'], species_json))
 
 
