@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
@@ -52,6 +53,12 @@ urlpatterns = [
     path('pages/', include(wagtail_urls)),
 
 ]
+
+""" urlpatterns += i18n_patterns(
+    # These URLs will have /<language_code>/ appended to the beginning
+
+    path('', include(wagtail_urls)),
+) """
 
 admin.site.site_header = 'Antkeeping.info administration'
 
