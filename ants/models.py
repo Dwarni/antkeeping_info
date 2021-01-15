@@ -4,7 +4,7 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.core.validators import MaxValueValidator, MinValueValidator, \
+from django.core.validators import MinValueValidator, \
     RegexValidator, ValidationError
 from django.db import models
 from django.contrib.postgres import validators as psql_validators
@@ -19,7 +19,7 @@ from sorl.thumbnail import ImageField
 from regions.models import Region
 from ants.managers import AntRegionManager, CountryAntRegionManager, \
     AntSizeManager, AntSpeciesManager, GenusManager, StateAntRegionManager
-from ants.helpers import format_integer_range, DEFAULT_NONE_STR
+from ants.helpers import DEFAULT_NONE_STR
 
 
 # Create your models here.
