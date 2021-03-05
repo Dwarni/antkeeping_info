@@ -14,7 +14,6 @@ djangorestframework>=3.11
 image>=1.5.27
 psycopg2-binary ~= 2.8
 pycountry==18.12.8
-python-memcached==1.59
 redis>=3.4
 requests>=2.23
 sorl-thumbnail==12.*
