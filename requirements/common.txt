@@ -17,4 +17,3 @@ pycountry==18.12.8
 redis>=3.4
 requests>=2.23
 sorl-thumbnail==12.*
-wagtail>=2.0
