@@ -3,9 +3,21 @@
 """
 from django.urls import path, include
 
+from django.views.generic import TemplateView
+
+from rest_framework.schemas import get_schema_view
+
 from . import views
 
 urlpatterns = [
+    path('schema', get_schema_view(
+         title="Antkeeping.info API",
+         version="1.0.0"
+         ), name='api-schema'),
+    path('doc', TemplateView.as_view(
+        template_name='swagger_ui.html',
+        extra_context={'schema_url': 'api-schema'}
+    ), name='api-doc'),
     path('ants/',
          views.AntSpeciesListView.as_view(),
          name='api_ant_species'),
