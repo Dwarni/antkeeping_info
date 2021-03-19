@@ -9,3 +9,7 @@
 .hidden {
     display: none;
 }
+
+.grecaptcha-badge { 
+    bottom:80px !important; 
+}
