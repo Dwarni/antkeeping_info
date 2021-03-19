@@ -42,6 +42,7 @@ def update_antmaps_ids():
                   len(regions_updated),
                   len(regions_not_found),
                   len(multiple_regions)))
+        print(regions_not_found)
     except requests.exceptions.HTTPError as e:
         print('HTTP Error: {}'.format(e))
     except requests.exceptions.RequestException:

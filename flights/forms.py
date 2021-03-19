@@ -13,8 +13,8 @@ from crispy_forms.layout import Layout, Fieldset, Div, ButtonHolder, \
     Submit, HTML, Button
 from crispy_forms.bootstrap import AppendedText, InlineRadios
 
-from snowpenguin.django.recaptcha2.fields import ReCaptchaField
-from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
+from captcha.fields import ReCaptchaField
+from captcha.widgets import ReCaptchaV3
 
 from ants.models import Genus, Species, AntSpecies, AntRegion
 
@@ -33,11 +33,11 @@ class Html5TimeInput(TimeInput):
 
 
 MODEL_SELECT_ATTRS = {
-        # Only trigger autocompletion after 3 characters have been typed
-        'data-minimum-input-length': 3,
-        'data-theme': 'bootstrap4',
-        'data-width': '100%',
-    }
+    # Only trigger autocompletion after 3 characters have been typed
+    'data-minimum-input-length': 3,
+    'data-theme': 'bootstrap4',
+    'data-width': '100%',
+}
 
 
 class FlightForm(forms.ModelForm):
@@ -50,7 +50,7 @@ class FlightForm(forms.ModelForm):
     wind_speed_unit = ChoiceField(
         choices=Velocity.UNIT_CHOICES, required=False)
 
-    captcha = ReCaptchaField(widget=ReCaptchaWidget, label='')
+    captcha = ReCaptchaField(widget=ReCaptchaV3, label="")
 
     helper = FormHelper()
 
@@ -301,7 +301,7 @@ class FlightForm(forms.ModelForm):
             'ant_species': autocomplete.ModelSelect2(
                 url=reverse_lazy('ant_species_autocomplete'),
                 attrs=MODEL_SELECT_ATTRS
-                ),
+            ),
             'date': Html5DateInput,
             'start_time': Html5TimeInput,
             'end_time': Html5TimeInput,

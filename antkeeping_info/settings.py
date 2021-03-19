@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'api',
     'crispy_forms',
     'django_bootstrap_breadcrumbs',
-    'snowpenguin.django.recaptcha2',
+    'captcha',
     'taggit',
     'rest_framework',
     'corsheaders',
