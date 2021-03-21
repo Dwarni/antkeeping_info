@@ -76,7 +76,9 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -151,7 +153,7 @@ PUBLIC_ROOT = env('PUBLIC_ROOT')
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    str(root.path('global_static/')),
+    str(root.path('global_static/'))
 ]
 STATIC_ROOT = ''
 
