@@ -5,7 +5,7 @@ The goal of Antkeeping.info is to provide ant keepers around the world with all 
 * Detailed information about spotted nuptial flights
 * Statistical information/charts about nuptial flights
 # Requirements
-* python > 3.4
+* python > 3.8
 * PostgreSQL (Other databases are possible for testing, but .env file has to be changed)
 # Setup
 1. Clone the repository

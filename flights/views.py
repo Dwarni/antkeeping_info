@@ -145,7 +145,6 @@ class FlightsMapView(TemplateView):
 class FlightsListView(ListView):
     """List view for flights."""
     model = Flight
-    # queryset = Flight.objects.filter(reviewed=True)
 
     def get(self, request, *args, **kwargs):
         qs = self.get_queryset()
@@ -203,8 +202,8 @@ class FlightStatisticView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         ants = Flight.objects.values(
-                'ant_species__slug', 'ant_species__name'
-            ).distinct().order_by('ant_species__name')
+            'ant_species__slug', 'ant_species__name'
+        ).distinct().order_by('ant_species__name')
         context['ants'] = ants
         return context
 
