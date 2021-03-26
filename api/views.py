@@ -12,6 +12,8 @@ from .serializers import RegionSerializer, RegionListSerializer, \
     AntSpeciesDetailSerializer, AntSpeciesNameSerializer, \
     GenusNameSerializer
 
+from .schemas import AntsSchema, GeneraSchema, RegionsSchema
+
 
 def get_months_array(flight_months):
     all_flight_months = [0] * 12
@@ -28,6 +30,7 @@ class NuptialFlightMonths(generics.ListAPIView):
         including these months.
     """
     serializer_class = AntsWithNuptialFlightsListSerializer
+    schema = AntsSchema()
 
     def get_queryset(self):
         ants = AntSpecies.objects.filter(
@@ -48,6 +51,7 @@ class AntSpeciesDetailView(APIView):
     """
         Return a specific ant species.
     """
+    schema = AntsSchema()
 
     def get(self, request, ant_species):
         ant_species_qs = AntSpecies.objects
@@ -69,7 +73,7 @@ class RegionView(APIView):
     """
         Return a specific region.
     """
-    # serializer_class = AntListSerializer
+    schema = RegionsSchema()
 
     def get(self, request, region):
         regions = AntRegion.objects
@@ -91,6 +95,7 @@ class RegionsView(generics.ListAPIView):
     """
         Return a list of all existing regions.
     """
+    schema = RegionsSchema()
     serializer_class = RegionListSerializer
 
     def get_queryset(self):
@@ -137,7 +142,7 @@ class AntsByRegionView(APIView):
     """
         Return a list of ants which occur in the specific region.
     """
-    # serializer_class = AntListSerializer
+    schema = RegionsSchema()
 
     def get(self, request, region):
         ant_species_name = self.request.query_params.get(
@@ -180,7 +185,7 @@ class AntsByRegionDiffView(APIView):
         Return a list of ants which occur in the specific region
         but not in the second region.
     """
-    # serializer_class = AntListSerializer
+    schema = RegionsSchema()
 
     def get(self, request, region, region2):
         region_query = get_region_query(region)
@@ -201,7 +206,7 @@ class AntsByRegionCommonView(APIView):
     """
         Return a list of ants which occur in both regions.
     """
-    # serializer_class = AntListSerializer
+    schema = RegionsSchema()
 
     def get(self, request, region, region2):
         region_query = get_region_query(region)
@@ -222,6 +227,7 @@ class AntsByGenusView(generics.ListAPIView):
         Return a list of ant species of the specific genus.
     """
     serializer_class = AntSpeciesNameSerializer
+    schema = GeneraSchema()
 
     def get_queryset(self):
         id = self.kwargs['id']
@@ -235,10 +241,12 @@ class GeneraListView(generics.ListAPIView):
     """
         Return a list of genera.
     """
+    schema = GeneraSchema()
     serializer_class = GenusNameSerializer
     queryset = Genus.objects.all()
 
 
 class AntSpeciesListView(generics.ListAPIView):
+    schema = AntsSchema()
     serializer_class = AntSpeciesNameSerializer
     queryset = AntSpecies.objects.all()
