@@ -25,7 +25,6 @@ class SaveLayout(Layout):
 
 class CustomAuthentificationForm(auth_forms.AuthenticationForm):
     """Log in form."""
-    captcha = ReCaptchaField(widget=ReCaptchaV3, label="")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -33,8 +32,7 @@ class CustomAuthentificationForm(auth_forms.AuthenticationForm):
         self.layout_fieldset = Fieldset(
             'Log In',
             'username',
-            'password',
-            'captcha'
+            'password'
         )
         self.helper.layout = Layout(
             self.layout_fieldset,
