@@ -7,8 +7,6 @@ from django.contrib.auth import forms as auth_forms
 from django.contrib.auth import models as auth_models
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit
-from captcha.fields import ReCaptchaField
-from captcha.widgets import ReCaptchaV3
 
 
 class SaveLayout(Layout):
