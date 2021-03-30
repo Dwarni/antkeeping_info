@@ -1,5 +1,5 @@
 beautifulsoup4 >= 4.0
-celery==4.*
+celery >= 5.0
 Django >= 3.0
 django-autocomplete-light>=3.5
 django-bootstrap-breadcrumbs ~= 0.9
