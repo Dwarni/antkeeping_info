@@ -8,10 +8,16 @@
 <meta name="description" content="{% trans 'A map on which you can see ant nuptial flight spottings.' %}">
 {% endblock %}
 {% block css %}
-<link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=8">
-<link rel="stylesheet" href="{% static "flights/css/vendor/leaflet/leaflet.css" %}" />
-<link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.css" %}">
-<link rel="stylesheet" href="{% static "flights/css/vendor/leaflet-markerclusterer/MarkerCluster.Default.css" %}">
+<link rel="stylesheet" href="{% static 'flights/css/flights_map.css' %}?v=8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css"
+    integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA=="
+    crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.0/MarkerCluster.min.css" 
+        integrity="sha512-ENrTWqddXrLJsQS2A86QmvA17PkJ0GVm1bqj5aTgpeMAfDKN2+SIOLpKG8R/6KkimnhTb+VW5qqUHB/r1zaRgg=="
+        crossorigin="anonymous" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.0/MarkerCluster.Default.min.css"
+            integrity="sha512-fYyZwU1wU0QWB4Yutd/Pvhy5J1oWAwFXun1pt+Bps04WSe4Aq6tyHlT4+MHSJhD8JlLfgLuC4CbCnX5KHSjyCg=="
+            crossorigin="anonymous" />
 {% endblock %}
 {% block content %}
 {{ block.super }}
@@ -59,8 +65,12 @@
 </div>
 {% endblock %}
 {% block script %}
-<script src="{% static 'flights/js/vendor/leaflet.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"
+    integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA=="
+    crossorigin="anonymous"></script>
 <script src="{% static 'flights/js/vendor/leaflet-bing-layer.min.js' %}"></script>
-<script src="{% static 'flights/js/vendor/leaflet.markercluster.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.0/leaflet.markercluster.min.js"
+    integrity="sha512-8/nLM89o+U+gWYH4orGbC8qlD/3A4JGHarcJ+PSkrkJ3r2a9/2GdXZNidl5pcBvZ/AGqUiBLBg3BUBH4sUzXow=="
+    crossorigin="anonymous"></script>
 <script src="{% static 'flights/js/flights_map.js' %}?v=15" bingApiKey="{{ BING_API_KEY }}"></script>
 {% endblock %}
