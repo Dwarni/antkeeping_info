@@ -1,0 +1,38 @@
+{% load bootstraptags %}
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if page.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace request 'page' page.previous_page_number %}">
+                    <i class="bi bi-skip-backward"></i>
+                </a>
+            </li>
+        {% endif %}
+        {% if page_range.start > 1 %}
+            <li class="page-item">
+                <span class="page-link">...</span>
+            </li>
+        {% endif %}
+        {% for i in page_range %}
+            {% if i == page.number %}
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+            {% else %}
+                <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' i %}">{{ i }}</a></li>    
+            {% endif %}
+        {% endfor %}
+        {% if page_range.stop <= page.paginator.num_pages %}
+            <li class="page-item">
+                <span class="page-link">...</span>
+            </li>
+        {% endif %}
+        {% if page.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% url_replace request 'page' page.next_page_number %}">
+                    <i class="bi bi-skip-forward"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
