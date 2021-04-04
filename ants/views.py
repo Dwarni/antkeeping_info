@@ -9,9 +9,7 @@ from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 
-from django.db.models import Q
-
-from .models import AntRegion, AntSize, AntSpecies, InvalidName
+from .models import AntRegion, AntSize, AntSpecies
 from flights.models import Flight
 from ants.helpers import DEFAULT_NONE_STR
 
@@ -36,7 +34,8 @@ class AntList(ListView):
         Generic view for all lists of ants.
     """
     context_object_name = 'ants'
-    template_name = 'ants/ants_by_country/list.html'
+    template_name = 'ants/antdb/ants_by_country/list.html'
+    paginate_by = 25
 
     def get_context_data(self, **kwargs):  # pylint: disable=W0221
         context = super().get_context_data(**kwargs)
@@ -44,9 +43,9 @@ class AntList(ListView):
         return context
 
 
-class CountryIndex(TemplateView):
+class AntsByCountry(TemplateView):
     """Template view which get's a list of all countries with ants."""
-    template_name = 'ants/ants_by_country/list.html'
+    template_name = 'ants/antdb/ants_by_country.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
