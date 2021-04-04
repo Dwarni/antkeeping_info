@@ -5,11 +5,11 @@
 <meta name="description" content="{% trans 'Information and tools related to ants and ant keeping for example detailed information for ant species, list of ants by country, nuptial flight map etc.' %}">
 {% endblock %}
 {% block css %}
-  <link rel="stylesheet" href="{% static "home/css/home.css" %}">
+  <link rel="stylesheet" href="{% static 'home/css/home.css' %}">
 {% endblock %}
 {% block content %}
 <div class="card-deck">
-  {% include "home/cards/card.html" with header="Distribution" body="See which ant species you can find in a specific country or state. The list contains both native and non native species." img_path="home/img/world_map.jpg" img_ver=2 target_url="index" %}
+  {% include "home/cards/card.html" with header="Distribution" body="See which ant species you can find in a specific country or state. The list contains both native and non native species." img_path="home/img/world_map.jpg" img_ver=2 target_url="ants_by_country" %}
   {% include "home/cards/card.html" with header="Mating chart" body="See in which months ant species have their nuptial flights." img_path="home/img/mating_chart_small.jpg" img_ver=1 target_url="flights_mating_chart" %}
   {% include "home/cards/card.html" with header="Nuptial flight and alate spotting" body="See what nuptial flights currently occur or if someone already found winged ants (alates)." img_path="home/img/ant_queen.jpg" img_ver=1 target_url="flights_map" %}
 </div>
