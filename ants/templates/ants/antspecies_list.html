@@ -1,17 +1,15 @@
 {% extends 'layout.html' %}
+{% load bootstraptags %}
 {% load i18n %}
 {% load static %}
 {% block css %}
-    <link rel="stylesheet" href="{% static "ants/css/antspecies_list.css" %}?v=2">
+    <link rel="stylesheet" href="{% static 'ants/css/antspecies_list.css' %}?v=2">
 {% endblock %}
 {% block content %}
     {% if ants %}
-        <div class="input-group ant-search">
-            <div class="input-group-prepend">
-            <div class="input-group-text search-icon">⌕</div>
-            </div>
-            <input type="text" class="form-control" id="antSearchInput" placeholder="Search">
-        </div>
+        {% if page_obj.paginator.num_pages > 1 %}
+            {% bs_pagination page_obj request %}
+        {% endif %}
         <table id="antTable" class="table table-hover">
             <thead>
                 <tr>
@@ -30,11 +28,14 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% if page_obj.paginator.num_pages > 1 %}
+            {% bs_pagination page_obj request %}
+        {% endif %}
         <div id="noSpeciesFoundWarning" class="alert alert-warning" role="alert">
             No ant species found.
         </div>
     {% endif %}
 {% endblock %}
 {% block script %}
-    <script src="{% static "ants/js/antfilter.js" %}"></script>
+    <script src="{% static 'ants/js/antfilter.js' %}"></script>
 {% endblock %}
