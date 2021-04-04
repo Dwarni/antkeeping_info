@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'staff',
     'api',
     'crispy_forms',
+    'crispy_bootstrap5',
     'django_bootstrap_breadcrumbs',
     'captcha',
     'taggit',
@@ -70,6 +71,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'sorl.thumbnail',
     'tinymce',
+    'bootstrap_tags',
 ]
 
 MIDDLEWARE = [
@@ -167,7 +169,8 @@ if PUBLIC_ROOT is not None:
 BREADCRUMBS_TEMPLATE = "django_bootstrap_breadcrumbs/bootstrap4.html"
 
 # Crispy forms settings
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 LOGIN_URL = '/users/login'
 
