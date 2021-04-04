@@ -176,21 +176,34 @@ Vue.component('mating-chart-row', {
     props: ['flightEntry'],
     template: `
         <tr>
-            <td class="name-column"> {{ flightEntry.name }}</td>
+            <mating-chart-name-column :speciesName="flightEntry.name" />
             <mating-chart-month-column 
                 v-for="n in 12"
                 v-bind:current-month="n"
                 v-bind:flight-months="flightEntry.flight_months"
                 v-bind:key="n"
                 ></mating-chart-month-column>
-            <td v-if="flightEntry.flight_hour_range" title="Hours of the day" class="pr-1"><i class="fas fa-clock"></i> {{ flightEntry.flight_hour_range.lower }}-{{ flightEntry.flight_hour_range.upper - 1 }}</td>
+            <td v-if="flightEntry.flight_hour_range" title="Hours of the day" class="pr-1"><i class="bi bi-clock-fill"></i> {{ flightEntry.flight_hour_range.lower }}-{{ flightEntry.flight_hour_range.upper - 1 }}</td>
             <td v-if="flightEntry.flight_climate">
-                <i v-if="flightEntry.flight_climate === 'm'" title="Moderate climate" class="fas fa-thermometer-half"></i>
-                <i v-else-if="flightEntry.flight_climate === 'w'" title="Warm climate" class="fas fa-thermometer-full"></i>
-                <div v-else title="Sticky climate"><i class="fas fa-thermometer-full"></i><i  class="fas fa-tint"></i></div>
+                <i v-if="flightEntry.flight_climate === 'm'" title="Moderate climate" class="bi bi-thermometer-half"></i>
+                <i v-else-if="flightEntry.flight_climate === 'w'" title="Warm climate" class="fas bi bi-thermometer-high"></i>
+                <div v-else title="Sticky climate"><i class="fas bi bi-thermometer-high"></i><i  class="bi bi-lightning-fill"></i></div>
             </td>
         </tr>
     `
+})
+
+Vue.component('mating-chart-name-column', {
+    props: { speciesName: String},
+    template: `
+        <td class="name-column"> <a :href="antWikiURL" target="_blank">{{ speciesName }}</a></td>       
+    `,
+    computed: {
+        antWikiURL: function () {
+            const baseURL = 'https://antwiki.org/wiki'
+            return `${baseURL}/${this.speciesName.replaceAll(' ', '_')}`
+        }
+    }
 })
 
 Vue.component('mating-chart-month-column', {
