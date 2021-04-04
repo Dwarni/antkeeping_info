@@ -1,4 +1,5 @@
-"""antkeeping_info URL Configuration
+"""
+antkeeping_info URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.0/topics/http/urls/
@@ -24,8 +25,8 @@ from search import views as search_views
 
 urlpatterns = [
     path('', views.home, name="home"),
-    path('ants/', include('ants.urls')),
-    path('ants-by-country/', include('ants.ants_by_country_urls')),
+    path('', include('ants.urls')),
+    path('antdb/', include('ants.antdb_urls')),
     path('flights/', include('flights.urls')),
     path('search/', search_views.SearchView.as_view(), name='search'),
     path('staff/', include('staff.urls')),
