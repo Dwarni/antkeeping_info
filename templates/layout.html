@@ -24,13 +24,14 @@
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{% static 'img/icons/ms-icon-144x144.png' %}">
     <meta name="theme-color" content="#ffffff">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% block meta %}{% endblock %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css"
-        integrity="sha512-P5MgMn1jBN01asBgU0z60Qk4QxiXo86+wlFahKrsQf37c9cro517WzVSPPV1tDKzhku2iJ2FVgL67wG03SGnNA=="
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.0-beta3/css/bootstrap.min.css"
+        integrity="sha512-N415hCJJdJx+1UBfULt+i+ihvOn42V/kOjOpp1UTh4CZ70Hx5bDlKryWaqEKfY/8EYOu/C2MuyaluJryK1Lb5Q=="
         crossorigin="anonymous" />
-    <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}?v=1">
-    <link rel="stylesheet" href="{% static 'css/solid.min.css' %}?v=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.4.1/font/bootstrap-icons.min.css" 
+        integrity="sha512-YBSrHBAMjFhWHodf0RF58XB/x9lmuwBtyJv1LWDHQa1nOaWNXfG3Etc/lEXfW+qBx8ne79JnzccDs59je/ccVA==" 
+        crossorigin="anonymous" />
     <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=8">
     {% block css %} {% endblock %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
@@ -55,16 +56,16 @@
     </header>
     {% endif %}
     <!-- Return to Top -->
-    <a href="javascript:" id="return-to-top"><i class="fas fa-chevron-up"></i></a>
+    <a href="javascript:" id="return-to-top"><i class="bi bi-arrow-up"></i></a>
     <main role="main" {% if iframe %}class="container-fluid" {% else %}class="container" {% endif %}>
         {% include 'messages.html' %}
-        {% block breadcrumbs %} {% clear_breadcrumbs %} {% endblock %} {% block content %} {% endblock %}
+        {% block breadcrumbs %} {% breadcrumb "Home" "home" %}{% endblock %} {% block content %} {% endblock %}
     </main>
     {% if iframe is None or iframe == False %}
     {% include "footer.html" %}
     {% endif %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"
-        integrity="sha512-wV7Yj1alIZDqZFCUQJy85VN+qvEIly93fIQAN7iqDFCPEucLCeNFz4r35FCo9s6WrpdDQPi80xbljXB8Bjtvcg=="
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.0-beta3/js/bootstrap.bundle.min.js" 
+        integrity="sha512-DSdiuNZtfUhehZHXtit9Sa/83i06YSnvT8Js8drwdkVCDMk3JwpIxdhf2oRUByUDB3wguN2iAzoTNfxFAuqGyA=="
         crossorigin="anonymous"></script>
     <script src="{% static 'js/layout.js' %}?v=1"></script>
     {% block script %} {% endblock %}
