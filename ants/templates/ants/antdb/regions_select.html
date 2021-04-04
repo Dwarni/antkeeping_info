@@ -1,0 +1,18 @@
+{% if regions.count > 0 %}
+<div class="mb-3  region-select-div">
+    <input type="hidden" class="region-url" value="{{ url }}">
+    <label for="{{ id }}" class="form-label">{{ label }}:</label>
+    <select id="{{ id }}" name="{{ id }}" class="form-select region-select">
+        {% if not code %}
+            <option value="" selected>Please select a {{ label|lower }}</option>
+        {% endif %}
+        {% for region in regions %}
+            {% if code == region.code %}
+                <option value="{{ region.code }}" selected>{{ region.name }}</option>
+            {% else %}
+                <option value="{{ region.code }}">{{ region.name }}</option>
+            {% endif %}
+        {% endfor %}
+    </select>
+</div>
+{% endif %}
