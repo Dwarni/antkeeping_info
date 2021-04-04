@@ -2,61 +2,61 @@
 {% load i18n %}
 {% load admin_urls %}
 <nav class="navbar navbar-expand-md fixed-top navbar-light bg-light">
-    <a class="navbar-brand" href="{% url 'home' %}">
-        <img src="{% static 'img/logo.svg' %}?v=2" width="30" height="30" alt="" class="d-inline-block align-top">
-        &nbsp;Antkeeping.info
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
-        aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <img src="{% static 'img/logo.png' %}" alt="Antkeeping.info logo" class="d-inline-block align-top">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'index' %}">{% trans "Countries" %} <span
-                        class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'flights_mating_chart' %}">{% trans "Mating Chart" %} <span
-                        class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="flightsDropdown" role="button" data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false">
-                    {% trans "Flights" %}
-                </a>
-                <div class="dropdown-menu" aria-labelledby="flightsDropdown">
-                    <a class="dropdown-item" href="{% url 'flights_map' %}">{% trans "Map" %}</a>
-                    <a class="dropdown-item" href="{% url 'flight_add' %}">{% trans "Add Flight" %}</a>
-                    {% if user.is_staff %}
-                    <a class="dropdown-item" href="{% url 'flights_review_list' %}">{% trans "Review" %}</a>
-                    {% endif %}
-                </div>
-            </li>
-            {% if user.is_staff %}
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="flightsDropdown" role="button" data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false">
-                    {% trans "Staff" %}
-                </a>
-                <div class="dropdown-menu" aria-labelledby="flightsDropdown">
-                    <a class="dropdown-item" href="{% url 'admin:index' %}">{% trans "Admin page" %}</a>
-                </div>
-            </li>
-            {% endif %}
-            <li class="nav-item">
-                <a class="nav-link" target="_blank" rel="noopener noreferrer" href="https://discord.gg/xuuQnGt"
-                    title="Antkeeping.info on Discord">
-                    Discord (Chat)
-                </a>
-            </li>
-        </ul>
-        <div class="navbar-nav ml-auto">
-            <form class="form-inline" action="{% url 'search' %}" method="GET">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="q"
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">{% trans "Home" %}</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="antDatabaseDropdown" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        {% trans "Ant Database" %}
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="antDatabaseDropdown">
+                        <li><a class="dropdown-item" href="{% url 'ants_by_country' %}">{% trans "Ants by Country" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'flights_mating_chart' %}">{% trans "Mating Chart" %}</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="nuptialFlightsDropdown" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        {% trans "Nuptial Flights" %}
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="nuptialFlightsDropdown">
+                        <li><a class="dropdown-item" href="{% url 'flights_map' %}">{% trans "Reports" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'flights_mating_chart' %}">{% trans "Mating Chart" %}</a></li>
+                    </ul>
+                </li>
+                {% if user.is_staff %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="staffDropdown" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        {% trans "Staff" %}
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="staffDropdown">
+                        <li><a class="dropdown-item" href="{% url 'admin:index' %}">{% trans "Admin page" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'flights_review_list' %}">{% trans "Review flights" %}</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" target="_blank" rel="noopener noreferrer" href="https://discord.gg/xuuQnGt"
+                        title="Antkeeping.info on Discord">
+                        Discord (Chat)
+                    </a>
+                </li>
+            </ul>
+            <form class="d-flex" action="{% url 'search' %}" method="GET">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="q"
                     minlength=3 required>
-                <button class="btn btn-light my-2 my-sm-0" type="submit">Search</button>
             </form>
             <ul class="navbar-nav ml-3">
                 {% include "user_on_navbar.html" %}
