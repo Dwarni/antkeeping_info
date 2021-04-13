@@ -3,6 +3,7 @@
 """
 import json
 from dal import autocomplete
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, reverse
 
 from django.views.generic.list import ListView
@@ -43,13 +44,45 @@ class AntList(ListView):
         return context
 
 
-class AntsByCountry(TemplateView):
+class AntsByRegion(TemplateView):
     """Template view which get's a list of all countries with ants."""
     template_name = 'ants/antdb/ants_by_country.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        country = self.request.GET.get('country')
+        sub_region = self.request.GET.get('subRegion')
+        name = self.request.GET.get('name')
+        ant_list = None
+
+        if country:
+            context['country'] = country
+            sub_regions = AntRegion.states.with_ants_and_country(country)
+            context['sub_regions'] = sub_regions
+
+        if sub_region:
+            context['sub_region'] = sub_region
+            ant_list = AntSpecies.objects.by_region_code(
+                code=sub_region)
+
+        if country and not sub_region:
+            ant_list = AntSpecies.objects.by_country_code(country)
+
         context['countries'] = AntRegion.countries.with_ants()
+
+        if name:
+            context['name'] = name
+            if ant_list:
+                ant_list = ant_list.filter(name__icontains=name)
+
+        if ant_list:
+            paginator = Paginator(ant_list, 50)
+            page_number = self.request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+            context['page_obj'] = page_obj
+            context['total_objects'] = ant_list.count()
+
         add_iframe_to_context(context, self.request)
         return context
 
