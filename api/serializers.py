@@ -64,7 +64,7 @@ class RegionListSerializer(serializers.ModelSerializer):
     """Serializer for a list of regions."""
     class Meta:
         model = ant_models.AntRegion
-        fields = ('id', 'name', 'slug', 'type')
+        fields = ('id', 'code', 'name', 'slug', 'type')
         read_only_fields = fields
 
 
