@@ -558,6 +558,12 @@ class AntSpecies(Species):
         """Return the url to detail page."""
         return reverse('ant_detail', args=[self.slug])
 
+    @property
+    def antwiki_url(self):
+        """Returns the url to the antwiki.org page for that ant species."""
+        return 'http://www.antwiki.org/wiki/{}' \
+            .format(self.name.replace(' ', '_'))
+
     objects = AntSpeciesManager()
 
     class Meta(SpeciesMeta):
