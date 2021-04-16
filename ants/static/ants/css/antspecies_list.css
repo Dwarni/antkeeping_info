@@ -1,11 +1,5 @@
-.ant-search {
-    margin-bottom: 1em;
-}
-
-#noSpeciesFoundWarning {
-    display: none;
-}
-
-.search-icon {
-    font-size: 11pt;
+@media (min-width: 768px) {
+    #filterDiv {
+        order: 2;
+    }
 }
