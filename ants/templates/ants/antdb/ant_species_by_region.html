@@ -4,33 +4,71 @@
 {% load django_bootstrap_breadcrumbs %}
 {% block breadcrumbs %}
     {{ block.super }}
-    {% breadcrumb "Ants By Country" "index" %}
-    {% if country %}
-        {% breadcrumb country.name "country" country.code %}   
-    {% endif %}
-    {% if region %}
-        {% breadcrumb region.name "region" region.code %}
-    {% endif %}
+    {% breadcrumb "Ant species By Country" "ant_species_by_country" %}
 {% endblock %}
 {% block content %}
     {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap4.html" %}
-    <form class="mb-3" method="get">
-        {% include "ants/antdb/regions_select.html" with regions=countries code=country_code id='countrySelect' label='Country' url=url %}
-        {% include "ants/antdb/regions_select.html" with regions=regions code=region_code id='regionSelect' label=regions_type url=url_country %}
-        <label for="speciesNameFilter" class="form-label">Species name:</label>
-        <input type="text" class="form-control" id="speciesNameFilter" name="speciesNameFilter" placeholder="Filter">
-        <button type="submit" class="btn btn-primary">Update</button>
-    </form>
-    {% if ant_list_complete == False %}
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            {% trans 'This region list is not complete yet!' %}
+    <h2 class="mb-4">Ant species By Region</h2>
+    <div class="row">
+        <div class="col-md-4" id="filterDiv">
+            <div class="accordion mb-4" id="filterAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="filterHeading">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#filterCollapse" aria-expanded="true"
+                            aria-controls="filterCollapse"
+                        >
+                            Filter
+                        </button>
+                    </h2>
+                    <div id="filterCollapse" class="accordion-collapse collapse show" aria-labelledby="filterHeading" data-bs-parent="#filterAccordion">
+                        <div class="accordion-body">
+                            <form method="get" id="filterForm">
+                                {% include "ants/antdb/regions_select.html" with regions=countries code=country id='countrySelect' name='country' label='Country'%}
+                                {% include "ants/antdb/regions_select.html" with regions=sub_regions code=sub_region id='subRegionSelect' name='subRegion' label='Sub Regions' %}
+                                <div class="mb-3">
+                                    <label for="speciesNameFilter" class="form-label">Name:</label>    
+                                    <input type="text" class="form-control" id="nameFilter" name="name" placeholder="Filter" value="{{ name }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Apply</button>
+                                <button id="resetButton" class="btn btn-warning">Reset</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    {% endif %}
-    {{ block.super }}
+        <div class="col-md">
+            {{ block.super }}
+        </div>
+    </div>
 {% endblock %}
 {% block script %}
     {{ block.super }}
     <script>
-        var countriesUrl = "{{ url }}";
+        const countriesSelect = document.getElementById('countrySelect')
+        const subRegionSelect = document.getElementById('subRegionSelect')
+        const nameFilter = document.getElementById('nameFilter')
+        const resetButton = document.getElementById('resetButton')
+        const filterForm = document.getElementById('filterForm')
+        const submitFormFunction = (event) => {
+            filterForm.submit()
+        }
+        countriesSelect.onchange = (event) => {
+            if(subRegionSelect) {
+                subRegionSelect.value = null
+            }
+
+            submitFormFunction(event)
+        }
+        if(subRegionSelect) { subRegionSelect.onchange = submitFormFunction }
+
+        function resetForm() {
+            nameFilter.value = ""
+            countriesSelect.value = ""
+            if(subRegionSelect) { subRegionSelect.value = "" }
+        }
+
+        resetButton.onclick = resetForm
     </script>
 {% endblock %}
