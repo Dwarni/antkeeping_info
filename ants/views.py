@@ -44,9 +44,9 @@ class AntList(ListView):
         return context
 
 
-class AntsByRegion(TemplateView):
-    """Template view which get's a list of all countries with ants."""
-    template_name = 'ants/antdb/ants_by_country.html'
+class AntSpeciesByRegion(TemplateView):
+    """Let user see which ant species occur in selected regions."""
+    template_name = 'ants/antdb/ant_species_by_region.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
