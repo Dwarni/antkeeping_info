@@ -6,7 +6,8 @@
     <link rel="stylesheet" href="{% static 'ants/css/antspecies_list.css' %}?v=2">
 {% endblock %}
 {% block content %}
-    {% if ants %}
+    {% if page_obj %}
+        <p class="lead"><b>{{ total_objects }}</b> ant species found</i></p>
         {% if page_obj.paginator.num_pages > 1 %}
             {% bs_pagination page_obj request %}
         {% endif %}
@@ -18,10 +19,10 @@
                 </tr>
             </thead>
             <tbody id="antTableBody">
-                {% for ant in ants %}
+                {% for ant in page_obj %}
                 <tr style="cursor:pointer">
                     <td style="width:300px;">
-                        <a href="{% url 'ant_detail' ant.slug %}">{{ ant }}</a>
+                        <a href="{{ ant.antwiki_url }}" target="blank">{{ ant }}</a>
                     </td>
                     {% block table_column %}{% endblock %}
                 </tr>
@@ -31,9 +32,12 @@
         {% if page_obj.paginator.num_pages > 1 %}
             {% bs_pagination page_obj request %}
         {% endif %}
-        <div id="noSpeciesFoundWarning" class="alert alert-warning" role="alert">
-            No ant species found.
-        </div>
+    {% else %}
+        {% if country or sub_region %}
+            <div class="alert alert-warning" role="alert">
+                No Ant species found!
+            </div>
+        {% endif %}
     {% endif %}
 {% endblock %}
 {% block script %}
