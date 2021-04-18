@@ -21,7 +21,7 @@
                         {% trans "Ant Database" %}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="antDatabaseDropdown">
-                        <li><a class="dropdown-item" href="{% url 'ants_by_country' %}">{% trans "Ants by Country" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'ant_species_by_region' %}">{% trans "Ants by Country" %}</a></li>
                         <li><a class="dropdown-item" href="{% url 'flights_mating_chart' %}">{% trans "Mating Chart" %}</a></li>
                     </ul>
                 </li>
@@ -36,16 +36,16 @@
                     </ul>
                 </li>
                 {% if user.is_staff %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="staffDropdown" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        {% trans "Staff" %}
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="staffDropdown">
-                        <li><a class="dropdown-item" href="{% url 'admin:index' %}">{% trans "Admin page" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'flights_review_list' %}">{% trans "Review flights" %}</a></li>
-                    </ul>
-                </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="staffDropdown" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            {% trans "Staff" %}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="staffDropdown">
+                            <li><a class="dropdown-item" href="{% url 'admin:index' %}">{% trans "Admin page" %}</a></li>
+                            <li><a class="dropdown-item" href="{% url 'flights_review_list' %}">{% trans "Review flights" %}</a></li>
+                        </ul>
+                    </li>
                 {% endif %}
                 <li class="nav-item">
                     <a class="nav-link" target="_blank" rel="noopener noreferrer" href="https://discord.gg/xuuQnGt"
