@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'search',
     'staff',
     'api',
+    'bootstrap_tags',
     'crispy_forms',
     'crispy_bootstrap5',
     'django_bootstrap_breadcrumbs',
@@ -71,7 +72,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'sorl.thumbnail',
     'tinymce',
-    'bootstrap_tags',
 ]
 
 MIDDLEWARE = [
