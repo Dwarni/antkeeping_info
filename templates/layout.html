@@ -56,7 +56,6 @@
         <!-- Return to Top -->
         <a href="javascript:" id="return-to-top"><i class="bi bi-arrow-up"></i></a>
         <main role="main" {% if iframe %}class="container-fluid" {% else %}class="container" {% endif %}>
-            <button type="button" class="btn btn-lg btn-danger" data-bs-toggle="popover" title="Popover title" data-bs-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover</button>
             {% include 'messages.html' %}
             {% block breadcrumbs %} {% breadcrumb "Home" "home" %}{% endblock %} {% block content %} {% endblock %}
         </main>
