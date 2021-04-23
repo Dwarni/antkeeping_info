@@ -4,7 +4,6 @@
 import json
 from dal import autocomplete
 from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404, reverse
 
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
@@ -12,7 +11,6 @@ from django.views.generic.base import TemplateView
 
 from .models import AntRegion, AntSize, AntSpecies
 from flights.models import Flight
-from ants.helpers import DEFAULT_NONE_STR
 
 
 # Create your views here.
