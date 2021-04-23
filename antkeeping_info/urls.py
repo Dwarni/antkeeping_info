@@ -25,7 +25,7 @@ from search import views as search_views
 
 urlpatterns = [
     path('', views.home, name="home"),
-    path('', include('ants.urls')),
+    path('ants/', include('ants.urls')),
     path('antdb/', include('ants.antdb_urls')),
     path('flights/', include('flights.urls')),
     path('search/', search_views.SearchView.as_view(), name='search'),
