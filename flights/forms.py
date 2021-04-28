@@ -16,7 +16,7 @@ from crispy_forms.bootstrap import AppendedText, InlineRadios
 from captcha.fields import ReCaptchaField
 from captcha.widgets import ReCaptchaV3
 
-from ants.models import Genus, Species, AntSpecies, AntRegion
+from ants.models import AntRegion
 
 from .models import Flight, Temperature, Velocity
 from .geocoding import geocode, reverse_geocode
