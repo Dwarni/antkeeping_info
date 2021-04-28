@@ -14,7 +14,7 @@
         <table id="antTable" class="table table-hover">
             <thead>
                 <tr>
-                    <th>{% trans 'Species name' %}</th>
+                    <th>{% trans 'Name' %}</th>
                     {% block table_header %}{% endblock %}
                 </tr>
             </thead>
@@ -34,9 +34,9 @@
         {% endif %}
     {% else %}
         {% if country or sub_region %}
-            <div class="alert alert-warning" role="alert">
-                No Ant species found!
-            </div>
+            {% bs_alert 'warning' 'No Ant species found!' %}
+        {% else %}
+            {% bs_alert 'info' 'Start by selecting a country.' %}
         {% endif %}
     {% endif %}
 {% endblock %}
