@@ -3,7 +3,7 @@
     <input type="hidden" class="region-url" value="{{ url }}">
     <label for="{{ id }}" class="form-label">{{ label }}:</label>
     <select id="{{ id }}" name="{{ name }}" class="form-select region-select">
-        <option value="" selected></option>
+        <option value="" selected>Please select a {{ label }}</option>
         {% for region in regions %}
             {% if code == region.code %}
                 <option value="{{ region.code }}" selected>{{ region.name }}</option>
