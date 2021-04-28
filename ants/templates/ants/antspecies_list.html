@@ -7,7 +7,7 @@
 {% endblock %}
 {% block content %}
     {% if page_obj %}
-        <p class="lead"><b>{{ total_objects }}</b> ant species found</i></p>
+        <p class="lead"><b>{{ total_objects }}</b> ant {{ taxonomic_rank_type_lower }} found</i></p>
         {% if page_obj.paginator.num_pages > 1 %}
             {% bs_pagination page_obj request %}
         {% endif %}
@@ -19,10 +19,10 @@
                 </tr>
             </thead>
             <tbody id="antTableBody">
-                {% for ant in page_obj %}
+                {% for obj in page_obj %}
                 <tr style="cursor:pointer">
                     <td style="width:300px;">
-                        <a href="{{ ant.antwiki_url }}" target="blank">{{ ant }}</a>
+                        <a href="{{ obj.antwiki_url }}" target="blank">{{ obj.taxonomic_rank_name }}</a>
                     </td>
                     {% block table_column %}{% endblock %}
                 </tr>
@@ -34,7 +34,9 @@
         {% endif %}
     {% else %}
         {% if country or sub_region %}
-            {% bs_alert 'warning' 'No Ant species found!' %}
+            {% with 'No ant '|add:taxonomic_rank_type_lower|add:' found!' as alert_text %}
+                {% bs_alert 'warning' alert_text %}
+            {% endwith %}
         {% else %}
             {% bs_alert 'info' 'Start by selecting a country.' %}
         {% endif %}

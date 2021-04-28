@@ -5,10 +5,12 @@ import json
 from dal import autocomplete
 from django.core.paginator import Paginator
 
+from django.db.models import F
+
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 
-from .models import AntRegion, AntSize, AntSpecies
+from .models import AntRegion, AntSize, AntSpecies, Genus, SubFamily
 from flights.models import Flight
 
 
@@ -27,17 +29,28 @@ def add_iframe_to_context(context, request):
         context['iframe'] = False
 
 
-class AntSpeciesByRegion(TemplateView):
+class TaxonomicRanksByRegion(TemplateView):
     """Let user see which ant species occur in selected regions."""
     template_name = 'ants/antdb/ant_species_by_region.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        taxonomic_rank = kwargs.get('taxonomic_rank')
 
         country = self.request.GET.get('country')
         sub_region = self.request.GET.get('subRegion')
         name = self.request.GET.get('name')
-        ant_list = None
+        taxonomic_ranks = None
+        taxonomic_rank_class = AntSpecies
+        taxonomic_rank_name_field = 'name'
+
+        if taxonomic_rank == 'genera':
+            taxonomic_rank_name_field = 'genus__name'
+            taxonomic_rank_class = Genus
+
+        if taxonomic_rank == 'sub-families':
+            taxonomic_rank_name_field = 'genus__sub_family__name'
+            taxonomic_rank_class = SubFamily
 
         if country:
             context['country'] = country
@@ -46,25 +59,29 @@ class AntSpeciesByRegion(TemplateView):
 
         if sub_region:
             context['sub_region'] = sub_region
-            ant_list = AntSpecies.objects.by_region_code(
+            taxonomic_ranks = AntSpecies.objects.by_region_code(
                 code=sub_region)
 
         if country and not sub_region:
-            ant_list = AntSpecies.objects.by_country_code(country)
+            taxonomic_ranks = AntSpecies.objects.by_country_code(country)
 
         context['countries'] = AntRegion.countries.with_ants()
 
-        if name:
-            context['name'] = name
-            if ant_list:
-                ant_list = ant_list.filter(name__icontains=name)
+        context['taxonomic_rank_type'] = taxonomic_rank_class._meta.verbose_name_plural
+        context['taxonomic_rank_type_lower'] = context['taxonomic_rank_type'].lower()
 
-        if ant_list:
-            paginator = Paginator(ant_list, 50)
+        if taxonomic_ranks:
+            taxonomic_ranks = taxonomic_ranks.annotate(taxonomic_rank_name=F(taxonomic_rank_name_field))
+            if name:
+                context['name'] = name
+                taxonomic_ranks = taxonomic_ranks.filter(taxonomic_rank_name__icontains=name)
+            taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name')
+            taxonomic_ranks = taxonomic_ranks.distinct('taxonomic_rank_name').order_by('taxonomic_rank_name')
+            paginator = Paginator(taxonomic_ranks, 50)
             page_number = self.request.GET.get('page')
             page_obj = paginator.get_page(page_number)
             context['page_obj'] = page_obj
-            context['total_objects'] = ant_list.count()
+            context['total_objects'] = taxonomic_ranks.count()
 
         add_iframe_to_context(context, self.request)
         return context

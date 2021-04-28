@@ -4,11 +4,13 @@
 {% load django_bootstrap_breadcrumbs %}
 {% block breadcrumbs %}
     {{ block.super }}
-    {% breadcrumb "Ant species By Region" "ant_species_by_region" %}
+    {% with 'Ant '|add:taxonomic_rank_type_lower|add:' By Region' as breadcrumb_text %}
+        {% breadcrumb breadcrumb_text "taxonomic_rank_by_region" %}
+    {% endwith %}
 {% endblock %}
 {% block content %}
     {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap4.html" %}
-    <h2 class="mb-4">Ant species By Region</h2>
+    <h2 class="mb-4">Ant {{ taxonomic_rank_type }} By Region</h2>
     <div class="row">
         <div class="col-md-4" id="filterDiv">
             <div class="accordion mb-4" id="filterAccordion">
