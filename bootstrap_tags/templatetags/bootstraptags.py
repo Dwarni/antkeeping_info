@@ -26,5 +26,7 @@ def bs_pagination(page, request, **kwargs):
 
 
 @register.inclusion_tag("bootstrap_tags/alert.html")
-def bs_alert(alert_type, alert_text):
-    return {'alert_type': alert_type, 'alert_text': alert_text}
+def bs_alert(alert_type, alert_text, **kwargs):
+    dismissible = kwargs.get('dismissible', False)
+    return {'alert_type': alert_type, 'alert_text': alert_text,
+            'dismissible': dismissible}
