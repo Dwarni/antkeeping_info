@@ -1,6 +1,3 @@
-from ants.managers import AntSpeciesManager
-
-
 def add_generic_species_for_each_genus(apps, schema_editor=None):
     AntSpecies = apps.get_model('ants', 'AntSpecies')
     Genus = apps.get_model('ants', 'Genus')
