@@ -1,5 +1,6 @@
 {% extends 'layout.html' %}
 {% load bootstraptags %}
+{% load ants %}
 {% load i18n %}
 {% load static %}
 {% block css %}
@@ -22,7 +23,7 @@
                 {% for obj in page_obj %}
                 <tr style="cursor:pointer">
                     <td style="width:300px;">
-                        <a href="{{ obj.antwiki_url }}" target="blank">{{ obj.taxonomic_rank_name }}</a>
+                        <a href="{{ obj.taxonomic_rank_name | antwiki_url }}" target="blank">{{ obj.taxonomic_rank_name }}</a>
                     </td>
                     {% block table_column %}{% endblock %}
                 </tr>
