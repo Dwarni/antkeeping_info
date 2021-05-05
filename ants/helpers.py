@@ -1,8 +1,13 @@
+from typing import Optional, Union
 DEFAULT_NONE_STR = 'No information.'
 DEFAULT_NONE_RANGE_STR = '?'
 
 
-def format_value(int_value, unit_symbol, none_str=DEFAULT_NONE_STR):
+def format_value(
+    int_value: int,
+    unit_symbol: Union[str, None],
+    none_str: Optional[str] = DEFAULT_NONE_STR
+) -> str:
     if int_value is None:
         return DEFAULT_NONE_STR
     if unit_symbol is None:
