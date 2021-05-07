@@ -5,7 +5,8 @@ import json
 from dal import autocomplete
 from django.core.paginator import Paginator
 
-from django.db.models import F
+from django.db import connection
+from django.db.models import Count, F
 
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
@@ -84,6 +85,117 @@ class TaxonomicRanksByRegion(TemplateView):
             context['total_objects'] = taxonomic_ranks.count()
 
         add_iframe_to_context(context, self.request)
+        return context
+
+
+class Ranking(TemplateView):
+    template_name = 'ants/antdb/ranking.html'
+    num_entries = 50
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['num_entries'] = self.num_entries
+        return context
+
+
+class TopCountriesByNumberOfAntSpecies(Ranking):
+    """Shows top countries by number of ant species."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ranking = AntSpecies \
+            .objects \
+            .filter(distribution__region__type='Country') \
+            .annotate(rank_entry_name=F('distribution__region__name')) \
+            .values('rank_entry_name') \
+            .annotate(total=Count('rank_entry_name')) \
+            .order_by('-total')[:self.num_entries]
+        context['ranking'] = ranking
+        context['max_total'] = ranking[0]['total']
+        context['heading'] = 'countries by number of ant species'
+        return context
+
+
+def dictfetchall(cursor):
+    "Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]
+
+
+class TopCountriesByNumberOfAntGenera(Ranking):
+    """Shows top countries by number of ant genera."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ranking = None
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                    select rr.name as rank_entry_name, count(distinct ag.name) as total from ants_antspecies aa 
+                    inner join ants_species as2 on aa.species_ptr_id = as2.id 
+                    inner join ants_distribution ad ON as2.id = ad.species_id
+                    inner join regions_region rr on rr.id = ad.region_id 
+                    inner join ants_antregion ar on ar.region_ptr_id = rr.id
+                    inner join ants_genus ag on ag.id = as2.genus_id
+                    where rr.type = 'Country'
+                    group by rank_entry_name
+                    order by total desc
+                    limit %s
+                """, [self.num_entries])
+            ranking = dictfetchall(cursor)
+        context['ranking'] = ranking
+        context['max_total'] = ranking[0]['total']
+        context['heading'] = 'countries by number of ant genera'
+        return context
+
+
+class TopAntSpeciesByNumberOfCountries(Ranking):
+    """Shows top ant species by number of countries."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ranking = AntSpecies \
+            .objects \
+            .filter(distribution__region__type='Country') \
+            .annotate(
+                rank_entry_name=F('name'),
+                total=Count('distribution__region__name')
+            ) \
+            .values('rank_entry_name', 'total') \
+            .order_by('-total')[:self.num_entries]
+        context['ranking'] = ranking
+        context['max_total'] = ranking[0]['total']
+        context['heading'] = 'ant species by number of countries'
+        return context
+
+
+class TopAntGeneraByNumberOfCountries(Ranking):
+    """Shows top ant genera by number of countries."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ranking = None
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                    select ag.name as rank_entry_name, count(distinct rr.code) as total from ants_antspecies aa 
+                    inner join ants_species as2 on aa.species_ptr_id = as2.id 
+                    inner join ants_distribution ad ON as2.id = ad.species_id
+                    inner join regions_region rr on rr.id = ad.region_id 
+                    inner join ants_antregion ar on ar.region_ptr_id = rr.id
+                    inner join ants_genus ag on ag.id = as2.genus_id
+                    where rr.type = 'Country'
+                    group by rank_entry_name
+                    order by total desc
+                    limit %s
+                """, [self.num_entries])
+            ranking = dictfetchall(cursor)
+        context['ranking'] = ranking
+        context['max_total'] = ranking[0]['total']
+        context['heading'] = 'ant genera by number of countries'
         return context
 
 

@@ -1,0 +1,9 @@
+{% extends 'layout.html' %}
+{% load bootstraptags %}
+{% load ants %}
+{% block content %}
+    <h2 class="mb-4">Top {{ num_entries }} {{ heading }}</h2>
+    {% for entry in ranking %}
+        {% rank_entry forloop.counter entry.rank_entry_name entry.total max_total %}
+    {% endfor %}
+{% endblock %}

@@ -26,3 +26,12 @@ def antwiki_url(taxonomic_rank_name: str) -> Union[str, None]:
         antwiki_url = 'https://www.antwiki.org/wiki/{}' \
             .format(taxonomic_rank_name.replace(' ', '_'))
     return antwiki_url
+
+@register.inclusion_tag("ants/antdb/tags/rank_entry.html")
+def rank_entry(index: int, entry_name: str, entry_total: int, max_total: int):
+    return {
+        'index': index,
+        'entry_name': entry_name,
+        'entry_total': entry_total,
+        'width': entry_total / max_total * 100
+    }
