@@ -18,4 +18,7 @@ urlpatterns = [
      path('top-ant-genera-by-number-of-countries',
           views.TopAntGeneraByNumberOfCountries.as_view(),
           name='top_ant_genera_countries'),
+     path('top-ant-genera-by-number-of-species',
+          views.TopAntGeneraByNumberOfSpecies.as_view(),
+          name='top_ant_genera_species'),
 ]

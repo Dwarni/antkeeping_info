@@ -68,16 +68,21 @@ class TaxonomicRanksByRegion(TemplateView):
 
         context['countries'] = AntRegion.countries.with_ants()
 
-        context['taxonomic_rank_type'] = taxonomic_rank_class._meta.verbose_name_plural
-        context['taxonomic_rank_type_lower'] = context['taxonomic_rank_type'].lower()
+        context['taxonomic_rank_type'] = taxonomic_rank_class._meta \
+            .verbose_name_plural
+        context['taxonomic_rank_type_lower'] = context['taxonomic_rank_type'] \
+            .lower()
 
         if taxonomic_ranks:
-            taxonomic_ranks = taxonomic_ranks.annotate(taxonomic_rank_name=F(taxonomic_rank_name_field))
+            taxonomic_ranks = taxonomic_ranks \
+                .annotate(taxonomic_rank_name=F(taxonomic_rank_name_field))
             if name:
                 context['name'] = name
-                taxonomic_ranks = taxonomic_ranks.filter(taxonomic_rank_name__icontains=name)
+                taxonomic_ranks = taxonomic_ranks \
+                    .filter(taxonomic_rank_name__icontains=name)
             taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name')
-            taxonomic_ranks = taxonomic_ranks.distinct('taxonomic_rank_name').order_by('taxonomic_rank_name')
+            taxonomic_ranks = taxonomic_ranks.distinct('taxonomic_rank_name') \
+                .order_by('taxonomic_rank_name')
             paginator = Paginator(taxonomic_ranks, 50)
             page_number = self.request.GET.get('page')
             page_obj = paginator.get_page(page_number)
@@ -134,10 +139,12 @@ class TopCountriesByNumberOfAntGenera(Ranking):
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                    select rr.name as rank_entry_name, count(distinct ag.name) as total from ants_antspecies aa 
-                    inner join ants_species as2 on aa.species_ptr_id = as2.id 
+                    select rr.name as rank_entry_name,
+                    count(distinct ag.name) as total
+                    from ants_antspecies aa
+                    inner join ants_species as2 on aa.species_ptr_id = as2.id
                     inner join ants_distribution ad ON as2.id = ad.species_id
-                    inner join regions_region rr on rr.id = ad.region_id 
+                    inner join regions_region rr on rr.id = ad.region_id
                     inner join ants_antregion ar on ar.region_ptr_id = rr.id
                     inner join ants_genus ag on ag.id = as2.genus_id
                     where rr.type = 'Country'
@@ -181,10 +188,12 @@ class TopAntGeneraByNumberOfCountries(Ranking):
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                    select ag.name as rank_entry_name, count(distinct rr.code) as total from ants_antspecies aa 
-                    inner join ants_species as2 on aa.species_ptr_id = as2.id 
+                    select ag.name as rank_entry_name,
+                    count(distinct rr.code) as total
+                    from ants_antspecies aa
+                    inner join ants_species as2 on aa.species_ptr_id = as2.id
                     inner join ants_distribution ad ON as2.id = ad.species_id
-                    inner join regions_region rr on rr.id = ad.region_id 
+                    inner join regions_region rr on rr.id = ad.region_id
                     inner join ants_antregion ar on ar.region_ptr_id = rr.id
                     inner join ants_genus ag on ag.id = as2.genus_id
                     where rr.type = 'Country'
@@ -196,6 +205,25 @@ class TopAntGeneraByNumberOfCountries(Ranking):
         context['ranking'] = ranking
         context['max_total'] = ranking[0]['total']
         context['heading'] = 'ant genera by number of countries'
+        return context
+
+
+class TopAntGeneraByNumberOfSpecies(Ranking):
+    """Shows top ant species by number of countries."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ranking = Genus \
+            .objects \
+            .annotate(
+                rank_entry_name=F('name'),
+                total=Count('species')
+            ) \
+            .values('rank_entry_name', 'total') \
+            .order_by('-total')[:self.num_entries]
+        context['ranking'] = ranking
+        context['max_total'] = ranking[0]['total']
+        context['heading'] = 'ant genera by number of species'
         return context
 
 
