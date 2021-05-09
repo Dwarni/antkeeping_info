@@ -91,7 +91,7 @@ ROOT_URLCONF = 'antkeeping_info.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [root.path('templates/')],
+        'DIRS': [str(root.path('templates/'))],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -147,6 +147,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 PUBLIC_ROOT = env('PUBLIC_ROOT')
 # Static files (CSS, JavaScript, Images)
