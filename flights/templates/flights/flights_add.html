@@ -17,7 +17,7 @@
 {{ block.super }}
 {% crispy form %}
 {# Needs to be included here because css placed in header won't work since it is overridden by default values #}
-<link rel="stylesheet" href="{% static 'flights/css/vendor/select2-bootstrap4.min.css' %}?v=3">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.1.1/dist/select2-bootstrap-5-theme.min.css" />
 {% endblock %}
 {% block script %}
 <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"

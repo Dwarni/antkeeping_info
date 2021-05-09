@@ -35,7 +35,7 @@ class Html5TimeInput(TimeInput):
 MODEL_SELECT_ATTRS = {
     # Only trigger autocompletion after 3 characters have been typed
     'data-minimum-input-length': 3,
-    'data-theme': 'bootstrap4',
+    'data-theme': 'bootstrap-5',
     'data-width': '100%',
 }
 
