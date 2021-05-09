@@ -1,7 +1,7 @@
 beautifulsoup4 >= 4.0
 celery == 4.*
 crispy-bootstrap5 >= 0.3
-Django == 3.1.*
+Django == 3.2.*
 django-autocomplete-light>=3.5
 django-bootstrap-breadcrumbs ~= 0.9
 django-cors-headers >= 3.3
