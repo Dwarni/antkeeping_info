@@ -2,6 +2,7 @@
 from django.test import TestCase
 from flights.helpers import Temperature, Velocity
 
+
 class TemperatureTest(TestCase):
     """Tests for the Temperature class"""
     def test_create_without_unit(self):
@@ -24,7 +25,6 @@ class TemperatureTest(TestCase):
         self.assertEqual(fahrenheit.unit, Temperature.FAHRENHEIT)
         self.assertEqual(fahrenheit_value, fahrenheit.value)
         self.assertEqual(fahrenheit_value, fahrenheit.fahrenheit)
-
 
     def test_convert_to_fahrenheit(self):
         """Test for conversion to Fahrenheit."""
