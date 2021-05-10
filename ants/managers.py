@@ -120,7 +120,7 @@ class AntSpeciesManager(TaxonomicRankManager):
     def search_by_name(self, search_name):
         """
             Return a QuerySet which only contains ants that contain
-            the search_name either in their name, invalid names or 
+            the search_name either in their name, invalid names or
             common names.
         """
         return self.get_queryset().filter(
