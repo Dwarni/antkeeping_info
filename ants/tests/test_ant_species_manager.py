@@ -2,9 +2,8 @@ from django.test import TestCase
 from django.db.models import ObjectDoesNotExist
 from django.db.utils import IntegrityError
 from django.db import transaction
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 
-from ants.managers import AntSpeciesManager
 from ants.models import AntSpecies, AntRegion, Distribution, Genus
 
 
@@ -67,7 +66,8 @@ class AntSpeciesManagerTestCase(TestCase):
             self.assertFalse(
                 self.manager.filter(name='Lasius niger binorius').exists()
             )
-        """Trying to add name 'Lasius niger binoarius' should raise a ValidationError"""
+        """Trying to add name 'Lasius niger binoarius' should raise
+            a ValidationError"""
 
     def test_get_or_create_with_name(self):
         self.assertIsNotNone(
@@ -98,14 +98,15 @@ class AntSpeciesManagerTestCase(TestCase):
 
     def test_get_or_create_with_genus_or_species_id(self):
         species_name = 'Lasius sp.'
-        genus_name = 'Lasius'
         genus = Genus.objects.get_or_create_with_name('Lasius')
 
         self.assertFalse(AntSpecies.objects.name_exists(species_name))
-        species = self.manager.get_or_create_with_genus_or_species_id(genus.pk, None)
+        species = self.manager \
+            .get_or_create_with_genus_or_species_id(genus.pk, None)
         self.assertEqual(species.name, species_name)
         self.assertTrue(AntSpecies.objects.name_exists(species_name))
-        species2 = self.manager.get_or_create_with_genus_or_species_id(genus.pk, None)
+        species2 = self.manager \
+            .get_or_create_with_genus_or_species_id(genus.pk, None)
         self.assertEqual(species2.name, species_name)
         self.assertEqual(species.pk, species2.pk)
 
@@ -152,7 +153,8 @@ class AntSpeciesManagerTestCase(TestCase):
         Distribution.objects.create(species=ant3, region=new_region)
 
         new_region = AntRegion.objects.get(code=region_code)
-        ants = [ant.name for ant in AntSpecies.objects.by_region_code(region_code)]
+        ants = [ant.name for ant
+                in AntSpecies.objects.by_region_code(region_code)]
         self.assertEqual(len(ants), 3)
         self.assertTrue(ant1.name in ants)
         self.assertTrue(ant2.name in ants)
