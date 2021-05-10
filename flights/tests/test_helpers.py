@@ -85,4 +85,3 @@ class VelocityTest(TestCase):
 
         self.assertEqual('60.0 km/h (37.3 mph)', str(vel_kmh))
         self.assertEqual('40.0 mph (64.4 km/h)', str(vel_mph))
-
