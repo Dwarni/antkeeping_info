@@ -228,6 +228,10 @@ class Species(TaxonomicRank):
         max_length=100,
         unique=True,
         validators=name_validators)
+    valid = models.BooleanField(
+        db_index=True,
+        default=True
+    )
     author = models.CharField(
         db_index=True,
         max_length=100,
