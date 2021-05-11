@@ -18,7 +18,8 @@ from sorl.thumbnail import ImageField
 
 from regions.models import Region
 from ants.managers import AntRegionManager, CountryAntRegionManager, \
-    AntSizeManager, AntSpeciesManager, GenusManager, StateAntRegionManager
+    AntSizeManager, AntSpeciesManager, GenusManager, StateAntRegionManager, \
+    TaxonomicRankManager
 from ants.helpers import DEFAULT_NONE_STR
 
 
@@ -84,15 +85,29 @@ class SubFamily(TaxonomicRank):
         null=True
     )
 
+    objects = TaxonomicRankManager()
+
     class Meta(TaxonomicRankMeta):
         verbose_name = _('Sub Family')
         verbose_name_plural = _('Sub Families')
 
 
-class Genus(TaxonomicRank):
-    """Model which represents a taxonomic rank of type 'Genus'."""
+class Tribe(TaxonomicRank):
+    """Model which represents a taxonomic rank of type 'Tribe"."""
     sub_family = models.ForeignKey(
         SubFamily,
+        models.SET_NULL,
+        blank=True,
+        null=True
+    )
+
+    objects = TaxonomicRankManager()
+
+
+class Genus(TaxonomicRank):
+    """Model which represents a taxonomic rank of type 'Genus'."""
+    tribe = models.ForeignKey(
+        Tribe,
         models.SET_NULL,
         blank=True,
         null=True
@@ -213,6 +228,23 @@ class Species(TaxonomicRank):
         max_length=100,
         unique=True,
         validators=name_validators)
+    author = models.CharField(
+        db_index=True,
+        max_length=100,
+        blank=True,
+        null=True
+    )
+    year = models.IntegerField(
+        db_index=True,
+        blank=True,
+        null=True
+    )
+    group = models.CharField(
+        db_index=True,
+        max_length=100,
+        blank=True,
+        null=True
+    )
     genus = models.ForeignKey(
         Genus,
         models.SET_NULL,

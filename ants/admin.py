@@ -1,12 +1,10 @@
 from django.contrib import admin
-from django.core.cache import caches
 from django.utils.translation import ugettext as _
 from sorl.thumbnail.admin import AdminImageMixin
 from ants.models import AntRegion, AntSize, AntSpecies, \
      AntSpeciesDistribution, AntSpeciesImage, CommonName, \
      Distribution, SpeciesDescription, Family, Genus, \
-     InvalidName, SubFamily
-from regions.models import Region
+     InvalidName, SubFamily, Tribe
 
 
 class AntSizeInline(admin.StackedInline):
@@ -58,7 +56,8 @@ class BaseAdmin(AdminImageMixin, admin.ModelAdmin):
 class AntSpeciesAdmin(BaseAdmin):
     filter_horizontal = ['flight_months']
     fieldsets = [
-        (_('General'), {'fields': ['name', 'genus',
+        (_('General'), {'fields': ['name', 'author', 'year', 'genus',
+                                   'group',
                                    'information_complete',
                                    'colony_structure',
                                    'worker_polymorphism',
@@ -98,7 +97,12 @@ class FamilyAdmin(BaseAdmin):
 
 @admin.register(Genus)
 class GenusAdmin(BaseAdmin):
-    list_filter = ('sub_family',)
+    list_filter = ('tribe',)
+
+
+@admin.register(Tribe)
+class TribeAdmin(BaseAdmin):
+    pass
 
 
 @admin.register(SubFamily)
