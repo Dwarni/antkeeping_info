@@ -12,7 +12,9 @@ class Region(models.Model):
     code = models.CharField(
         max_length=8,
         verbose_name='ISO Code',
-        db_index=True
+        db_index=True,
+        blank=True,
+        null=True
     )
     name = models.CharField(max_length=200)
     official_name = models.CharField(max_length=200, blank=True, null=True)
