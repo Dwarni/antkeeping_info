@@ -6,7 +6,7 @@
     <ul id="distribution-list">
         {% for country in countries %}
             <li>   
-                <a class="btn btn-primary mb-1 active" role="button" aria-pressed="true" href="{% url 'country' country.code %}">{{ country.name }}</a>
+                <a class="btn btn-primary mb-1 active" role="button" aria-pressed="true" href="{% url 'taxonomic_ranks_by_region' 'species' %}?country={{ country.code }}">{{ country.name }}</a>
             </li>
         {% endfor %}
     </ul>
