@@ -156,7 +156,7 @@ def _add_distribution(species, region, occurence,
     d.native = occurence == 'Present'
     d.save()
     if verbose:
-        _print_progress(species)
+        _print_progress(species.name)
 
 
 def import_world_distribution(csv_file: Iterable[Text],
@@ -201,5 +201,5 @@ def import_world_distribution(csv_file: Iterable[Text],
                 _add_distribution(species, sub_region, occurence, verbose)
 
 
-def import_world_distribution_csv(csv_file: str):
-    _import_from_csv(csv_file, import_world_distribution)
+def import_world_distribution_csv(csv_file: str, verbose=False):
+    _import_from_csv(csv_file, import_world_distribution, verbose)
