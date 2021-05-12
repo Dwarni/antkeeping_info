@@ -48,7 +48,7 @@ class TaxonomicRank(models.Model):
     """
     name = models.CharField(
         db_index=True,
-        max_length=100,
+        max_length=200,
         unique=True,
         validators=[
             RegexValidator('^[A-Z][a-z]+$')
@@ -228,7 +228,7 @@ class Species(TaxonomicRank):
     ]
     name = models.CharField(
         db_index=True,
-        max_length=100,
+        max_length=200,
         unique=True,
         validators=name_validators)
     valid = models.BooleanField(
@@ -237,7 +237,7 @@ class Species(TaxonomicRank):
     )
     author = models.CharField(
         db_index=True,
-        max_length=100,
+        max_length=300,
         blank=True,
         null=True
     )
