@@ -5,10 +5,18 @@
     <select id="{{ id }}" name="{{ name }}" class="form-select region-select">
         <option value="" selected>Please select a {{ label }}</option>
         {% for region in regions %}
-            {% if code == region.code %}
-                <option value="{{ region.code }}" selected>{{ region.name }}</option>
+            {% if region.code %}
+                {% if code == region.code %}
+                    <option value="{{ region.code }}" selected>{{ region.name }}</option>
+                {% else %}
+                    <option value="{{ region.code }}">{{ region.name }}</option>
+                {% endif %}
             {% else %}
-                <option value="{{ region.code }}">{{ region.name }}</option>
+                {% if code == region.id|stringformat:"i" %}
+                    <option value="{{ region.id }}" selected>{{ region.name }}</option>
+                {% else %}
+                    <option value="{{ region.id }}">{{ region.name }}</option>
+                {% endif %}     
             {% endif %}
         {% endfor %}
     </select>
