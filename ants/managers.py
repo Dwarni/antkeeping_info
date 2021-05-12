@@ -31,6 +31,7 @@ class TaxonomicRankManager(Manager):
 
 class GenusManager(TaxonomicRankManager):
     """Manager for GenusModel"""
+
     def by_country_code(self, code):
         return self.get_queryset() \
             .filter(species__distribution__region__type='Country') \
@@ -132,6 +133,7 @@ class AntSpeciesManager(TaxonomicRankManager):
 
 class AntSizeManager(Manager):
     """Manager for AntSizeModel"""
+
     def by_ant_and_type(self, ant_id, ant_type):
         """
             Returns ant size object with specific ant_id and ant_type.
@@ -146,11 +148,19 @@ class AntSizeManager(Manager):
 
 class AntRegionManager(Manager):
     """Manager for AntRegionModel"""
+
     def with_ants(self):
         """Returns all regions in which ants live"""
         return self.get_queryset() \
             .filter(distribution__isnull=False) \
             .distinct()
+
+    def get_by_name(self, name):
+        """Return a region by name."""
+        return self.get_queryset() \
+            .get(Q(name=name) |
+                 Q(official_name=name) |
+                 Q(antwiki_name=name))
 
 
 class CountryAntRegionManager(AntRegionManager):
@@ -159,6 +169,7 @@ class CountryAntRegionManager(AntRegionManager):
         This manager makes it easy to query for ant regions of type
         'country'.
     """
+
     def get_queryset(self):
         """
             Returns a query set which only contains AntRegions of type
@@ -174,6 +185,7 @@ class StateAntRegionManager(AntRegionManager):
         This manager makes it easy to query for ant regions whose
         parent's type is 'Country'.
     """
+
     def get_queryset(self):
         """
             Returns a query set which only contains AntRegions whose
