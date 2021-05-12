@@ -208,6 +208,9 @@ class Distribution(models.Model):
     def __str__(self):
         return str(self.region)
 
+    class Meta:
+        unique_together = ('species', 'region')
+
 
 class SpeciesMeta(TaxonomicRankMeta):
     verbose_name = _('Species')
