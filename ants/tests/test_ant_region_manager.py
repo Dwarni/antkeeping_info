@@ -16,17 +16,27 @@ class AntSpeciesManagerTestCase(TestCase):
 
     def test_find_by_name(self):
         self.assertIsNotNone(AntRegion.objects.get_by_name(self._name))
+        self.assertIsNotNone(AntRegion.objects
+                             .find_by_name(self._name).first())
 
     def test_find_by_official_name(self):
         self.assertIsNotNone(AntRegion.objects.get_by_name(
             self._official_name))
+        self.assertIsNotNone(AntRegion.objects.find_by_name(
+            self._official_name).first())
 
     def test_find_by_antwiki_name(self):
         self.assertIsNotNone(AntRegion.objects.get_by_name(
             self._antwiki_name))
+        self.assertIsNotNone(AntRegion.objects.find_by_name(
+            self._antwiki_name).first())
 
     def test_no_object_found(self):
+        name1 = 'blub blub bla'
+        name2 = 'awiki blub'
         self.assertRaises(AntRegion.DoesNotExist,
-                          AntRegion.objects.get_by_name, 'blub blub bla')
+                          AntRegion.objects.get_by_name, name1)
+        self.assertIsNone(AntRegion.objects.find_by_name(name1).first())
         self.assertRaises(AntRegion.DoesNotExist,
-                          AntRegion.objects.get_by_name, 'awiki blub')
+                          AntRegion.objects.get_by_name, name2)
+        self.assertIsNone(AntRegion.objects.find_by_name(name2).first())

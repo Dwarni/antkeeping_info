@@ -162,6 +162,13 @@ class AntRegionManager(Manager):
                  Q(official_name=name) |
                  Q(antwiki_name=name))
 
+    def find_by_name(self, name):
+        """Return a region by name."""
+        return self.get_queryset() \
+            .filter(Q(name=name) |
+                    Q(official_name=name) |
+                    Q(antwiki_name=name))
+
 
 class CountryAntRegionManager(AntRegionManager):
     """
