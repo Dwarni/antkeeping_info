@@ -44,13 +44,16 @@ class TaxonomicRanksByRegion(TemplateView):
         taxonomic_ranks = None
         taxonomic_rank_class = AntSpecies
         taxonomic_rank_name_field = 'name'
+        taxonomic_rank_slug_field = 'slug'
 
         if taxonomic_rank == 'genera':
             taxonomic_rank_name_field = 'genus__name'
+            taxonomic_rank_slug_field = 'genus__slug'
             taxonomic_rank_class = Genus
 
         if taxonomic_rank == 'sub-families':
-            taxonomic_rank_name_field = 'genus__sub_family__name'
+            taxonomic_rank_name_field = 'genus__tribe__sub_family__name'
+            taxonomic_rank_slug_field = 'genus__tribe__sub_family__slug'
             taxonomic_rank_class = SubFamily
 
         if country:
@@ -60,8 +63,8 @@ class TaxonomicRanksByRegion(TemplateView):
 
         if sub_region:
             context['sub_region'] = sub_region
-            taxonomic_ranks = AntSpecies.objects.by_region_code(
-                code=sub_region)
+            taxonomic_ranks = AntSpecies.objects.by_region_code_or_id(
+                sub_region)
 
         if country and not sub_region:
             taxonomic_ranks = AntSpecies.objects.by_country_code(country)
@@ -74,13 +77,16 @@ class TaxonomicRanksByRegion(TemplateView):
             .lower()
 
         if taxonomic_ranks:
+            print(taxonomic_rank_slug_field)
             taxonomic_ranks = taxonomic_ranks \
-                .annotate(taxonomic_rank_name=F(taxonomic_rank_name_field))
+                .annotate(taxonomic_rank_name=F(taxonomic_rank_name_field),
+                          taxonomic_rank_slug=F(taxonomic_rank_slug_field))
             if name:
                 context['name'] = name
                 taxonomic_ranks = taxonomic_ranks \
                     .filter(taxonomic_rank_name__icontains=name)
-            taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name')
+            taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name',
+                                                     'taxonomic_rank_slug')
             taxonomic_ranks = taxonomic_ranks.distinct('taxonomic_rank_name') \
                 .order_by('taxonomic_rank_name')
             paginator = Paginator(taxonomic_ranks, 50)
@@ -237,8 +243,8 @@ class AntSpeciesDetail(DetailView):
 
         if has_flights:
             flight_frequency = Flight \
-                                .objects \
-                                .flight_frequency_per_month(ant_species)
+                .objects \
+                .flight_frequency_per_month(ant_species)
             return json.dumps([value for key,
                                value in flight_frequency.items()],
                               separators=(',', ':'))
