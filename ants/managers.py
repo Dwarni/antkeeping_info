@@ -118,6 +118,24 @@ class AntSpeciesManager(TaxonomicRankManager):
             .filter(distribution__region__code=code) \
             .distinct()
 
+    def by_region_code_or_id(self, code_id):
+        """
+            Returns a QuerySet which only contains ants of the region
+            with the specific code or id. Only regions which parent's type is
+            Country' are considered.   
+        """
+        qs = self.get_queryset() \
+            .filter(distribution__region__parent__type='Country')
+
+        try:
+            id = int(code_id)
+            qs = qs.filter(distribution__region__id=id)
+        except ValueError:
+            qs = qs.filter(distribution__region__code=code_id)
+        finally:
+            qs = qs.distinct()
+        return qs
+
     def search_by_name(self, search_name):
         """
             Return a QuerySet which only contains ants that contain
@@ -128,7 +146,7 @@ class AntSpeciesManager(TaxonomicRankManager):
             Q(name__icontains=search_name) |
             Q(commonname__name__icontains=search_name) |
             Q(invalid_names__name__icontains=search_name)
-        ).exclude(name__endswith='sp.').distinct()
+        ).filter(valid=True).exclude(name__endswith='sp.').distinct()
 
 
 class AntSizeManager(Manager):
