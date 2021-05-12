@@ -23,7 +23,11 @@
                 {% for obj in page_obj %}
                 <tr style="cursor:pointer">
                     <td style="width:300px;">
-                        <a href="{{ obj.taxonomic_rank_name | antwiki_url }}" target="blank">{{ obj.taxonomic_rank_name }}</a>
+                        {% if taxonomic_rank_type_lower == 'species' %}
+                            <a href="{% url 'ant_detail' obj.taxonomic_rank_slug %}">{{ obj.taxonomic_rank_name }}</a>                            
+                        {% else %}
+                            <a href="{{ obj.taxonomic_rank_name | antwiki_url }}" target="blank">{{ obj.taxonomic_rank_name }}</a>
+                        {% endif %}
                     </td>
                     {% block table_column %}{% endblock %}
                 </tr>
