@@ -11,7 +11,7 @@ from django.db.models import Count, F
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 
-from .models import AntRegion, AntSize, AntSpecies, Genus, SubFamily
+from .models import AntRegion, AntSize, AntSpecies, Genus, Tribe, SubFamily
 from flights.models import Flight
 
 
@@ -51,6 +51,11 @@ class TaxonomicRanksByRegion(TemplateView):
             taxonomic_rank_slug_field = 'genus__slug'
             taxonomic_rank_class = Genus
 
+        if taxonomic_rank == 'tribes':
+            taxonomic_rank_name_field = 'genus__tribe__name'
+            taxonomic_rank_slug_field = 'genus__tribe__slug'
+            taxonomic_rank_class = Tribe
+
         if taxonomic_rank == 'sub-families':
             taxonomic_rank_name_field = 'genus__tribe__sub_family__name'
             taxonomic_rank_slug_field = 'genus__tribe__sub_family__slug'
@@ -58,11 +63,18 @@ class TaxonomicRanksByRegion(TemplateView):
 
         if country:
             context['country'] = country
-            sub_regions = AntRegion.states.with_ants_and_country(country)
+            country_obj = AntRegion.objects.get_by_id_or_code(country)
+            if country_obj:
+                context['country_name'] = country_obj.name
+            sub_regions = AntRegion.states.with_ants_and_country(country) \
+                .order_by('name')
             context['sub_regions'] = sub_regions
 
         if sub_region:
             context['sub_region'] = sub_region
+            subregion_obj = AntRegion.objects.get_by_id_or_code(sub_region)
+            if subregion_obj:
+                context['subregion_name'] = subregion_obj.name
             taxonomic_ranks = AntSpecies.objects.by_region_code_or_id(
                 sub_region)
 
@@ -77,7 +89,6 @@ class TaxonomicRanksByRegion(TemplateView):
             .lower()
 
         if taxonomic_ranks:
-            print(taxonomic_rank_slug_field)
             taxonomic_ranks = taxonomic_ranks \
                 .annotate(taxonomic_rank_name=F(taxonomic_rank_name_field),
                           taxonomic_rank_slug=F(taxonomic_rank_slug_field))
@@ -85,6 +96,9 @@ class TaxonomicRanksByRegion(TemplateView):
                 context['name'] = name
                 taxonomic_ranks = taxonomic_ranks \
                     .filter(taxonomic_rank_name__icontains=name)
+            if taxonomic_rank == 'tribes':
+                taxonomic_ranks = taxonomic_ranks \
+                    .exclude(genus__tribe__name='')
             taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name',
                                                      'taxonomic_rank_slug')
             taxonomic_ranks = taxonomic_ranks.distinct('taxonomic_rank_name') \
