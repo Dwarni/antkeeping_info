@@ -10,7 +10,11 @@
 {% endblock %}
 {% block content %}
     {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap4.html" %}
-    <h2 class="mb-4">Ant {{ taxonomic_rank_type }} By Region</h2>
+    {% if country_name or subregion_name %}
+        <h2 class="mb-4">Ant {{ taxonomic_rank_type }} Of {% if subregion_name %}{{ subregion_name }}{% else %}{{ country_name }}{% endif %}</h2>
+    {% else %}
+        <h2 class="mb-4">Ant {{ taxonomic_rank_type }} By Region</h2>
+    {% endif %}
     <div class="row">
         <div class="col-md-4" id="filterDiv">
             <div class="accordion mb-4" id="filterAccordion">
@@ -27,7 +31,7 @@
                         <div class="accordion-body">
                             <form method="get" id="filterForm">
                                 {% include "ants/antdb/regions_select.html" with regions=countries code=country id='countrySelect' name='country' label='Country'%}
-                                {% include "ants/antdb/regions_select.html" with regions=sub_regions code=sub_region id='subRegionSelect' name='subRegion' label='Sub Region' %}
+                                {% include "ants/antdb/regions_select.html" with regions=sub_regions code=sub_region id='subRegionSelect' name='subRegion' label='Subregion' %}
                                 <div class="mb-3">
                                     <label for="speciesNameFilter" class="form-label">Name:</label>    
                                     <input type="text" class="form-control" id="nameFilter" name="name" placeholder="Filter" value="{{ name }}">
