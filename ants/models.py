@@ -141,10 +141,12 @@ class AntRegion(Region):
     )
 
     def get_absolute_url(self):
-        if self.type == 'Country':
-            return reverse('country', args=[self.code])
-
-        return reverse('region', args=[self.parent.code, self.code])
+        if self.code is None:
+            code = self.id
+        else:
+            code = self.code
+        return reverse('taxonomic_ranks_by_region', args=['species']) \
+            + f'?country={code}'
 
     @property
     def antwiki_url(self):
