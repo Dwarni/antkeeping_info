@@ -1,7 +1,7 @@
 {% load static %}
 {% load i18n %}
 {% load admin_urls %}
-<nav class="navbar navbar-expand-md fixed-top navbar-light bg-light">
+<nav class="navbar navbar-expand-md fixed-top navbar-light bg-light d-print-none">
     <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'home' %}">
             <img src="{% static 'img/logo.png' %}" alt="Antkeeping.info logo" class="d-inline-block align-top">
@@ -23,6 +23,7 @@
                     <ul class="dropdown-menu" aria-labelledby="antDatabaseDropdown">
                         <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'species' %}">{% trans "Ant species by Region" %}</a></li>
                         <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'genera' %}">{% trans "Ant genera by Region" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'tribes' %}">{% trans "Ant tribes by Region" %}</a></li>
                         <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'sub-families' %}">{% trans "Ant sub families by Region" %}</a></li>
                     </ul>
                 </li>
