@@ -22,43 +22,43 @@
 {% block content %}
 {{ block.super }}
 <div>
-    <div class="form-row">
-        <div class="col-lg-2">
-            <div class="form-group">
-                <select id="yearSelect" class="form-control">
-                    <option value="all">{% trans "All Years" %}</option>
-                    {% for year in years %}
+    <div class="alert alert-warning" role="alert">
+        I decided to use iNaturalist in future for ant nuptial flight tracking. Please report new flights by using iNaturalist and add them to 
+        <a href="https://www.inaturalist.org/projects/ant-nuptial-flights" target="_blank">Ant nuptial flights project</a>. Flights reported to the project will also be shown in this map in the future.
+    </div>
+    <div class="row mb-3">
+        <div class="col">
+            <select id="yearSelect" class="form-select">
+                <option value="all">{% trans "All Years" %}</option>
+                {% for year in years %}
                     <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                {% endfor %}
+            </select>
         </div>
-        <div class="col-lg-3">
-            <div class="form-group">
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text search-icon">⌕</div>
-                    </div>
-                    <input type="text" class="form-control" id="antSearchInput" placeholder="{% trans 'Search' %}">
-                </div>
+        <div class="col">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="antSearchInput" placeholder="{% trans 'Search' %}">
             </div>
         </div>
         <div class="col">
-            <div class="form-group">
-                {% if iframe %}
-                <a href="{% url 'flight_add' %}?iframe=true" id="addSpottingButton" class="btn btn-primary"
-                    role="button" aria-pressed="true">{% trans 'Add Spotting' %}</a>
-                {% else %}
-                <a href="{% url 'flight_add' %}" id="addSpottingButton" class="btn btn-primary" role="button"
-                    aria-pressed="true">{% trans 'Add Spotting' %}</a>
-                {% endif %}
-            </div>
+            <a href="https://www.inaturalist.org/observations/new?project_id=11418" target="_blank" class="btn btn-primary" id="addSpottingButton">
+                Add
+            </a>
         </div>
+        {% if user.is_staff %}
+            <div class="col">
+                <a href="{% url 'flight_add' %}" class="btn btn-primary" id="addSpottingLegacyButton">
+                    Add (legacy)
+                </a>
+            </div>
+        {% endif %}
+
     </div>
 </div>
 <div id="map" {% if iframe %} class="iframe" {% endif %}></div>
 <div id="flightInfoModal" class="modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog">
         <div id="flightInfoModalContent" class="modal-content">
         </div>
     </div>
