@@ -122,7 +122,7 @@ class AntSpeciesManager(TaxonomicRankManager):
         """
             Returns a QuerySet which only contains ants of the region
             with the specific code or id. Only regions which parent's type is
-            Country' are considered.   
+            'Country' are considered.
         """
         qs = self.get_queryset() \
             .filter(distribution__region__parent__type='Country')
@@ -186,6 +186,20 @@ class AntRegionManager(Manager):
             .filter(Q(name=name) |
                     Q(official_name=name) |
                     Q(antwiki_name=name))
+
+    def get_by_id_or_code(self, id_code):
+        """
+            Returns a region (or None if not found)
+            by id or code.
+        """
+        try:
+            id = int(id_code)
+            filter = Q(id=id)
+        except ValueError:
+            filter = Q(code=id_code)
+
+        return self.get_queryset() \
+            .filter(filter).first()
 
 
 class CountryAntRegionManager(AntRegionManager):
