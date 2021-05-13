@@ -6,14 +6,14 @@
     <meta name="description" content="{% trans 'Detailed information for ant species ' %}{{ object.name }}">
 {% endblock %}
 {% block css %}
-    <link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}?v=7">
+    <link rel="stylesheet" href="{% static 'ants/css/antspecies_detail.css' %}?v=7">
 {% endblock %}
 {% block content %}
-<h1 class="taxonomy">{{ object.name }}
+<h2 class="fst-italic">{{ object.name }} ({{ object.author }}, {{ object.year }})
     {% if user.is_staff %}
-    <small><a title="{% trans 'Edit species' %}" href="{% url 'admin:ants_antspecies_change' object.id %}"><i class="fas fa-edit text-primary"></i></a></small>
+    <small><a title="{% trans 'Edit species' %}" href="{% url 'admin:ants_antspecies_change' object.id %}"><i class="bi bi-pencil-fill"></i></a></small>
     {% endif %}
-</h1>
+</h2>
 {% if object.information_complete == False %}
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
         {% trans 'Species information is not complete yet!' %}
@@ -21,61 +21,66 @@
 {% endif %}
 <section class="ant-detail-section">
     {% include 'ants/antspecies_detail/antspecies_detail_main_image.html' with main_image=object.main_image %}
-    <h2>{% trans 'Taxonomy' %}</h2>
-<span class="taxonomy">
-    {% if object.genus is not None %}
-        {% if object.genus.sub_family %}
-            {{ object.genus.sub_family }} 🡺
-        {% endif %}
-        {{ object.genus }} 🡺
-        {{ object.name }}</span>
-    {% else %}
-        {{ DEFAULT_NONE_STR }}
-    {% endif %}
+    <h3>{% trans 'Scientific classification' %}</h3>
+    <table class="table table-hover">
+        <tbody>
+            <tr><th>{% trans 'Kingdom' %}:</th><td><a href="{{ 'Animalia' | wikipedia_url }}" target="_blank"><i>Animalia</i></a></td></tr>
+            <tr><th>{% trans 'Phylum' %}:</th><td><a href="{{ 'Arthropoda' | wikipedia_url }}" target="_blank"><i>Arthropoda</i></a></td></tr>
+            <tr><th>{% trans 'Class' %}:</th><td><a href="{{ 'Insecta' | wikipedia_url }}" target="_blank"><i>Insecta</i></a></td></tr>
+            <tr><th>{% trans 'Order' %}:</th><td><a href="{{ 'Hymenoptera' | wikipedia_url }}" target="_blank"><i>Hymenoptera</i></a></td></tr>
+            <tr><th>{% trans 'Family' %}:</th><td><a href="{{ 'Formicidae' | antwiki_url }}" target="_blank"><i>Formicidae</i></a></td></tr>
+            <tr><th>{% trans 'Subfamily' %}:</th><td><a href="{{ object.genus.tribe.sub_family | antwiki_url }}" target="_blank"><i>{{ object.genus.tribe.sub_family }}</i></a></td></tr>
+            <tr><th>{% trans 'Tribe' %}:</th><td><a href="{{ object.genus.tribe | antwiki_url }}" target="_blank"><i>{{ object.genus.tribe }}</i></a></td></tr>
+            <tr><th>{% trans 'Genus' %}:</th><td><a href="{{ object.genus | antwiki_url }}" target="_blank"><i>{{ object.genus }}</i></a></td></tr>
+            <tr><th>{% trans 'Species' %}:</th><td><i>{{ object.name }}</i></td></tr>
+        </tbody>
+    </table>
 </section>
 <section class="ant-detail-section">
-    <h2>{% trans 'General information' %}</h2>
-    <table class="ant-detail-info-table">
-        <tr>
-            <th>
-                {% trans 'Colony structure' %}:
-            </th>
-            <td>
-                {{ object.colony_structure_str }}
-            </td>
-        </tr>
-        <tr>
-            <th>
-                {% trans 'Worker polymorphism' %}:
-            </th>
-            <td>
-                {{ object.worker_polymorphism|yesno:"Yes,No,No information." }}
-            </td>
-        </tr>
-        <tr>
-            <th>
-                {% trans 'Nuptial flight months' %}:
-            </th>
-            <td>
-                {{ object.flight_months_str }}
-            </td>
-        </tr>
-        <tr>
-            <th>
-                {% trans 'Colony founding' %}:
-            </th>
-            <td>
-                {{ object.get_founding_display|format_value }}
-            </td>
-        </tr>
-        <tr>
-            <th>
-                Links:
-            </th>
-            <td>
-                <a target="_blank" rel="noopener" href="http://www.antwiki.org/wiki/{{ object.name_underscore }}">AntWiki</a>
-            </td>
-        </tr>
+    <h3>{% trans 'General information' %}</h3>
+    <table class="table table-hover">
+        <tbody>
+            <tr>
+                <th>
+                    {% trans 'Colony structure' %}:
+                </th>
+                <td>
+                    {{ object.colony_structure_str }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    {% trans 'Worker polymorphism' %}:
+                </th>
+                <td>
+                    {{ object.worker_polymorphism|yesno:"Yes,No,No information." }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    {% trans 'Nuptial flight months' %}:
+                </th>
+                <td>
+                    {{ object.flight_months_str }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    {% trans 'Colony founding' %}:
+                </th>
+                <td>
+                    {{ object.get_founding_display|format_value }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    Links:
+                </th>
+                <td>
+                    <a target="_blank" rel="noopener" href="http://www.antwiki.org/wiki/{{ object.name_underscore }}">AntWiki</a>
+                </td>
+            </tr>
+        </tbody>
     </table>
 </section>
 <section class="ant-detail-section">
