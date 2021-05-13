@@ -19,13 +19,24 @@ def format_value(value: int, unit_symbol: Optional[str] = None) -> str:
     return format_value_helper(value, unit_symbol)
 
 
+def _wiki_url(wiki_url, taxonomic_rank):
+    taxonomic_rank = str(taxonomic_rank)
+    full_wiki_url = None
+    if taxonomic_rank:
+        taxonomic_rank = taxonomic_rank.replace(' ', '_')
+        full_wiki_url = f'{wiki_url}/{taxonomic_rank}'
+    return full_wiki_url
+
+
 @register.filter
 def antwiki_url(taxonomic_rank_name: str) -> Union[str, None]:
-    antwiki_url = None
-    if taxonomic_rank_name:
-        antwiki_url = 'https://www.antwiki.org/wiki/{}' \
-            .format(taxonomic_rank_name.replace(' ', '_'))
-    return antwiki_url
+    return _wiki_url('https://www.antwiki.org/wiki', taxonomic_rank_name)
+
+
+@register.filter
+def wikipedia_url(taxonomic_rank_name: str) -> Union[str, None]:
+    return _wiki_url('https://en.wikipedia.org/wiki', taxonomic_rank_name)
+
 
 @register.inclusion_tag("ants/antdb/tags/rank_entry.html")
 def rank_entry(index: int, entry_name: str, entry_total: int, max_total: int):
