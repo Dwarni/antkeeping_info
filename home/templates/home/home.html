@@ -10,6 +10,125 @@
 {% block content %}
 
 <h1 class="display-1">Welcome to Antkeeping.info</h1>
-<p class="lead">Your source of information related to Ant keeping.</p>
-
+<p class="lead pb-2">Your source of information related to Ants and Ant keeping.</p>
+<h1 class="pb-2 border-bottom">Nuptial flights</h1>
+<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-globe fs-3 "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'flights_map' %}">Reports</a></h2>
+      <p>Check out latest reports of ant nuptial flights.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-table fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'flights_mating_chart' %}">Mating Chart</a></h2>
+      <p>See when ant species normally have their nuptial flights.</p>
+    </div>
+  </div>
+</div>
+<h1 class="pb-2 border-bottom">Ant Database</h1>
+<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-list fs-3 "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'taxonomic_ranks_by_region' 'species' %}">Ant species by region</a></h2>
+      <p>See which ant species occur in a selected region.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-list fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'taxonomic_ranks_by_region' 'genera' %}">Ant genera by region</a></h2>
+      <p>See which ant genera occur in a selected region.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-list fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'taxonomic_ranks_by_region' 'tribes' %}">Ant tribes by region</a></h2>
+      <p>See which ant tribes occur in a selected region.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-list fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'taxonomic_ranks_by_region' 'sub-families' %}">Ant subfamilies by region</a></h2>
+      <p>See which ant subfamilies occur in a selected region.</p>
+    </div>
+  </div>
+</div>
+<h1 class="pb-2 border-bottom">Rankings</h1>
+<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-diagram-3 fs-3 "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'top_ant_species_countries' %}">{% trans "Ant species by number of countries" %}</a></h2>
+      <p>See which ant species occur in the most countries.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-diagram-3 fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'top_ant_genera_countries' %}">{% trans "Ant genera by number of countries" %}</a></h2>
+      <p>See which ant genera occur in the most countries.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-diagram-3 fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'top_ant_genera_species' %}">{% trans "Ant genera by number of species" %}</a></h2>
+      <p>See which ant genera have the most ant species.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-globe fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'top_countries_ant_species' %}">{% trans "Countries by number of ant species" %}</a></h2>
+      <p>See which countries have the most ant species.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-globe fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'top_countries_ant_genera' %}">{% trans "Countries by number of ant genera" %}</a></h2>
+      <p>See which countries have the most ant genera.</p>
+    </div>
+  </div>
+  <div class="col d-flex align-items-start">
+    <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+      <i class="bi bi-person fs-3  "></i>
+    </div>
+    <div>
+      <h2><a href="{% url 'top_authors_ant_species' %}">{% trans "Authors by number of ant species" %}</a></h2>
+      <p>See which authors described the most ant species.</p>
+    </div>
+  </div>
+</div>
+<p>Species data is from <a href="https://antwiki.org" target="_blank">Antwiki</a>. Species distribution data is from Antwiki and <a href="https://antmaps.org/" target="_blank">Antmaps.</a>
+  Other data is from various sources (other websites, articles, forums etc.).
+</p>
 {% endblock %}
