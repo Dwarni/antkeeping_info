@@ -196,9 +196,13 @@ Vue.component('mating-chart-row', {
 Vue.component('mating-chart-name-column', {
     props: { speciesName: String},
     template: `
-        <td class="name-column"> <a :href="antWikiURL" target="_blank">{{ speciesName }}</a></td>       
+        <td class="name-column"> <a class="fst-italic" :href="antsURL" target="_blank">{{ speciesName }}</a><a :href="antWikiURL" class="ms-1" title="Antwiki" target="_blank"><span class="badge rounded-pill bg-success">AW</span></a></td>       
     `,
     computed: {
+        antsURL: function () {
+            const baseURL = '/ants'
+            return `${baseURL}/${this.speciesName.toLowerCase().replaceAll(' ', '-')}`
+        },
         antWikiURL: function () {
             const baseURL = 'https://antwiki.org/wiki'
             return `${baseURL}/${this.speciesName.replaceAll(' ', '_')}`
