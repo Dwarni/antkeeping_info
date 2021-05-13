@@ -1,7 +1,3 @@
-.taxonomy {
-    font-style: italic;
-}
-
 .size-th {
     min-width: 100px;
 }
@@ -89,4 +85,8 @@ a.region-toggle-button:hover {
   
 #distribution-list li {
 display: inline;
+}
+
+th {
+    width: 220px;
 }
