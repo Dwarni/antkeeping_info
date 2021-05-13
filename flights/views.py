@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 @method_decorator(xframe_options_exempt, name='dispatch')
+@method_decorator(staff_member_required, name='dispatch')
 class AddFlightView(FormView):
     """View for adding a new flight."""
     template_name = 'flights/flights_add.html'
