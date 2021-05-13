@@ -247,6 +247,23 @@ class TopAntGeneraByNumberOfSpecies(Ranking):
         return context
 
 
+class TopAuthorsByNumberOfAntSpecies(Ranking):
+    """Shows top countries by number of ant species."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ranking = AntSpecies \
+            .objects \
+            .annotate(rank_entry_name=F('author')) \
+            .values('rank_entry_name') \
+            .annotate(total=Count('rank_entry_name')) \
+            .order_by('-total')[:self.num_entries]
+        context['ranking'] = ranking
+        context['max_total'] = ranking[0]['total']
+        context['heading'] = 'authors by number of ant species'
+        return context
+
+
 class AntSpeciesDetail(DetailView):
     """Detail view of an ant species."""
     model = AntSpecies
