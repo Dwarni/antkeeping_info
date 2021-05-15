@@ -2,11 +2,11 @@
 <footer class="footer mt-auto py-2 border-top border-1">
     <div class="container">
         <div class="row">
-            <div class="text-muted d-inline col-sm-8">
-                <a href="{% url 'legal' %}">Legal Notice</a> |
-                <a href="{% url 'privacy' %}">Privacy Policy</a>
+            <div class="d-flex align-items-center text-muted d-inline col-sm">
+                <a href="{% url 'legal' %}" class="me-1">Legal Notice</a> |
+                <a href="{% url 'privacy' %}" class="ms-1">Privacy Policy</a>
             </div>
-            <div class="text-sm-right d-inline col-sm-4">
+            <div class="d-flex col-sm justify-content-sm-end">
                 <a target="_blank" rel="noopener noreferrer" href="https://discord.gg/xuuQnGt"
                     title="Antkeeping.info on Discord">
                     <img src="{% static  'img/Discord-Logo-Color.svg' %}" height="45" width="45" alt="Discord Logo">
