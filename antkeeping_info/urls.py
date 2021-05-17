@@ -22,11 +22,14 @@ from django.views.generic import TemplateView
 
 from home import views
 from search import views as search_views
+from ants import views as ants_views
 
 urlpatterns = [
     path('', views.home, name="home"),
     path('ants/', include('ants.urls')),
     path('antdb/', include('ants.antdb_urls')),
+    path('ants-by-country/<str:country>/', ants_views.ants_by_country,
+         name='ants_by_country'),
     path('flights/', include('flights.urls')),
     path('search/', search_views.SearchView.as_view(), name='search'),
     path('staff/', include('staff.urls')),

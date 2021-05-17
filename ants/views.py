@@ -5,6 +5,9 @@ import json
 from dal import autocomplete
 from django.core.paginator import Paginator
 
+from django.shortcuts import redirect
+from django.urls import reverse
+
 from django.db import connection
 from django.db.models import Count, F
 
@@ -28,6 +31,12 @@ def add_iframe_to_context(context, request):
         context['iframe'] = True
     else:
         context['iframe'] = False
+
+
+def ants_by_country(request, country):
+    url = f'{reverse("taxonomic_ranks_by_region", args=["species"])}' \
+            f'?country={country}'
+    return redirect(url, permanent=True)
 
 
 class TaxonomicRanksByRegion(TemplateView):
