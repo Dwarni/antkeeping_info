@@ -197,7 +197,7 @@ class AntsByRegionDiffView(APIView):
                 .filter(region_query)
                 .exclude(species_in_query)
                 .order_by('species__name')
-                .values(species_name=F('species__name')))
+                .values(name=F('species__name')))
 
         return Response(ants)
 
@@ -217,7 +217,7 @@ class AntsByRegionCommonView(APIView):
                 .objects
                 .filter(region_query, species_in_query)
                 .order_by('species__name')
-                .values(species_name=F('species__name')))
+                .values(name=F('species__name')))
 
         return Response(ants)
 
