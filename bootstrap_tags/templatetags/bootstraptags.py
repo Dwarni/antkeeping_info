@@ -1,4 +1,5 @@
 from django import template
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -30,3 +31,12 @@ def bs_alert(alert_type, alert_text, **kwargs):
     dismissible = kwargs.get('dismissible', False)
     return {'alert_type': alert_type, 'alert_text': alert_text,
             'dismissible': dismissible}
+
+
+@register.simple_tag
+def bs_icon(icon_name, add_classes=None):
+    classes = f'bi bi-{icon_name}'
+    if add_classes:
+        classes = f'{classes} {add_classes}'
+
+    return mark_safe(f'<i class="{classes}"></i>')
