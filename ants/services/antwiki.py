@@ -148,12 +148,12 @@ def import_valid_ant_species_csv(csv_file: str, verbose: bool = False):
     _import_from_csv(csv_file, import_valid_ant_species, verbose)
 
 
-def _add_distribution(species, region, occurence,
+def _add_distribution(species, region, introduced,
                       verbose: bool = False) -> None:
     d = Distribution.objects.filter(species=species, region=region).first()
     if not d:
         d = Distribution(species=species, region=region)
-    d.native = occurence == 'Present'
+    d.native = introduced != 'Yes'
     d.save()
     if verbose:
         _print_progress(species.name)
@@ -173,10 +173,7 @@ def import_world_distribution(csv_file: Iterable[Text],
             sub_region_name = line[5]
             occurence = line[6]
 
-            if not species_name or sub_species \
-                    or not (
-                        occurence == 'Present'
-                        or occurence == 'Introduced'):
+            if not species_name or sub_species:
                 continue
 
             taxon_name = '{0} {1}'.format(genus_name, species_name)
