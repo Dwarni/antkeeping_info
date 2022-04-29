@@ -3,7 +3,7 @@ import re
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.db.models import Q
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.views.generic import FormView
 from django.utils.decorators import method_decorator
 

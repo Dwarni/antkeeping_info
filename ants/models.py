@@ -10,7 +10,7 @@ from django.db import models
 from django.contrib.postgres import validators as psql_validators
 from django.contrib.postgres import fields as psql_fields
 from django.utils.text import slugify
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.urls import reverse
 from tinymce.models import HTMLField
 

@@ -5,7 +5,7 @@ from django import forms
 from django.conf import settings
 from django.forms import IntegerField, ChoiceField
 from django.forms.widgets import DateInput, TimeInput
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.urls import reverse_lazy
 
 from crispy_forms.helper import FormHelper

@@ -19,7 +19,7 @@ from django.views.generic import FormView, ListView, TemplateView, \
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 
 from ants.views import add_iframe_to_context
