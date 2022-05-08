@@ -38,8 +38,8 @@
             const maxZoom = 17
 
             const getCurrentLocationButtonId = 'getCurrentLocationButton'
-            const locationRadioId = 'id_location_type_1'
-            const gpsCoordinatesRadioId = 'id_location_type_2'
+            const locationRadioId = 'id_location_type_0'
+            const gpsCoordinatesRadioId = 'id_location_type_1'
 
             const addressContainerId = 'addressContainer'
             const addressInputId = 'id_address'
