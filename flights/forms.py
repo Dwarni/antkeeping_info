@@ -41,7 +41,7 @@ MODEL_SELECT_ATTRS = {
 
 
 class FlightForm(forms.ModelForm):
-    """Form class for adding end updating nuptial flights."""
+    """Form class for adding and updating nuptial flights."""
 
     # weather
     temperature = IntegerField(required=False)
