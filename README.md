@@ -7,6 +7,7 @@ The goal of Antkeeping.info is to provide ant keepers around the world with all 
 # Requirements
 * python > 3.8
 * PostgreSQL (Other databases are possible for testing, but .env file has to be changed)
+* Redis
 # Setup
 1. Clone the repository
 2. Create a new python virtual environment
