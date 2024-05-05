@@ -13,8 +13,8 @@ from crispy_forms.layout import Layout, Fieldset, Div, ButtonHolder, \
     Submit, HTML, Button
 from crispy_forms.bootstrap import AppendedText, InlineRadios
 
-from captcha.fields import ReCaptchaField
-from captcha.widgets import ReCaptchaV3
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha.widgets import ReCaptchaV3
 
 from ants.models import AntRegion
 
@@ -126,7 +126,7 @@ class FlightForm(forms.ModelForm):
                      ),
             'captcha',
             ButtonHolder(
-                Submit('submit', 'Submit'),
+                Submit('mainSubmit', 'Submit'),
                 Submit('add_another_species',
                        'Submit and add another species'),
                 Submit('add_another_flight', 'Submit and add another flight'),
