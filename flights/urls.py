@@ -7,7 +7,8 @@ urlpatterns = [
     path('', views.FlightsMapView.as_view(), name='flights_map'),
     path('add/', views.AddFlightView.as_view(), name='flight_add'),
     path('list/', views.FlightsListView.as_view(), name='flights_list'),
-    path('mating-chart/', views.MatingChartView.as_view(), name='flights_mating_chart'),
+    path('mating-chart/', views.MatingChartView.as_view(),
+         name='flights_mating_chart'),
     path(
         'review/', views.FlightsReviewListView.as_view(),
         name='flights_review_list'),
