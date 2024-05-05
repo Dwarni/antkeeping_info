@@ -1,7 +1,4 @@
 {
     "python.defaultInterpreterPath": "/home/merlin/venv/antkeeping_info/bin/python",
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.formatting.provider": "autopep8",
     "python.languageServer": "Pylance"
 }
