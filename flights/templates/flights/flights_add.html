@@ -8,11 +8,6 @@
 <meta name="description" content="{% trans 'A form which allows you to add an ant nuptial flight you spotted.' %}">
 {% endblock %}
 {% load crispy_forms_tags %}
-{% load django_bootstrap_breadcrumbs %}
-{% block breadcrumbs %}
-{{ block.super }}
-{% breadcrumb "Add Spotting" "flight_add" %}
-{% endblock %}
 {% block content %}
 {{ block.super }}
 {% crispy form %}

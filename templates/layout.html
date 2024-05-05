@@ -1,5 +1,4 @@
 {% load static %}
-{% load django_bootstrap_breadcrumbs %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -56,7 +55,7 @@
         <a href="javascript:" id="return-to-top"><i class="bi bi-arrow-up"></i></a>
         <main role="main" {% if iframe %}class="container-fluid" {% else %}class="container" {% endif %}>
             {% include 'messages.html' %}
-            {% block breadcrumbs %} {% breadcrumb "Home" "home" %}{% endblock %} {% block content %} {% endblock %}
+            {% block content %} {% endblock %}
         </main>
         {% if iframe is None or iframe == False %}
         {% include "footer.html" %}

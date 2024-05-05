@@ -1,11 +1,3 @@
 {% extends 'layout.html' %}
-{% load django_bootstrap_breadcrumbs %}
-{% block breadcrumbs %}
-    {{ block.super }}
-    {% breadcrumb "Flights" "flights_map" %}   
-{% endblock %}
 {% block content %}
-    {% if iframe is None or iframe == False %}
-        {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap4.html" %}
-    {% endif %}
 {% endblock %}

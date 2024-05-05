@@ -5,10 +5,6 @@
 {% block css %}
 <link rel="stylesheet" href="{% static "flights/css/flights_review.css" %}">
 {% endblock %}
-{% block breadcrumbs %}
-{{ block.super }}
-{% breadcrumb "Review" "flights_review" %}
-{% endblock %}
 {% block content %}
 {{ block.super }}
 {% if flights %}
