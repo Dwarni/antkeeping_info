@@ -34,7 +34,7 @@ class NuptialFlightMonths(generics.ListAPIView):
 
     def get_queryset(self):
         ants = AntSpecies.objects.filter(
-            flight_months__isnull=False)
+            flight_months__isnull=False, valid=True)
         name = self.request.query_params.get('name', None)
         region = self.request.query_params.get('region', None)
 
