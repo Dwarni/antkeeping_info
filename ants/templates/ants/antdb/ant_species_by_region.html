@@ -1,15 +1,7 @@
 {% extends 'ants/antspecies_list.html' %}
 {% load i18n %}
 {% load static %}
-{% load django_bootstrap_breadcrumbs %}
-{% block breadcrumbs %}
-    {{ block.super }}
-    {% with 'Ant '|add:taxonomic_rank_type_lower|add:' By Region' as breadcrumb_text %}
-        {% breadcrumb breadcrumb_text "taxonomic_rank_by_region" %}
-    {% endwith %}
-{% endblock %}
 {% block content %}
-    {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap4.html" %}
     {% if country_name or subregion_name %}
         <h2 class="mb-4">Ant {{ taxonomic_rank_type }} Of {% if subregion_name %}{{ subregion_name }}{% else %}{{ country_name }}{% endif %}</h2>
     {% else %}
