@@ -63,7 +63,8 @@ class AntSpeciesAdmin(BaseAdmin):
                                    'worker_polymorphism',
                                    'founding']}),
         (_('Nuptial flight'), {'fields': ['flight_months', 'flight_hour_range',
-                                          'flight_climate']}),
+                                          'flight_climate',
+                                          'flight_data_source']}),
         (_('Keeping parameters'), {'fields': [
             'nutrition', 'nest_temperature', 'nest_humidity',
             'outworld_temperature', 'outworld_humidity', 'hibernation'

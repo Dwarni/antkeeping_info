@@ -483,6 +483,12 @@ class AntSpecies(Species):
         verbose_name=_('Flight climate')
     )
 
+    flight_data_source = models.CharField(
+        blank=True,
+        null=True,
+        verbose_name=_('Nuptial flight data source')
+    )
+
     @property
     def flight_months_str(self):
         """Returns the nuptial flight months as a string."""
