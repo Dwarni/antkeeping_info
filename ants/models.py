@@ -486,6 +486,7 @@ class AntSpecies(Species):
     flight_data_source = models.CharField(
         blank=True,
         null=True,
+        max_length=255,
         verbose_name=_('Nuptial flight data source')
     )
 
