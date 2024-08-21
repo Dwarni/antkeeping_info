@@ -201,7 +201,7 @@ class Flight(models.Model):
         models.CASCADE,
         related_name='flight',
         blank=True,
-        null=True
+        null=True,
     )
     humidity = models.IntegerField(
         blank=True,
