@@ -20,5 +20,5 @@ psycopg2-binary ~= 2.8
 pycountry==18.12.8
 redis>=4
 requests>=2
-sorl-thumbnail>=12.*
+sorl-thumbnail>=12
 uritemplate==3.*
