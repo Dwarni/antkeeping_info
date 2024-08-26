@@ -5,15 +5,12 @@ from django.urls import path, include
 
 from django.views.generic import TemplateView
 
-from rest_framework.schemas import get_schema_view
+from drf_spectacular.views import SpectacularAPIView
 
 from . import views
 
 urlpatterns = [
-    path('schema', get_schema_view(
-         title="Antkeeping.info API",
-         version="1.0.0"
-         ), name='api-schema'),
+    path('schema', SpectacularAPIView.as_view(), name='api-schema'),
     path('doc', TemplateView.as_view(
         template_name='swagger_ui.html',
         extra_context={'schema_url': 'api-schema'}
@@ -24,7 +21,7 @@ urlpatterns = [
     path('ants/nuptial-flight-months/',
          views.NuptialFlightMonths.as_view(),
          name='api_ants_nuptial_flight_month'),
-    path('ants/<str:ant_species>/',
+    path('ants/<str:pk>/',
          views.AntSpeciesDetailView.as_view(), name='api_ant_species_detail'),
     path('genera/',
          views.GeneraListView.as_view(),

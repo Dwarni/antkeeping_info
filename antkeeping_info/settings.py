@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'api',
     'bootstrap_tags',
     'django_recaptcha',
+    'drf_spectacular',
     'crispy_forms',
     'crispy_bootstrap5',
     'taggit',
@@ -197,7 +198,17 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '30/min',
         'user': '60/min'
-    }
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Rest open API swagger ui
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Antkeeping.info API',
+    'DESCRIPTION': 'API for antkeeping.info website',
+    'VERSION': '0.0.1',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
 }
 
 # Cors
