@@ -30,7 +30,7 @@ class NuptialFlightMonths(generics.ListAPIView):
     serializer_class = AntsWithNuptialFlightsListSerializer
 
     def get_queryset(self):
-        ants = AntSpecies.objects.filter(
+        ants = AntSpecies.objects.prefetch_related('flight_months').filter(
             flight_months__isnull=False, valid=True)
         name = self.request.query_params.get('name', None)
         region = self.request.query_params.get('region', None)
