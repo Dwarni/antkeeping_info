@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
+import sys
 import environ
 
 env = environ.Env(
@@ -289,3 +290,17 @@ TINYMCE_DEFAULT_CONFIG = {
 }
 
 TAGGIT_CASE_INSENSITIVE = True
+
+# django-debug-toolbar
+
+TESTING = "test" in sys.argv
+
+if not TESTING and DEBUG:
+    INSTALLED_APPS = [
+        *INSTALLED_APPS,
+        "debug_toolbar",
+    ]
+    MIDDLEWARE = [
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+        *MIDDLEWARE,
+    ]
