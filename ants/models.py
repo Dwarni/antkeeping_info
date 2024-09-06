@@ -501,8 +501,8 @@ class AntSpecies(Species):
     LEAVES = 'LEAVES'
     LEAVES_TEXT = _('Leaves, grass and other vegetables')
     OMNIVOROUS = 'OMNIVOROUS'
-    OMNIVOROUS_TEXT = _('Omnivorous (sugar water, honey, insects, meat, seeds, \
-        nuts etc.)')
+    OMNIVOROUS_TEXT = _('Omnivorous (sugar water, honey, insects, meat, \
+        seeds nuts etc.)')
     SEEDS = 'SEEDS'
     SEEDS_TEXT = _('Mainly seeds and nuts but dead insects and sugar water, \
         honey too.')
@@ -678,7 +678,7 @@ class Image(models.Model):
     )
     source_caption = models.CharField(
         'Source caption',
-        max_length=200,
+        max_length=500,
         blank=True
     )
     main_image = models.BooleanField(
