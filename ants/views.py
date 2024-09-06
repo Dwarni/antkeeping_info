@@ -297,7 +297,7 @@ class AntSpeciesDetail(DetailView):
         ant = context['object']
 
         countries = AntRegion.countries.filter(distribution__species=ant.id)
-        regions = {}
+        """ regions = {}
 
         for country in countries:  # pylint: disable=E1133
             region_query = AntRegion.objects \
@@ -305,10 +305,10 @@ class AntSpeciesDetail(DetailView):
                 .filter(distribution__species__id=ant.id)
 
             if region_query:
-                regions[country.code] = region_query
+                regions[country.code] = region_query """
 
         context['countries'] = countries
-        context['regions'] = regions
+        # context['regions'] = regions
 
         common_names = ant.common_names.all()
         context['common_names'] = common_names
