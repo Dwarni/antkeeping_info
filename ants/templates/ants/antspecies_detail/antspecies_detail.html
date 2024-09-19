@@ -30,7 +30,9 @@
             <tr><th>{% trans 'Order' %}:</th><td><a href="{{ 'Hymenoptera' | wikipedia_url }}" target="_blank"><i>Hymenoptera</i></a></td></tr>
             <tr><th>{% trans 'Family' %}:</th><td><a href="{{ 'Formicidae' | antwiki_url }}" target="_blank"><i>Formicidae</i></a></td></tr>
             <tr><th>{% trans 'Subfamily' %}:</th><td><a href="{{ object.genus.tribe.sub_family | antwiki_url }}" target="_blank"><i>{{ object.genus.tribe.sub_family }}</i></a></td></tr>
+        {% if not object.genus.tribe %}
             <tr><th>{% trans 'Tribe' %}:</th><td><a href="{{ object.genus.tribe | antwiki_url }}" target="_blank"><i>{{ object.genus.tribe }}</i></a></td></tr>
+        {% endif %}
             <tr><th>{% trans 'Genus' %}:</th><td><a href="{{ object.genus | antwiki_url }}" target="_blank"><i>{{ object.genus }}</i></a></td></tr>
             <tr><th>{% trans 'Species' %}:</th><td><i>{{ object.name }}</i></td></tr>
         </tbody>
