@@ -25,15 +25,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {% block meta %}{% endblock %}
         <!-- CSS only -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
-            rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
-            crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.4.1/font/bootstrap-icons.min.css" 
-            integrity="sha512-YBSrHBAMjFhWHodf0RF58XB/x9lmuwBtyJv1LWDHQa1nOaWNXfG3Etc/lEXfW+qBx8ne79JnzccDs59je/ccVA==" 
-            crossorigin="anonymous" />
+        <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}?v=5.3.3">
+        <link rel="stylesheet" href="{% static 'css/bootstrap-icons.min.css' %}?v=5.3.3">
         <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=10">
         {% block css %} {% endblock %}
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
         {% if iframe %}
         <style>
             body>.container,
@@ -59,7 +55,7 @@
         {% include "footer.html" %}
         {% endif %}
         <!-- JavaScript Bundle with Popper -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js" integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="{% static 'js/bootstrap.bundle.min.js' %}?v=5.3.3"></script>
         <script src="{% static 'js/layout.js' %}?v=1"></script>
         {% block script %} {% endblock %}
     </body>
