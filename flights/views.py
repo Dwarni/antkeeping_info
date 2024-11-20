@@ -1,5 +1,4 @@
 """Module which contains all views of flights app."""
-import datetime
 
 import logging
 
@@ -134,8 +133,8 @@ class FlightsMapView(TemplateView):
             d.year for d in Flight.objects.all().dates(
                 'date', 'year', order='DESC')
         ]
-        now = datetime.datetime.now()
-        context['current_year'] = now.year
+        # now = datetime.datetime.now()
+        # context['current_year'] = now.year
         context['BING_API_KEY'] = settings.BING_API_KEY_CLIENT
         add_iframe_to_context(context, self.request)
         return context
