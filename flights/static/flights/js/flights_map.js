@@ -1,8 +1,6 @@
 (function () {
-    const BING_API_KEY = document.currentScript.getAttribute('bingApiKey')
     class AntMap {
         constructor(year, searchString) {
-            this._bingApiKey = BING_API_KEY
             this._markers = []
             this._flights = []
             this._filteredFlights = []
@@ -19,7 +17,7 @@
         }
 
         set year(value) {
-            if(this._year !== value) {
+            if (this._year !== value) {
                 this._year = value
                 this.updateMap()
             }
@@ -30,7 +28,7 @@
         }
 
         set searchString(value) {
-            if(this._searchString !== value) {
+            if (this._searchString !== value) {
                 this._searchString = value
                 this.filterFlights()
                 this.updateMarkers()
@@ -38,12 +36,17 @@
         }
 
         initMap() {
-            this._map = L.map('map')
-                .setView([45, 10], 2);
-            this.initBingLayer()
+            this._map = L.map('map');
+
+            //Create Layer and add it to map
+            var cartodbAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution">CARTO</a>';
+            var positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+                attribution: cartodbAttribution
+            }).addTo(this._map);
+
+            this._map.setView([45, 10], 2);
             this.initClusterGroup()
-            //this.focusOnCurrentPosition(4)
-            this.updateMap();    
+            this.updateMap();
         }
 
         initClusterGroup() {
@@ -52,14 +55,6 @@
             this._clusterGroup.on('click', a => {
                 this.openFlightInfo(a.layer)
             });
-        }
-
-        initBingLayer() {
-            const options = {
-                bingMapsKey: this._bingApiKey,
-                imagerySet: 'Road',
-            }
-            L.tileLayer.bing(options).addTo(this._map)
         }
 
         async getCurrentPosition() {
@@ -96,8 +91,8 @@
             fetch(flight.id + '/info-window')
                 .then(response => response.text())
                 .then(data => {
-                    $( "#flightInfoModalContent" ).html(data);
-                    $( "#flightInfoModal" ).modal('toggle');    
+                    $("#flightInfoModalContent").html(data);
+                    $("#flightInfoModal").modal('toggle');
                 })
                 .catch(error => console.log(`Could not fetch info for flight with id ${flight.id}: ${error}`))
         }
@@ -107,7 +102,7 @@
             this._markers = []
         }
 
-        updateMap() {    
+        updateMap() {
             this._flights = []
             this._filteredFlights = []
             fetch("/flights/list?year=" + this._year)
@@ -121,7 +116,7 @@
 
         filterFlights() {
             var filterStringLower = this._searchString.toLowerCase();
-    
+
             if (filterStringLower) {
                 this._filteredFlights = this._flights.filter(function (flight) {
                     var antSpeciesLower = flight.ant.toLowerCase();
@@ -134,9 +129,9 @@
 
         updateMarkers() {
             this.removeMarkers()
-    
+
             for (var flight of this._filteredFlights) {
-                var plotll = new L.LatLng(flight.lat,flight.lng, true);
+                var plotll = new L.LatLng(flight.lat, flight.lng, true);
                 var plotmark = new L.Marker(plotll);
                 this._markers.push(plotmark)
                 this._clusterGroup.addLayer(plotmark)
@@ -145,16 +140,16 @@
     }
 
     window.onload = () => {
-        const yearSelect = document.getElementById( "yearSelect" )
+        const yearSelect = document.getElementById("yearSelect")
         const map = new AntMap(yearSelect.value, '')
-        
+
         yearSelect.onchange = e => {
             map.year = e.target.value
         }
 
-        const antSearchInput = document.getElementById( "antSearchInput" )
+        const antSearchInput = document.getElementById("antSearchInput")
         antSearchInput.onkeyup = e => {
             map.searchString = e.target.value
         }
     }
-}) ();
+})();

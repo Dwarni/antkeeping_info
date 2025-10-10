@@ -41,7 +41,6 @@ class AddFlightView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['BING_API_KEY'] = settings.BING_API_KEY_CLIENT
         add_iframe_to_context(context, self.request)
         return context
 
@@ -133,9 +132,6 @@ class FlightsMapView(TemplateView):
             d.year for d in Flight.objects.all().dates(
                 'date', 'year', order='DESC')
         ]
-        # now = datetime.datetime.now()
-        # context['current_year'] = now.year
-        context['BING_API_KEY'] = settings.BING_API_KEY_CLIENT
         add_iframe_to_context(context, self.request)
         return context
 

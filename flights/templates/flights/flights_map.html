@@ -21,7 +21,7 @@
             <select id="yearSelect" class="form-select">
                 <option value="all">{% trans "All Years" %}</option>
                 {% for year in years %}
-                    <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
+                <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -43,7 +43,6 @@
 {% endblock %}
 {% block script %}
 <script src="{% static 'flights/js/vendor/leaflet.js' %}"></script>
-<script src="{% static 'flights/js/vendor/leaflet-bing-layer.min.js' %}"></script>
 <script src="{% static 'flights/js/vendor/leaflet.markercluster.js' %}"></script>
-<script src="{% static 'flights/js/flights_map.js' %}?v=15" bingApiKey="{{ BING_API_KEY }}"></script>
+<script src="{% static 'flights/js/flights_map.js' %}?v=15"></script>
 {% endblock %}
