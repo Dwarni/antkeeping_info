@@ -18,7 +18,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from debug_toolbar.toolbar import debug_toolbar_urls
+
+if settings.DEBUG:
+    from debug_toolbar.toolbar import debug_toolbar_urls
 
 from django.urls import include, path
 from django.views.generic import TemplateView
