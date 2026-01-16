@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'staff',
     'api',
     'bootstrap_tags',
+    'django_filters',
     'django_recaptcha',
     'drf_spectacular',
     'crispy_forms',
@@ -188,6 +189,9 @@ if RECAPTCHA_ENABLED:
 
 # Rest Framework
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
