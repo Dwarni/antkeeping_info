@@ -1,16 +1,22 @@
 from django.db.models import Q, F, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
 
 from ants.models import AntSpecies, Distribution, AntRegion, Genus
 
-from .serializers import RegionSerializer, RegionListSerializer, \
-    AntsWithNuptialFlightsListSerializer, \
-    AntSpeciesDetailSerializer, AntSpeciesNameSerializer, \
-    GenusNameSerializer
+from .filters import AntRegionFilter
+
+from .serializers import (
+    RegionSerializer,
+    RegionListSerializer,
+    AntsWithNuptialFlightsListSerializer,
+    AntSpeciesDetailSerializer,
+    AntSpeciesNameSerializer,
+    AntSizeListSerializer,
+    GenusNameSerializer,
+)
 
 
 def get_months_array(flight_months):
@@ -24,16 +30,18 @@ def get_months_array(flight_months):
 
 class NuptialFlightMonths(generics.ListAPIView):
     """
-        Return a list with all ant species with nuptial flight months,
-        including these months.
+    Return a list with all ant species with nuptial flight months,
+    including these months.
     """
+
     serializer_class = AntsWithNuptialFlightsListSerializer
 
     def get_queryset(self):
-        ants = AntSpecies.objects.prefetch_related('flight_months').filter(
-            flight_months__isnull=False, valid=True)
-        name = self.request.query_params.get('name', None)
-        region = self.request.query_params.get('region', None)
+        ants = AntSpecies.objects.prefetch_related("flight_months").filter(
+            flight_months__isnull=False, valid=True
+        )
+        name = self.request.query_params.get("name", None)
+        region = self.request.query_params.get("region", None)
 
         if name is not None and len(name) >= 3:
             ants = ants.filter(name__icontains=name)
@@ -44,9 +52,23 @@ class NuptialFlightMonths(generics.ListAPIView):
         return ants.distinct()
 
 
-class AntSpeciesDetailView(APIView):
+class AntWorkerSizeListView(generics.ListAPIView):
+    queryset = AntSpecies.objects.filter(sizes__type="WORKER").annotate(
+        minimum=F("sizes__minimum"), maximum=F("sizes__maximum")
+    )
+    serializer_class = AntSizeListSerializer
+
+
+class AntQueenSizeListView(generics.ListAPIView):
+    queryset = AntSpecies.objects.filter(sizes__type="QUEEN").annotate(
+        minimum=F("sizes__minimum"), maximum=F("sizes__maximum")
+    )
+    serializer_class = AntSizeListSerializer
+
+
+class AntSpeciesDetailView(generics.GenericAPIView):
     """
-        Return a specific ant species.
+    Return a specific ant species.
     """
 
     def get(self, request, ant_species):
@@ -65,60 +87,39 @@ class AntSpeciesDetailView(APIView):
         return Response(serializer.data)
 
 
-class RegionView(APIView):
+class RegionDetailView(generics.RetrieveAPIView):
     """
-        Return a specific region.
+    Return a specific region by ID, code, or slug.
     """
 
-    def get(self, request, region):
-        regions = AntRegion.objects
+    queryset = AntRegion.objects.all()
+    serializer_class = RegionSerializer
+    lookup_url_kwarg = "region"
+
+    def get_object(self):
+        lookup_value = self.kwargs.get(self.lookup_url_kwarg)
+        queryset = self.get_queryset()
+
         try:
-            int(region)
-            regions = regions.filter(pk=region)
-        except ValueError:
-            code_query = Q(code=region)
-            slug_query = Q(slug=region)
-            regions = regions.filter(code_query | slug_query)
-        finally:
-            region = get_object_or_404(regions)
-
-        serializer = RegionSerializer(region, many=False)
-        return Response(serializer.data)
-
-
-class RegionsView(generics.ListAPIView):
-    """
-        Return a list of all existing regions.
-    """
-
-    serializer_class = RegionListSerializer
-
-    def get_queryset(self):
-        regions = AntRegion.objects.all()
-        with_ants = self.request.query_params.get('with-ants', None)
-        with_flight_months = (self.request
-                                  .query_params.get(
-                                      'with-flight-months',
-                                      None))
-        region_type = self.request.query_params.get('type', None)
-        parent = self.request.query_params.get('parent', None)
-
-        if with_ants is not None and with_ants.lower() == 'true':
-            regions = regions.filter(distribution__isnull=False).distinct()
-
-        if with_flight_months is not None and \
-           with_flight_months.lower() == 'true':
-            regions = regions = regions.filter(
-                distribution__species__flight_months__isnull=False
+            obj = queryset.get(pk=lookup_value)
+        except (ValueError, AntRegion.DoesNotExist):
+            obj = get_object_or_404(
+                queryset, Q(code=lookup_value) | Q(slug=lookup_value)
             )
 
-        if region_type:
-            regions = regions.filter(type=region_type)
+        return obj
 
-        if parent:
-            regions = regions.filter(parent=parent)
 
-        return regions.distinct()
+class RegionListView(generics.ListAPIView):
+    """
+    Return a list of all existing regions with filtering capabilities.
+    """
+
+    queryset = AntRegion.objects.all()
+    serializer_class = RegionListSerializer
+    # The filter backend is often already globally set in settings.py,
+    # but defining it here explicitly is also fine.
+    filterset_class = AntRegionFilter
 
 
 def get_region_query(region):
@@ -133,14 +134,13 @@ def get_region_query(region):
     return region_query
 
 
-class AntsByRegionView(APIView):
+class AntsByRegionView(generics.GenericAPIView):
     """
-        Return a list of ants which occur in the specific region.
+    Return a list of ants which occur in the specific region.
     """
 
     def get(self, request, region):
-        ant_species_name = self.request.query_params.get(
-            'antSpeciesName', None)
+        ant_species_name = self.request.query_params.get("antSpeciesName", None)
         ants = AntSpecies.objects
 
         if ant_species_name is not None:
@@ -155,11 +155,12 @@ class AntsByRegionView(APIView):
             ants = ants.filter(code_query | slug_query)
         finally:
             ants = ants.values(
-                'id',
-                'name',
-                native=F('distribution__native'),
-                protected=F('distribution__protected'),
-                red_list_status=F('distribution__red_list_status'))
+                "id",
+                "name",
+                native=F("distribution__native"),
+                protected=F("distribution__protected"),
+                red_list_status=F("distribution__red_list_status"),
+            )
 
             if len(ants) == 0:
                 raise Http404
@@ -168,16 +169,17 @@ class AntsByRegionView(APIView):
 
 
 def get_species_in_query(region_query):
-    return Q(species__in=Subquery(Distribution
-                                  .objects
-                                  .filter(region_query)
-                                  .values('species__pk')))
+    return Q(
+        species__in=Subquery(
+            Distribution.objects.filter(region_query).values("species__pk")
+        )
+    )
 
 
-class AntsByRegionDiffView(APIView):
+class AntsByRegionDiffView(generics.GenericAPIView):
     """
-        Return a list of ants which occur in the specific region
-        but not in the second region.
+    Return a list of ants which occur in the specific region
+    but not in the second region.
     """
 
     def get(self, request, region, region2):
@@ -185,19 +187,19 @@ class AntsByRegionDiffView(APIView):
         region2_query = get_region_query(region2)
         species_in_query = get_species_in_query(region2_query)
 
-        ants = (Distribution
-                .objects
-                .filter(region_query)
-                .exclude(species_in_query)
-                .order_by('species__name')
-                .values(name=F('species__name')))
+        ants = (
+            Distribution.objects.filter(region_query)
+            .exclude(species_in_query)
+            .order_by("species__name")
+            .values(name=F("species__name"))
+        )
 
         return Response(ants)
 
 
-class AntsByRegionCommonView(APIView):
+class AntsByRegionCommonView(generics.GenericAPIView):
     """
-        Return a list of ants which occur in both regions.
+    Return a list of ants which occur in both regions.
     """
 
     def get(self, request, region, region2):
@@ -205,40 +207,43 @@ class AntsByRegionCommonView(APIView):
         region2_query = get_region_query(region2)
         species_in_query = get_species_in_query(region2_query)
 
-        ants = (Distribution
-                .objects
-                .filter(region_query, species_in_query)
-                .order_by('species__name')
-                .values(name=F('species__name')))
+        ants = (
+            Distribution.objects.filter(region_query, species_in_query)
+            .order_by("species__name")
+            .values(name=F("species__name"))
+        )
 
         return Response(ants)
 
 
 class AntsByGenusView(generics.ListAPIView):
     """
-        Return a list of ant species of the specific genus.
+    Return a list of ant species of the specific genus.
     """
+
     serializer_class = AntSpeciesNameSerializer
 
     def get_queryset(self):
-        id = self.kwargs['id']
+        id = self.kwargs["id"]
         ants = AntSpecies.objects.all()
         ants = ants.filter(genus__pk=id)
-        ants = ants.values('id', 'name')
+        ants = ants.values("id", "name")
         return ants
 
 
 class GeneraListView(generics.ListAPIView):
     """
-        Return a list of genera.
+    Return a list of genera.
     """
+
     serializer_class = GenusNameSerializer
     queryset = Genus.objects.all()
 
 
 class AntSpeciesListView(generics.ListAPIView):
     """
-        Return a (very long) list of all ant species. Please cache the list.
+    Return a (very long) list of all ant species. Please cache the list.
     """
+
     serializer_class = AntSpeciesNameSerializer
     queryset = AntSpecies.objects.all()
