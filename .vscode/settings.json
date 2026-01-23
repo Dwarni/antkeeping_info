@@ -1,4 +1,19 @@
 {
-    "python.defaultInterpreterPath": "/home/merlin/venv/antkeeping_info/bin/python",
-    "python.languageServer": "Pylance"
+    // 1. Python -> Ruff
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
+  },
+
+  // 2. JavaScript -> Prettier
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+
+  // 3. Django HTML -> djLint
+  "[django-html]": {
+    "editor.defaultFormatter": "Glavin001.unibeautify", // Oder die djLint Extension
+    "editor.formatOnSave": true
+  }
 }
