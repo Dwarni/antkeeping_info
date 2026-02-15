@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 import sys
 import environ
 
+from corsheaders.signals import check_request_enabled
+
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
@@ -204,8 +206,16 @@ SPECTACULAR_SETTINGS = {
 }
 
 # Cors
+CORS_ALLOWED_ORIGINS = env.list("CORS_ORIGIN_WHITELIST", [])
+# Die dynamische Ausnahme für die API
 
-CORS_ORIGIN_WHITELIST = env("CORS_ORIGIN_WHITELIST")
+
+def cors_allow_api_public(sender, request, **kwargs):
+    return request.path.startswith("/api/")
+
+
+check_request_enabled.connect(cors_allow_api_public)
+
 
 INTERNAL_IPS = env("INTERNAL_IPS")
 
