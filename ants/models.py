@@ -385,6 +385,14 @@ class AntSize(models.Model):
 
     objects = AntSizeManager()
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(maximum__gte=models.F('minimum')),
+                name='antsize_max_gte_min'
+            )
+        ]
+
 
 INT_RANGE_HELP_TEXT = _('Note that the upper value is not included '
                         'so if you want to enter 25 - 28 you have '

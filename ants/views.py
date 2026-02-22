@@ -157,38 +157,19 @@ class TopCountriesByNumberOfAntSpecies(Ranking):
         return context
 
 
-def dictfetchall(cursor):
-    "Return all rows from a cursor as a dict"
-    columns = [col[0] for col in cursor.description]
-    return [
-        dict(zip(columns, row))
-        for row in cursor.fetchall()
-    ]
-
-
 class TopCountriesByNumberOfAntGenera(Ranking):
     """Shows top countries by number of ant genera."""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        ranking = None
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                    select rr.name as rank_entry_name,
-                    count(distinct ag.name) as total
-                    from ants_antspecies aa
-                    inner join ants_species as2 on aa.species_ptr_id = as2.id
-                    inner join ants_distribution ad ON as2.id = ad.species_id
-                    inner join regions_region rr on rr.id = ad.region_id
-                    inner join ants_antregion ar on ar.region_ptr_id = rr.id
-                    inner join ants_genus ag on ag.id = as2.genus_id
-                    where rr.type = 'Country'
-                    group by rank_entry_name
-                    order by total desc
-                    limit %s
-                """, [self.num_entries])
-            ranking = dictfetchall(cursor)
+        ranking = AntSpecies \
+            .objects \
+            .filter(distribution__region__type='Country') \
+            .annotate(rank_entry_name=F('distribution__region__name')) \
+            .values('rank_entry_name') \
+            .annotate(total=Count('genus', distinct=True)) \
+            .order_by('-total')[:self.num_entries]
+        
         context['ranking'] = ranking
         context['max_total'] = ranking[0]['total'] if ranking else 0
         context['heading'] = 'countries by number of ant genera'
@@ -220,24 +201,17 @@ class TopAntGeneraByNumberOfCountries(Ranking):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        ranking = None
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                    select ag.name as rank_entry_name,
-                    count(distinct rr.code) as total
-                    from ants_antspecies aa
-                    inner join ants_species as2 on aa.species_ptr_id = as2.id
-                    inner join ants_distribution ad ON as2.id = ad.species_id
-                    inner join regions_region rr on rr.id = ad.region_id
-                    inner join ants_antregion ar on ar.region_ptr_id = rr.id
-                    inner join ants_genus ag on ag.id = as2.genus_id
-                    where rr.type = 'Country'
-                    group by rank_entry_name
-                    order by total desc
-                    limit %s
-                """, [self.num_entries])
-            ranking = dictfetchall(cursor)
+        ranking = AntSpecies \
+            .objects \
+            .filter(distribution__region__type='Country', genus__isnull=False) \
+            .values('genus__name') \
+            .annotate(
+                rank_entry_name=F('genus__name'),
+                total=Count('distribution__region__code', distinct=True)
+            ) \
+            .values('rank_entry_name', 'total') \
+            .order_by('-total')[:self.num_entries]
+        
         context['ranking'] = ranking
         context['max_total'] = ranking[0]['total'] if ranking else 0
         context['heading'] = 'ant genera by number of countries'
@@ -311,18 +285,8 @@ class AntSpeciesDetail(DetailView):
         ant = context['object']
 
         countries = AntRegion.countries.filter(distribution__species=ant.id)
-        """ regions = {}
-
-        for country in countries:  # pylint: disable=E1133
-            region_query = AntRegion.objects \
-                .filter(parent__code=country.code) \
-                .filter(distribution__species__id=ant.id)
-
-            if region_query:
-                regions[country.code] = region_query """
 
         context['countries'] = countries
-        # context['regions'] = regions
 
         common_names = ant.common_names.all()
         context['common_names'] = common_names
