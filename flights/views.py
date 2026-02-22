@@ -22,7 +22,6 @@ from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 
 from ants.views import add_iframe_to_context
-from .forms import FlightForm, FlightStaffForm
 from .models import Flight
 
 logger = logging.getLogger(__name__)
@@ -30,95 +29,6 @@ logger = logging.getLogger(__name__)
 # Create your views here.
 
 
-@method_decorator(xframe_options_exempt, name='dispatch')
-class AddFlightView(FormView):
-    """View for adding a new flight."""
-    template_name = 'flights/flights_add.html'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.flight = None
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        add_iframe_to_context(context, self.request)
-        return context
-
-    def form_valid(self, form):
-        self.flight = form.create_flight(self.request.user)
-        messages.success(self.request, _('Added new spotting'))
-        return super().form_valid(form)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        iframe = self.request.GET.get('iframe', None)
-        kwargs['iframe'] = iframe
-        return kwargs
-
-    def get_form_class(self):
-        if self.request.user.is_staff:
-            return FlightStaffForm
-
-        return FlightForm
-
-    def get_initial(self):
-        copy_flight = self.request.GET.get('copy_flight', None)
-
-        initial = None
-
-        if copy_flight:
-            flight = Flight.objects.get(pk=copy_flight)
-            initial = {
-                'date': flight.date,
-                'start_time': flight.start_time,
-                'end_time': flight.end_time,
-                'location_type': flight.location_type,
-                'address': flight.address,
-                'latitude': flight.latitude,
-                'longitude': flight.longitude,
-                'habitat': ','.join(
-                    [tag.name for tag in flight.habitat.all()]),
-                'humidity': flight.humidity,
-                'rain': flight.rain,
-                'sky_condition': flight.sky_condition,
-                'comment': flight.comment,
-                'link': flight.link,
-                'project': flight.project,
-                'external_user': flight.external_user
-            }
-
-            if flight.temperature is not None:
-                initial['temperature'] = flight.temperature.value
-                initial['temperature_unit'] = flight.temperature.unit
-
-            if flight.wind_speed is not None:
-                initial['wind_speed'] = flight.wind_speed.value
-                initial['wind_speed_unit'] = flight.wind_speed.unit
-
-        return initial
-
-    def get_success_url(self):
-        iframe = self.request.GET.get('iframe', None)
-        add_another_species = self.request.POST.get(
-            'add_another_species', False)
-        add_another_flight = self.request.POST.get('add_another_flight', False)
-
-        url = None
-        if add_another_species or add_another_flight:
-            url = reverse_lazy('flight_add')
-        else:
-            url = reverse_lazy('flights_map')
-
-        if iframe:
-            url += '?iframe=true'
-
-        if add_another_species:
-            copy_str = 'copy_flight={}'.format(self.flight.pk)
-            if '?' in url:
-                url += '&' + copy_str
-            else:
-                url += '?' + copy_str
-        return url
 
 
 @method_decorator(xframe_options_exempt, name='dispatch')

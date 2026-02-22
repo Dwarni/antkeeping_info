@@ -64,4 +64,5 @@ urlpatterns = [
         name="api_ants_by_region_common",
     ),
     path("flights/", include("api.flights.urls")),
+    path("v2/", include("api.v2_urls")),
 ]

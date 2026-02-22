@@ -14,7 +14,6 @@ dependencies = [
     "django-environ>=0.12.0",
     "django-extra-fields>=3.0.2",
     "django-filter>=25.2",
-    "django-recaptcha>=4.0.0",
     "django-redis>=5.4.0",
     "django-taggit>=6.1.0",
     "django-tinymce>=4.1.0",

@@ -85,10 +85,17 @@ class TaxonomicRanksByRegion(TemplateView):
             if subregion_obj:
                 context['subregion_name'] = subregion_obj.name
             taxonomic_ranks = AntSpecies.objects.by_region_code_or_id(
-                sub_region)
+                sub_region
+            ).select_related(
+                'genus', 'genus__tribe', 'genus__tribe__sub_family'
+            )
 
         if country and not sub_region:
-            taxonomic_ranks = AntSpecies.objects.by_country_code(country)
+            taxonomic_ranks = AntSpecies.objects.by_country_code(
+                country
+            ).select_related(
+                'genus', 'genus__tribe', 'genus__tribe__sub_family'
+            )
 
         context['countries'] = AntRegion.countries.with_ants()
 
@@ -145,7 +152,7 @@ class TopCountriesByNumberOfAntSpecies(Ranking):
             .annotate(total=Count('rank_entry_name')) \
             .order_by('-total')[:self.num_entries]
         context['ranking'] = ranking
-        context['max_total'] = ranking[0]['total']
+        context['max_total'] = ranking[0]['total'] if ranking else 0
         context['heading'] = 'countries by number of ant species'
         return context
 
@@ -183,7 +190,7 @@ class TopCountriesByNumberOfAntGenera(Ranking):
                 """, [self.num_entries])
             ranking = dictfetchall(cursor)
         context['ranking'] = ranking
-        context['max_total'] = ranking[0]['total']
+        context['max_total'] = ranking[0]['total'] if ranking else 0
         context['heading'] = 'countries by number of ant genera'
         return context
 
@@ -203,7 +210,7 @@ class TopAntSpeciesByNumberOfCountries(Ranking):
             .values('rank_entry_name', 'total') \
             .order_by('-total')[:self.num_entries]
         context['ranking'] = ranking
-        context['max_total'] = ranking[0]['total']
+        context['max_total'] = ranking[0]['total'] if ranking else 0
         context['heading'] = 'ant species by number of countries'
         return context
 
@@ -232,7 +239,7 @@ class TopAntGeneraByNumberOfCountries(Ranking):
                 """, [self.num_entries])
             ranking = dictfetchall(cursor)
         context['ranking'] = ranking
-        context['max_total'] = ranking[0]['total']
+        context['max_total'] = ranking[0]['total'] if ranking else 0
         context['heading'] = 'ant genera by number of countries'
         return context
 
@@ -251,7 +258,7 @@ class TopAntGeneraByNumberOfSpecies(Ranking):
             .values('rank_entry_name', 'total') \
             .order_by('-total')[:self.num_entries]
         context['ranking'] = ranking
-        context['max_total'] = ranking[0]['total']
+        context['max_total'] = ranking[0]['total'] if ranking else 0
         context['heading'] = 'ant genera by number of species'
         return context
 
@@ -268,7 +275,7 @@ class TopAuthorsByNumberOfAntSpecies(Ranking):
             .annotate(total=Count('rank_entry_name')) \
             .order_by('-total')[:self.num_entries]
         context['ranking'] = ranking
-        context['max_total'] = ranking[0]['total']
+        context['max_total'] = ranking[0]['total'] if ranking else 0
         context['heading'] = 'authors by number of ant species'
         return context
 
@@ -277,6 +284,13 @@ class AntSpeciesDetail(DetailView):
     """Detail view of an ant species."""
     model = AntSpecies
     template_name = 'ants/antspecies_detail/antspecies_detail.html'
+
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'genus', 'genus__tribe', 'genus__tribe__sub_family'
+        ).prefetch_related(
+            'commonname_set', 'invalid_names', 'sizes', 'images'
+        )
 
     def __get_flight_frequency(self, ant_species):
         has_flights = Flight.objects.filter(ant_species=ant_species).exists()

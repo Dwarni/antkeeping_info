@@ -22,7 +22,6 @@ env = environ.Env(
     CORS_ORIGIN_WHITELIST=(list, []),
     PUBLIC_ROOT=(environ.Path, None),
     INTERNAL_IPS=(list, []),
-    RECAPTCHA_FORCE=(bool, False),
 )
 
 root = environ.Path(__file__) - 2  # two folder back (/a/b/ - 2 = /)
@@ -66,8 +65,6 @@ INSTALLED_APPS = [
     "staff",
     "api",
     "bootstrap_tags",
-    "django_filters",
-    "django_recaptcha",
     "drf_spectacular",
     "crispy_forms",
     "crispy_bootstrap5",
@@ -177,13 +174,6 @@ LOGIN_URL = "/users/login"
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "home"
-
-# Google Recaptcha
-RECAPTCHA_FORCE = env("RECAPTCHA_FORCE")
-RECAPTCHA_ENABLED = (not DEBUG) or RECAPTCHA_FORCE
-if RECAPTCHA_ENABLED:
-    RECAPTCHA_PUBLIC_KEY = env("RECAPTCHA_PUBLIC_KEY")
-    RECAPTCHA_PRIVATE_KEY = env("RECAPTCHA_PRIVATE_KEY")
 
 # Rest Framework
 REST_FRAMEWORK = {

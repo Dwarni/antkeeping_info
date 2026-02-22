@@ -38,9 +38,6 @@ class CustomAuthentificationForm(auth_forms.AuthenticationForm):
                 Submit('Log In', 'Log In')
             )
         )
-        if not settings.RECAPTCHA_ENABLED:
-            self.fields.pop('captcha')
-            self.layout_fieldset.pop()
 
 
 class ProfileForm(ModelForm):
