@@ -115,7 +115,7 @@ class TaxonomicRanksByRegion(TemplateView):
             if taxonomic_rank == 'tribes':
                 taxonomic_ranks = taxonomic_ranks \
                     .exclude(genus__tribe__name='')
-            if taxonomic_rank_type_lower == 'species':
+            if context['taxonomic_rank_type_lower'] == 'species':
                 taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name',
                                                          'taxonomic_rank_slug',
                                                          'forbidden_in_eu')
