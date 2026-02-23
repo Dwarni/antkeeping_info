@@ -115,8 +115,13 @@ class TaxonomicRanksByRegion(TemplateView):
             if taxonomic_rank == 'tribes':
                 taxonomic_ranks = taxonomic_ranks \
                     .exclude(genus__tribe__name='')
-            taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name',
-                                                     'taxonomic_rank_slug')
+            if taxonomic_rank_type_lower == 'species':
+                taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name',
+                                                         'taxonomic_rank_slug',
+                                                         'forbidden_in_eu')
+            else:
+                taxonomic_ranks = taxonomic_ranks.values('taxonomic_rank_name',
+                                                         'taxonomic_rank_slug')
             taxonomic_ranks = taxonomic_ranks.distinct('taxonomic_rank_name') \
                 .order_by('taxonomic_rank_name')
             paginator = Paginator(taxonomic_ranks, 50)

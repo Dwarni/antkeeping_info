@@ -24,7 +24,10 @@
                 <tr style="cursor:pointer">
                     <td style="width:300px;">
                         {% if taxonomic_rank_type_lower == 'species' %}
-                            <a href="{% url 'ant_detail' obj.taxonomic_rank_slug %}">{{ obj.taxonomic_rank_name }}</a>                            
+                            <a href="{% url 'ant_detail' obj.taxonomic_rank_slug %}">{{ obj.taxonomic_rank_name }}</a>
+                            {% if obj.forbidden_in_eu %}
+                                <span class="badge bg-danger ms-1" title="{% trans 'Forbidden Ant Species (EU)' %}"><i class="bi bi-ban"></i> EU</span>
+                            {% endif %}
                         {% else %}
                             <a href="{{ obj.taxonomic_rank_name | antwiki_url }}" target="blank">{{ obj.taxonomic_rank_name }}</a>
                         {% endif %}
