@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+{% load bootstraptags %}
+{% load i18n %}
+
+{% block content %}
+<h2 class="mb-4">{% trans 'Forbidden Ant Species (European Union)' %}</h2>
+
+<div class="alert alert-warning" role="alert">
+  <h4 class="alert-heading">{% trans 'Important Information' %}</h4>
+  <p>{% trans 'The ant species listed below are considered invasive alien species of Union concern.' %}</p>
+  <p><a href="https://environment.ec.europa.eu/topics/nature-and-biodiversity/invasive-alien-species_en" target="_blank" rel="noopener noreferrer">{% trans 'Read more about Invasive Alien Species on the official EU website' %}</a></p>
+  <hr />
+  <p class="mb-0">{% trans 'It is strictly forbidden to keep, breed, transport, or sell these species within the European Union.' %}</p>
+</div>
+
+{% if page_obj %}
+    <p class="lead"><b>{{ total_objects }}</b> {% trans 'ant species found' %}</p>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        {% bs_pagination page_obj request %}
+    {% endif %}
+
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>{% trans 'Species Name' %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ant in page_obj %}
+        <tr style="cursor: pointer">
+          <td>
+            <a href="{% url 'ant_detail' ant.slug %}">{{ ant.name }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        {% bs_pagination page_obj request %}
+    {% endif %}
+{% else %}
+    {% bs_alert 'info' 'No forbidden species found.' %}
+{% endif %}
+{% endblock %}

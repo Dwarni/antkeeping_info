@@ -59,6 +59,7 @@ class AntSpeciesAdmin(BaseAdmin):
         (_('General'), {'fields': ['name', 'valid', 'author', 'year', 'genus',
                                    'group',
                                    'information_complete',
+                                   'forbidden_in_eu',
                                    'colony_structure',
                                    'worker_polymorphism',
                                    'founding']}),

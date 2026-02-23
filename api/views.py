@@ -157,6 +157,7 @@ class AntsByRegionView(generics.GenericAPIView):
             ants = ants.values(
                 "id",
                 "name",
+                "forbidden_in_eu",
                 native=F("distribution__native"),
                 protected=F("distribution__protected"),
                 red_list_status=F("distribution__red_list_status"),

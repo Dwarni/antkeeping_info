@@ -139,6 +139,24 @@ class Ranking(TemplateView):
         return context
 
 
+class ForbiddenInEUSpeciesListView(TemplateView):
+    """View to list species that are forbidden to keep in the EU."""
+    template_name = 'ants/forbidden_in_eu_species_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        forbidden_species = AntSpecies.objects.filter(forbidden_in_eu=True).order_by('name')
+        
+        paginator = Paginator(forbidden_species, 50)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        context['page_obj'] = page_obj
+        context['total_objects'] = forbidden_species.count()
+        add_iframe_to_context(context, self.request)
+        return context
+
+
 class TopCountriesByNumberOfAntSpecies(Ranking):
     """Shows top countries by number of ant species."""
 

@@ -19,6 +19,15 @@
         {% trans 'Species information is not complete yet!' %}
     </div>
 {% endif %}
+{% if object.forbidden_in_eu %}
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> {% trans 'Warning' %}</h4>
+        <p class="mb-0">{% trans 'This species is on the EU list of invasive alien species of Union concern. It is strictly forbidden to keep, breed, transport, or sell this species within the European Union.' %}
+        <br>
+        <a href="https://environment.ec.europa.eu/topics/nature-and-biodiversity/invasive-alien-species_en" target="_blank" rel="noopener noreferrer">{% trans 'Read more on the official EU website' %}</a>
+        </p>
+    </div>
+{% endif %}
 <section class="ant-detail-section">
     {% include 'ants/antspecies_detail/antspecies_detail_main_image.html' with main_image=object.main_image %}
     <h3>{% trans 'Scientific classification' %}</h3>

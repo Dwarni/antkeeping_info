@@ -595,6 +595,12 @@ class AntSpecies(Species):
         help_text=INT_RANGE_HELP_TEXT
     )
 
+    forbidden_in_eu = models.BooleanField(
+        default=False,
+        verbose_name=_('Forbidden in EU'),
+        help_text=_('Indicates if keeping this species is forbidden in the EU (e.g. because it is on the list of invasive alien species of Union concern).')
+    )
+
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
