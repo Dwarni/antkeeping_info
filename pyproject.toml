@@ -1,7 +1,7 @@
 [project]
 name = "antkeeping-info"
 version = "0.1.0"
-description = "Add your description here"
+description = "Database and website for ant keeping information"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -29,7 +29,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "autopep8>=2.3.2",
     "django-debug-toolbar>=5.0.1",
     "djlint>=1.36.4",
     "ruff>=0.14.13",
