@@ -27,7 +27,7 @@ class GenusNameSerializer(serializers.ModelSerializer):
 class GenusSerializer(serializers.ModelSerializer):
     """Serializer for a genus object."""
 
-    sub_family = SubFamilySerializer(many=False, read_only=True)
+    sub_family = SubFamilySerializer(many=False, read_only=True, source='tribe.sub_family')
 
     class Meta:
         model = ant_models.Genus
