@@ -167,20 +167,6 @@ class AntsWithNuptialFlightsListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class AntListSerializer(serializers.ModelSerializer):
-    """Serializer for a list of ants."""
-
-    class Meta:
-        model = ant_models.AntSpecies
-        fields = (
-            "id",
-            "name",
-            "distribution__native",
-            "distribution__protected",
-            "distribution__red_list_status",
-        )
-        read_only_fields = fields
-
 
 class AntSpeciesNameSerializer(serializers.ModelSerializer):
     """Serializer for a list of ants with only id and name."""
