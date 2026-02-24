@@ -159,7 +159,7 @@ class AntSpeciesDetailSerializer(serializers.ModelSerializer):
 class AntsWithNuptialFlightsListSerializer(serializers.ModelSerializer):
     """Serializer for a list of ants with nuptial flight months."""
 
-    flight_hour_range = IntegerRangeField(source="flight_hour_range")
+    flight_hour_range = IntegerRangeField()
 
     class Meta:
         model = ant_models.AntSpecies
