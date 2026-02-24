@@ -16,9 +16,8 @@ def _is_species_and_synonym(name: str, valid_name: str, status: str) -> bool:
 
 
 def _import_from_csv(csv_file_path: str, import_function: Callable, verbose):
-    csv_file = open(csv_file_path,
-                    encoding="utf16") \
-        .readlines()[1:]
+    with open(csv_file_path, encoding="utf16") as f:
+        csv_file = f.readlines()[1:]
     import_function(csv_file, verbose)
 
 
