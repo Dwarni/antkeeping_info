@@ -46,7 +46,7 @@ class CommonNamesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ant_models.CommonName
         fields = ("language", "name")
-        read_online_fields = fields
+        read_only_fields = fields
 
 
 class InvalidNamesSerializer(serializers.ModelSerializer):
@@ -159,9 +159,10 @@ class AntSpeciesDetailSerializer(serializers.ModelSerializer):
 class AntsWithNuptialFlightsListSerializer(serializers.ModelSerializer):
     """Serializer for a list of ants with nuptial flight months."""
 
+    flight_hour_range = IntegerRangeField(source="flight_hour_range")
+
     class Meta:
         model = ant_models.AntSpecies
-        flight_hour_range = IntegerRangeField(source="flight_hour_range")
         fields = ("id", "name", "flight_months", "flight_climate", "flight_hour_range")
         read_only_fields = fields
 
@@ -176,7 +177,7 @@ class AntListSerializer(serializers.ModelSerializer):
             "name",
             "distribution__native",
             "distribution__protected",
-            "distribution__red_llist_status",
+            "distribution__red_list_status",
         )
         read_only_fields = fields
 

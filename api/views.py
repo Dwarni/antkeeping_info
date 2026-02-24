@@ -80,8 +80,7 @@ class AntSpeciesDetailView(generics.GenericAPIView):
             slug_query = Q(slug=ant_species)
             name_query = Q(name=ant_species)
             ant_species_qs = ant_species_qs.filter(name_query | slug_query)
-        finally:
-            ant_species_object = get_object_or_404(ant_species_qs)
+        ant_species_object = get_object_or_404(ant_species_qs)
 
         serializer = AntSpeciesDetailSerializer(ant_species_object, many=False)
         return Response(serializer.data)
@@ -153,20 +152,20 @@ class AntsByRegionView(generics.GenericAPIView):
             code_query = Q(distribution__region__code=region)
             slug_query = Q(distribution__region__slug=region)
             ants = ants.filter(code_query | slug_query)
-        finally:
-            ants = ants.values(
-                "id",
-                "name",
-                "forbidden_in_eu",
-                native=F("distribution__native"),
-                protected=F("distribution__protected"),
-                red_list_status=F("distribution__red_list_status"),
-            )
 
-            if len(ants) == 0:
-                raise Http404
+        ants = ants.values(
+            "id",
+            "name",
+            "forbidden_in_eu",
+            native=F("distribution__native"),
+            protected=F("distribution__protected"),
+            red_list_status=F("distribution__red_list_status"),
+        )
 
-            return Response(ants)
+        if len(ants) == 0:
+            raise Http404
+
+        return Response(ants)
 
 
 def get_species_in_query(region_query):

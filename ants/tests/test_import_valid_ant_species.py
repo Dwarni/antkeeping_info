@@ -2,15 +2,20 @@ from django.test import TestCase
 from ants.models import AntSpecies, Genus, Tribe, SubFamily
 from ants.services.antwiki import import_valid_ant_species
 
-# from ants.models import AntSpecies
+# Columns (tab-separated):
+# 0: taxon_name, 1: sub_family, 2: tribe, 3: genus, 4: species_group,
+# 5: (unused), 6: sub_species, 7: (unused), 8: author, 9: year
+_VALID_SPECIES_ROWS = [
+    "Acromyrmex diasi\tMyrmicinae\tAttini\tAcromyrmex\t\t\t\t\tGonçalves\t1983",
+    # sub_species name has 2 spaces → must not be imported
+    "Acromyrmex coronatus rectispinus\tMyrmicinae\tAttini\tAcromyrmex\t\t\t\t\tSmith\t1858",
+]
 
 
 class AntSpeciesManagerTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        csv_file = open('ants/tests/valid_ant_species.txt', encoding="utf16") \
-            .readlines(100000)[1:]
-        import_valid_ant_species(csv_file)
+        import_valid_ant_species(_VALID_SPECIES_ROWS)
 
     def test_species_import(self):
         name = 'Acromyrmex diasi'

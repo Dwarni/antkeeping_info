@@ -4,6 +4,19 @@ from ants.models import AntSpecies, AntRegion
 from flights.models import Flight
 from ants.services.antwiki import import_invalid_ant_species
 
+# Columns (tab-separated):
+# 0: taxon_name, 1-7: (unused), 8: valid_name, 9: current_status
+_INVALID_SPECIES_ROWS = [
+    # Both species exist in DB → invalid species gets valid=False, flight reassigned
+    "Acantholepis mamillatus\t\t\t\t\t\t\t\tIridomyrmex rufoniger\tsynonym",
+    # Only invalid species exists → gets renamed to valid name
+    "Acanthomyops negrensis\t\t\t\t\t\t\t\tLasiophanes atriventris\tsynonym",
+    # status=homonym (not synonym) → skipped entirely, not added as invalid name
+    "Acantholepis foreli\t\t\t\t\t\t\t\tStigmacros debilis\thomonym",
+    # taxon_name has 2 spaces → skipped, not added as invalid name
+    "Acantholepis frauenfeldi arnoldovi\t\t\t\t\t\t\t\tLepisiota semenovi\tsynonym",
+]
+
 
 class AntSpeciesManagerTestCase(TestCase):
     _invalid_species_name = 'Acantholepis mamillatus'
@@ -55,11 +68,7 @@ class AntSpeciesManagerTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls._create_objects()
-
-        csv_file = open('ants/tests/invalid_ant_species.txt',
-                        encoding="utf16") \
-            .readlines(100000)[1:]
-        import_invalid_ant_species(csv_file)
+        import_invalid_ant_species(_INVALID_SPECIES_ROWS)
 
     def test_set_invalid(self):
         iant = AntSpecies.objects.get(name=self._invalid_species_name)
