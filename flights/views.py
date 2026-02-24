@@ -79,7 +79,9 @@ class FlightsReviewListView(ListView):
     """Displays all not yet reviewed flights."""
     model = Flight
     template_name = "flights/flights_review.html"
-    queryset = model.objects.filter(reviewed=False)
+    queryset = model.objects.filter(reviewed=False).select_related(
+        'ant_species', 'country'
+    )
     context_object_name = 'flights'
 
 

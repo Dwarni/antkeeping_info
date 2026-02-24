@@ -72,7 +72,12 @@ class AntSpeciesDetailView(generics.GenericAPIView):
     """
 
     def get(self, request, ant_species):
-        ant_species_qs = AntSpecies.objects
+        ant_species_qs = AntSpecies.objects.select_related(
+            'genus', 'genus__tribe', 'genus__tribe__sub_family'
+        ).prefetch_related(
+            'commonname_set', 'invalid_names', 'distribution',
+            'distribution__region', 'images', 'sizes'
+        )
         try:
             int(ant_species)
             ant_species_qs = ant_species_qs.filter(pk=ant_species)
