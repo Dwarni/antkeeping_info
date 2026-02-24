@@ -14,6 +14,9 @@ if settings.DEBUG:
 
 from django.urls import include, path
 from django.views.generic import TemplateView
+from django.contrib.sitemaps.views import sitemap
+
+from antkeeping_info.sitemaps import AntSpeciesSitemap
 
 from home import views
 from search import views as search_views
@@ -42,6 +45,8 @@ urlpatterns = [
     ),
     path('api/', include('api.urls')),
     path('tinymce/', include('tinymce.urls')),
+    path('sitemap.xml', sitemap, {'sitemaps': {'species': AntSpeciesSitemap}},
+         name='django.contrib.sitemaps.views.sitemap'),
 ]
 
 admin.site.site_header = 'Antkeeping.info administration'

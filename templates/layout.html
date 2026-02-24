@@ -29,7 +29,6 @@
         <link rel="stylesheet" href="{% static 'css/bootstrap-icons.min.css' %}?v=5.3.3">
         <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=10">
         {% block css %} {% endblock %}
-        <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
         {% if iframe %}
         <style>
             body>.container,
@@ -56,7 +55,7 @@
         {% endif %}
         <!-- JavaScript Bundle with Popper -->
         <script src="{% static 'js/bootstrap.bundle.min.js' %}?v=5.3.3"></script>
-        <script src="{% static 'js/layout.js' %}?v=1"></script>
+        <script src="{% static 'js/layout.js' %}?v=2"></script>
         {% block script %} {% endblock %}
     </body>
 </html>

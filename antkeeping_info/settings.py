@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
     "ants",
     "home",
     "regions",
@@ -160,6 +161,12 @@ if PUBLIC_ROOT is not None:
     STATIC_ROOT = PUBLIC_ROOT("static/")
     MEDIA_ROOT = PUBLIC_ROOT("media/")
 
+    STORAGES = {
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+        },
+    }
+
 
 
 # Crispy forms settings
@@ -224,6 +231,10 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     X_FRAME_OPTIONS = "DENY"
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
 
 SECURE_REFERRER_POLICY = "origin-when-cross-origin"
 
