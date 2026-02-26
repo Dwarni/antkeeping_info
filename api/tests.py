@@ -214,6 +214,19 @@ class APIv2ViewsTest(TestCase):
 
         Distribution.objects.create(species=self.ant_species, region=self.region)
 
+    def test_v2_experimental_warning_header(self):
+        """All V2 endpoints must carry the experimental Warning header."""
+        endpoints = [
+            reverse('v2_api_ant_species'),
+            reverse('v2_api_regions'),
+            reverse('v2_api_ant_species_detail', args=[self.ant_species.id]),
+        ]
+        for url in endpoints:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertIn('Warning', response.headers)
+                self.assertIn('experimental', response.headers['Warning'])
+
     def test_v2_ant_species_list_paginated(self):
         response = self.client.get(reverse('v2_api_ant_species'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)

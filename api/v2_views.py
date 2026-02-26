@@ -1,30 +1,47 @@
-from django.db.models import Q, F
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.response import Response
 
-from ants.models import AntSpecies, AntRegion
+from ants.models import AntRegion, AntSpecies
+
 from .filters import AntRegionFilter
 from .pagination import StandardResultsSetPagination
 from .serializers import (
-    RegionListSerializer,
-    AntsWithNuptialFlightsListSerializer,
     AntSpeciesDetailSerializer,
     AntSpeciesNameSerializer,
+    AntsWithNuptialFlightsListSerializer,
+    RegionListSerializer,
 )
 
-class AntSpeciesListView(generics.ListAPIView):
+_EXPERIMENTAL_WARNING = (
+    '299 - "This API version is experimental and subject to change without notice"'
+)
+
+
+class ExperimentalApiMixin:
+    """WARNING: Experimental API – not stable yet, may change without notice."""
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(request, response, *args, **kwargs)
+        response["Warning"] = _EXPERIMENTAL_WARNING
+        return response
+
+
+class AntSpeciesListView(ExperimentalApiMixin, generics.ListAPIView):
     serializer_class = AntSpeciesNameSerializer
     pagination_class = StandardResultsSetPagination
-    queryset = AntSpecies.objects.select_related('genus').all()
+    queryset = AntSpecies.objects.select_related("genus").all()
 
-class RegionListView(generics.ListAPIView):
+
+class RegionListView(ExperimentalApiMixin, generics.ListAPIView):
     queryset = AntRegion.objects.all()
     serializer_class = RegionListSerializer
     filterset_class = AntRegionFilter
     pagination_class = StandardResultsSetPagination
 
-class NuptialFlightMonths(generics.ListAPIView):
+
+class NuptialFlightMonths(ExperimentalApiMixin, generics.ListAPIView):
     serializer_class = AntsWithNuptialFlightsListSerializer
     pagination_class = StandardResultsSetPagination
 
@@ -43,9 +60,12 @@ class NuptialFlightMonths(generics.ListAPIView):
 
         return ants.distinct()
 
-class AntSpeciesDetailView(generics.GenericAPIView):
+
+class AntSpeciesDetailView(ExperimentalApiMixin, generics.GenericAPIView):
     def get(self, request, ant_species):
-        ant_species_qs = AntSpecies.objects.select_related('genus').prefetch_related('sizes', 'images')
+        ant_species_qs = AntSpecies.objects.select_related("genus").prefetch_related(
+            "sizes", "images"
+        )
         try:
             int(ant_species)
             ant_species_qs = ant_species_qs.filter(pk=ant_species)
