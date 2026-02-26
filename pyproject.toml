@@ -39,11 +39,11 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors (ehemals flake8)
+    "E",   # pycodestyle errors (formerly flake8)
     "W",   # pycodestyle warnings
     "F",   # Pyflakes
-    "I",   # isort (Import-Sortierung)
-    "UP",  # pyupgrade (moderne Python-Syntax)
+    "I",   # isort (import sorting)
+    "UP",  # pyupgrade (modern Python syntax)
 ]
 
 [tool.ruff.lint.isort]
