@@ -247,3 +247,25 @@ class APIv2ViewsTest(TestCase):
             reverse('v2_api_ant_species_detail', args=[self.ant_species.id]))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], "Lasius niger")
+
+    def test_v2_ant_species_list_forbidden_in_eu_filter(self):
+        forbidden_species = AntSpecies.objects.create(
+            name="Wasmannia auropunctata", valid=True, genus=self.genus,
+            forbidden_in_eu=True
+        )
+        response = self.client.get(
+            reverse('v2_api_ant_species') + '?forbidden_in_eu=true')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['name'], forbidden_species.name)
+
+    def test_v2_ant_species_list_forbidden_in_eu_filter_false(self):
+        AntSpecies.objects.create(
+            name="Wasmannia auropunctata", valid=True, genus=self.genus,
+            forbidden_in_eu=True
+        )
+        response = self.client.get(
+            reverse('v2_api_ant_species') + '?forbidden_in_eu=false')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 1 from setUp + 60 generic species, none forbidden
+        self.assertEqual(response.data['count'], 61)

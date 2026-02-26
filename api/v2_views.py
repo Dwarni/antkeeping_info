@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from ants.models import AntRegion, AntSpecies
 
-from .filters import AntRegionFilter
+from .filters import AntRegionFilter, AntSpeciesFilter
 from .pagination import StandardResultsSetPagination
 from .serializers import (
     AntSpeciesDetailSerializer,
@@ -32,6 +32,7 @@ class AntSpeciesListView(ExperimentalApiMixin, generics.ListAPIView):
     serializer_class = AntSpeciesNameSerializer
     pagination_class = StandardResultsSetPagination
     queryset = AntSpecies.objects.select_related("genus").all()
+    filterset_class = AntSpeciesFilter
 
 
 class RegionListView(ExperimentalApiMixin, generics.ListAPIView):
