@@ -180,6 +180,7 @@ class NuptialFlightMonthsTest(TestCase):
         self.assertIn('name', data)
         self.assertIn('flight_months', data)
         self.assertIn('flight_hour_range', data)
+        self.assertIn('forbidden_in_eu', data)
 
     def test_nuptial_flight_months_name_filter(self):
         response = self.client.get(

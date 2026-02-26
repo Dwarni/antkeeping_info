@@ -163,7 +163,7 @@ class AntsWithNuptialFlightsListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ant_models.AntSpecies
-        fields = ("id", "name", "flight_months", "flight_climate", "flight_hour_range")
+        fields = ("id", "name", "flight_months", "flight_climate", "flight_hour_range", "forbidden_in_eu")
         read_only_fields = fields
 
 
