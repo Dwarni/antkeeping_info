@@ -200,7 +200,7 @@ SPECTACULAR_SETTINGS = {
 
 # Cors
 CORS_ALLOWED_ORIGINS = env.list("CORS_ORIGIN_WHITELIST", [])
-# Die dynamische Ausnahme für die API
+# Dynamic CORS exception for the API
 
 
 def cors_allow_api_public(sender, request, **kwargs):
