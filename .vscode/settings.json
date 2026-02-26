@@ -1,8 +1,12 @@
 {
-    // 1. Python -> Ruff
+  // 1. Python -> Ruff (Formatting + Linting + Import-Sortierung)
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
   },
 
   // 2. JavaScript -> Prettier
@@ -13,7 +17,7 @@
 
   // 3. Django HTML -> djLint
   "[django-html]": {
-    "editor.defaultFormatter": "Glavin001.unibeautify", // Oder die djLint Extension
+    "editor.defaultFormatter": "monosans.djlint",
     "editor.formatOnSave": true
   }
 }

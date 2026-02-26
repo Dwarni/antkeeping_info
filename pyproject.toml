@@ -33,3 +33,18 @@ dev = [
     "djlint>=1.36.4",
     "ruff>=0.14.13",
 ]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors (ehemals flake8)
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort (Import-Sortierung)
+    "UP",  # pyupgrade (moderne Python-Syntax)
+]
+
+[tool.ruff.lint.isort]
+known-third-party = ["django"]
