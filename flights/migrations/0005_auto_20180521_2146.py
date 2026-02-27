@@ -4,49 +4,48 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flights', '0004_auto_20180521_2130'),
+        ("flights", "0004_auto_20180521_2130"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='flight',
-            old_name='state',
-            new_name='state_long',
+            model_name="flight",
+            old_name="state",
+            new_name="state_long",
         ),
         migrations.RemoveField(
-            model_name='flight',
-            name='city',
+            model_name="flight",
+            name="city",
         ),
         migrations.RemoveField(
-            model_name='flight',
-            name='county',
+            model_name="flight",
+            name="county",
         ),
         migrations.AddField(
-            model_name='flight',
-            name='city_long',
+            model_name="flight",
+            name="city_long",
             field=models.CharField(blank=True, max_length=150, null=True),
         ),
         migrations.AddField(
-            model_name='flight',
-            name='city_short',
+            model_name="flight",
+            name="city_short",
             field=models.CharField(blank=True, max_length=150, null=True),
         ),
         migrations.AddField(
-            model_name='flight',
-            name='county_long',
+            model_name="flight",
+            name="county_long",
             field=models.CharField(blank=True, max_length=150, null=True),
         ),
         migrations.AddField(
-            model_name='flight',
-            name='county_short',
+            model_name="flight",
+            name="county_short",
             field=models.CharField(blank=True, max_length=150, null=True),
         ),
         migrations.AddField(
-            model_name='flight',
-            name='state_short',
-            field=models.CharField(default='blub', max_length=150),
+            model_name="flight",
+            name="state_short",
+            field=models.CharField(default="blub", max_length=150),
             preserve_default=False,
         ),
     ]

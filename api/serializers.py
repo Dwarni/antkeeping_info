@@ -27,7 +27,9 @@ class GenusNameSerializer(serializers.ModelSerializer):
 class GenusSerializer(serializers.ModelSerializer):
     """Serializer for a genus object."""
 
-    sub_family = SubFamilySerializer(many=False, read_only=True, source='tribe.sub_family')
+    sub_family = SubFamilySerializer(
+        many=False, read_only=True, source="tribe.sub_family"
+    )
 
     class Meta:
         model = ant_models.Genus
@@ -163,9 +165,15 @@ class AntsWithNuptialFlightsListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ant_models.AntSpecies
-        fields = ("id", "name", "flight_months", "flight_climate", "flight_hour_range", "forbidden_in_eu")
+        fields = (
+            "id",
+            "name",
+            "flight_months",
+            "flight_climate",
+            "flight_hour_range",
+            "forbidden_in_eu",
+        )
         read_only_fields = fields
-
 
 
 class AntSpeciesNameSerializer(serializers.ModelSerializer):

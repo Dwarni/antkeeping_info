@@ -4,20 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0028_auto_20190715_2204'),
+        ("ants", "0028_auto_20190715_2204"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='antspeciesimage',
-            name='source_caption',
-            field=models.CharField(blank=True, max_length=200, verbose_name='Source caption'),
+            model_name="antspeciesimage",
+            name="source_caption",
+            field=models.CharField(
+                blank=True, max_length=200, verbose_name="Source caption"
+            ),
         ),
         migrations.AddField(
-            model_name='antspeciesimage',
-            name='source_url',
-            field=models.URLField(blank=True, verbose_name='Image source'),
+            model_name="antspeciesimage",
+            name="source_url",
+            field=models.URLField(blank=True, verbose_name="Image source"),
         ),
     ]

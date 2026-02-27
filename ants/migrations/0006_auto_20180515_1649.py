@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0005_auto_20180430_1803'),
+        ("ants", "0005_auto_20180430_1803"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='family',
-            name='slug',
+            model_name="family",
+            name="slug",
             field=models.SlugField(editable=False),
         ),
         migrations.AlterField(
-            model_name='genus',
-            name='slug',
+            model_name="genus",
+            name="slug",
             field=models.SlugField(editable=False),
         ),
         migrations.AlterField(
-            model_name='species',
-            name='slug',
+            model_name="species",
+            name="slug",
             field=models.SlugField(editable=False),
         ),
         migrations.AlterField(
-            model_name='subfamily',
-            name='slug',
+            model_name="subfamily",
+            name="slug",
             field=models.SlugField(editable=False),
         ),
     ]

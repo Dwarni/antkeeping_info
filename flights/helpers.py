@@ -5,27 +5,25 @@ from urllib.parse import urlparse
 
 def format_unit(value, symbol):
     """Formats a unit value as a string including its symbol."""
-    return '{:.1f} {}'.format(value, symbol)
+    return f"{value:.1f} {symbol}"
 
 
 def format_two_units(primary, secondary):
     """
-        Formats two unit strings with the secondary unit displayed
-        in brackets.
+    Formats two unit strings with the secondary unit displayed
+    in brackets.
     """
-    return '{} ({})'.format(primary, secondary)
+    return f"{primary} ({secondary})"
 
 
-class Temperature():
+class Temperature:
     """Class for storing and converting temperature."""
-    CELSIUS = 'C'
-    CELSIUS_SYMBOL = '℃'  # unicode symbol is used.
-    FAHRENHEIT = 'F'
-    FAHRENHEIT_SYMBOL = '℉'  # unicode symbol is used.
-    CHOICES = (
-        (CELSIUS, CELSIUS_SYMBOL),
-        (FAHRENHEIT, FAHRENHEIT_SYMBOL)
-    )
+
+    CELSIUS = "C"
+    CELSIUS_SYMBOL = "℃"  # unicode symbol is used.
+    FAHRENHEIT = "F"
+    FAHRENHEIT_SYMBOL = "℉"  # unicode symbol is used.
+    CHOICES = ((CELSIUS, CELSIUS_SYMBOL), (FAHRENHEIT, FAHRENHEIT_SYMBOL))
 
     def __init__(self, value, unit=CELSIUS):
         self.value = value
@@ -41,8 +39,8 @@ class Temperature():
     @property
     def celsius_str(self):
         """
-            Returns the temperature in °C formatted as string including
-            the unit symbol.
+        Returns the temperature in °C formatted as string including
+        the unit symbol.
         """
         return format_unit(self.celsius, Temperature.CELSIUS_SYMBOL)
 
@@ -56,8 +54,8 @@ class Temperature():
     @property
     def fahrenheit_str(self):
         """
-            Returns the temperature in °F formatted as string including
-            the unit symbol.
+        Returns the temperature in °F formatted as string including
+        the unit symbol.
         """
         return format_unit(self.fahrenheit, Temperature.FAHRENHEIT_SYMBOL)
 
@@ -67,16 +65,14 @@ class Temperature():
         return format_two_units(self.fahrenheit_str, self.celsius_str)
 
 
-class Velocity():
+class Velocity:
     """Class for storing and converting velocity."""
-    KMH = 'KMH'
-    KMH_SYMBOL = 'km/h'
-    MPH = 'MPH'
-    MPH_SYMBOL = 'mph'
-    CHOICES = (
-        (KMH, KMH_SYMBOL),
-        (MPH, MPH_SYMBOL)
-    )
+
+    KMH = "KMH"
+    KMH_SYMBOL = "km/h"
+    MPH = "MPH"
+    MPH_SYMBOL = "mph"
+    CHOICES = ((KMH, KMH_SYMBOL), (MPH, MPH_SYMBOL))
     MPH_TO_KMH_FACTOR = 1.609344
 
     def __init__(self, value, unit=KMH):
@@ -93,8 +89,8 @@ class Velocity():
     @property
     def kmh_str(self):
         """
-            Returns the velocity in km/h formatted as string including
-            the unit symbol.
+        Returns the velocity in km/h formatted as string including
+        the unit symbol.
         """
         return format_unit(self.kmh, Velocity.KMH_SYMBOL)
 
@@ -108,8 +104,8 @@ class Velocity():
     @property
     def mph_str(self):
         """
-            Returns the velocity in mph formatted as string including
-            the unit symbol.
+        Returns the velocity in mph formatted as string including
+        the unit symbol.
         """
         return format_unit(self.mph, Velocity.MPH_SYMBOL)
 
@@ -123,6 +119,6 @@ def parse_hostname(uri):
     parsed_uri = urlparse(uri)
 
     if parsed_uri is not None:
-        return '{0.scheme}://{0.hostname}'.format(parsed_uri)
+        return f"{parsed_uri.scheme}://{parsed_uri.hostname}"
 
     return None

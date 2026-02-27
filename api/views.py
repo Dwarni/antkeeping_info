@@ -1,21 +1,20 @@
-from django.db.models import Q, F, Subquery
+from django.db.models import F, Q, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from rest_framework.response import Response
 
-from ants.models import AntSpecies, Distribution, AntRegion, Genus
+from ants.models import AntRegion, AntSpecies, Distribution, Genus
 
 from .filters import AntRegionFilter
-
 from .serializers import (
-    RegionSerializer,
-    RegionListSerializer,
-    AntsWithNuptialFlightsListSerializer,
+    AntSizeListSerializer,
     AntSpeciesDetailSerializer,
     AntSpeciesNameSerializer,
-    AntSizeListSerializer,
+    AntsWithNuptialFlightsListSerializer,
     GenusNameSerializer,
+    RegionListSerializer,
+    RegionSerializer,
 )
 
 
@@ -73,10 +72,14 @@ class AntSpeciesDetailView(generics.GenericAPIView):
 
     def get(self, request, ant_species):
         ant_species_qs = AntSpecies.objects.select_related(
-            'genus', 'genus__tribe', 'genus__tribe__sub_family'
+            "genus", "genus__tribe", "genus__tribe__sub_family"
         ).prefetch_related(
-            'commonname_set', 'invalid_names', 'distribution',
-            'distribution__region', 'images', 'sizes'
+            "commonname_set",
+            "invalid_names",
+            "distribution",
+            "distribution__region",
+            "images",
+            "sizes",
         )
         try:
             int(ant_species)

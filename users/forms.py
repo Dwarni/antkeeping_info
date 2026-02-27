@@ -1,12 +1,12 @@
 """
 Forms module for users app.
 """
-from django.forms import ModelForm
-from django.conf import settings
+
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import ButtonHolder, Fieldset, Layout, Submit
 from django.contrib.auth import forms as auth_forms
 from django.contrib.auth import models as auth_models
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit
+from django.forms import ModelForm
 
 
 class SaveLayout(Layout):
@@ -14,11 +14,7 @@ class SaveLayout(Layout):
 
     def __init__(self, *fields):
         super().__init__(*fields)
-        self.fields.append(
-            ButtonHolder(
-                Submit('Save', 'Save')
-            )
-        )
+        self.fields.append(ButtonHolder(Submit("Save", "Save")))
 
 
 class CustomAuthentificationForm(auth_forms.AuthenticationForm):
@@ -27,16 +23,9 @@ class CustomAuthentificationForm(auth_forms.AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.layout_fieldset = Fieldset(
-            'Log In',
-            'username',
-            'password'
-        )
+        self.layout_fieldset = Fieldset("Log In", "username", "password")
         self.helper.layout = Layout(
-            self.layout_fieldset,
-            ButtonHolder(
-                Submit('Log In', 'Log In')
-            )
+            self.layout_fieldset, ButtonHolder(Submit("Log In", "Log In"))
         )
 
 
@@ -47,16 +36,12 @@ class ProfileForm(ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = SaveLayout(
-            Fieldset(
-                'Edit Profile',
-                'first_name',
-                'last_name'
-            )
+            Fieldset("Edit Profile", "first_name", "last_name")
         )
 
     class Meta:
         model = auth_models.User
-        fields = ['first_name', 'last_name']
+        fields = ["first_name", "last_name"]
 
 
 class RegistrationForm(auth_forms.UserCreationForm):
@@ -66,10 +51,5 @@ class RegistrationForm(auth_forms.UserCreationForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = SaveLayout(
-            Fieldset(
-                'User Registration',
-                'username',
-                'password1',
-                'password2'
-            )
+            Fieldset("User Registration", "username", "password1", "password2")
         )

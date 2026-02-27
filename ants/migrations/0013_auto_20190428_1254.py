@@ -4,19 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0012_auto_20190412_1748'),
+        ("ants", "0012_auto_20190412_1748"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='species',
-            options={'ordering': ('ordering', 'name'), 'verbose_name': 'Species', 'verbose_name_plural': 'Species'},
+            name="species",
+            options={
+                "ordering": ("ordering", "name"),
+                "verbose_name": "Species",
+                "verbose_name_plural": "Species",
+            },
         ),
         migrations.AddField(
-            model_name='species',
-            name='ordering',
+            model_name="species",
+            name="ordering",
             field=models.IntegerField(db_index=True, default=1),
         ),
     ]

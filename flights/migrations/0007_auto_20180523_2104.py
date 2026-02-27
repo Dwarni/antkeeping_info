@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flights', '0006_auto_20180521_2150'),
+        ("flights", "0006_auto_20180521_2150"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='flight',
-            old_name='time',
-            new_name='start_time',
+            model_name="flight",
+            old_name="time",
+            new_name="start_time",
         ),
         migrations.AddField(
-            model_name='flight',
-            name='end_time',
+            model_name="flight",
+            name="end_time",
             field=models.TimeField(blank=True, null=True),
         ),
     ]

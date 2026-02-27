@@ -6,11 +6,8 @@ from ants.migration_operations import add_generic_species_for_each_genus
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0015_auto_20190428_1602'),
+        ("ants", "0015_auto_20190428_1602"),
     ]
 
-    operations = [
-        migrations.RunPython(add_generic_species_for_each_genus)
-    ]
+    operations = [migrations.RunPython(add_generic_species_for_each_genus)]

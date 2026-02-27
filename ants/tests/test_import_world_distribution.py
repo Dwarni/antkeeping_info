@@ -1,5 +1,6 @@
 from django.test import TestCase
-from ants.models import AntSpecies, AntRegion, Distribution
+
+from ants.models import AntRegion, AntSpecies, Distribution
 from ants.services.antwiki import import_world_distribution
 
 # Columns (tab-separated):
@@ -20,21 +21,25 @@ _WORLD_DISTRIBUTION_ROWS = [
 
 
 class AntSpeciesManagerTestCase(TestCase):
-
     @classmethod
     def setUpTestData(cls):
-        va = AntSpecies.objects.create(name='Veromessor andrei')
-        us = AntRegion.objects.create(name='United States', type='Country')
-        ca = AntRegion.objects.create(
-            name='California', type='Subregion', parent=us)
+        va = AntSpecies.objects.create(name="Veromessor andrei")
+        us = AntRegion.objects.create(name="United States", type="Country")
+        ca = AntRegion.objects.create(name="California", type="Subregion", parent=us)
         Distribution.objects.create(species=va, region=us)
         Distribution.objects.create(species=va, region=ca)
         import_world_distribution(_WORLD_DISTRIBUTION_ROWS, True)
 
     def test_species_has_distribution(self):
-        regions_to_test = ['Mexico', 'Chihuahua', 'Sonora', 'United States',
-                           'Arizona', 'New Mexico']
-        ant = AntSpecies.objects.get(name='Acanthostichus arizonensis')
+        regions_to_test = [
+            "Mexico",
+            "Chihuahua",
+            "Sonora",
+            "United States",
+            "Arizona",
+            "New Mexico",
+        ]
+        ant = AntSpecies.objects.get(name="Acanthostichus arizonensis")
         for region_name in regions_to_test:
             d = ant.distribution.get(region__name=region_name)
             self.assertTrue(d.native)

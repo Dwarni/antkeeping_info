@@ -4,15 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0030_auto_20190718_2114'),
+        ("ants", "0030_auto_20190718_2114"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='antregion',
-            name='antmaps_id',
-            field=models.CharField(blank=True, db_index=True, help_text='The id of the region used by antmaps.org.', max_length=10, null=True),
+            model_name="antregion",
+            name="antmaps_id",
+            field=models.CharField(
+                blank=True,
+                db_index=True,
+                help_text="The id of the region used by antmaps.org.",
+                max_length=10,
+                null=True,
+            ),
         ),
     ]

@@ -5,15 +5,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0040_alter_distribution_unique_together'),
+        ("ants", "0040_alter_distribution_unique_together"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='species',
-            name='name',
-            field=models.CharField(db_index=True, max_length=200, unique=True, validators=[django.core.validators.RegexValidator('^[A-Z][a-z]+ [a-z\\.]+$', 'Enter a valid species name.')]),
+            model_name="species",
+            name="name",
+            field=models.CharField(
+                db_index=True,
+                max_length=200,
+                unique=True,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        "^[A-Z][a-z]+ [a-z\\.]+$", "Enter a valid species name."
+                    )
+                ],
+            ),
         ),
     ]

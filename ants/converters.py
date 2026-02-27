@@ -1,5 +1,5 @@
 class CaseInsensitiveSlugConverter:
-    regex = '\\w+-\\w+'
+    regex = "\\w+-\\w+"
 
     def to_python(self, value):
         return value.lower()

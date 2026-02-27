@@ -4,20 +4,38 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0045_alter_antspecies_flight_data_source'),
+        ("ants", "0045_alter_antspecies_flight_data_source"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='antspecies',
-            name='nutrition',
-            field=models.CharField(blank=True, choices=[('LEAVES', 'Leaves, grass and other vegetables'), ('OMNIVOROUS', 'Omnivorous (sugar water, honey, insects, meat,         seeds nuts etc.)'), ('SEEDS', 'Mainly seeds and nuts but dead insects and sugar water,         honey too.'), ('SUGAR_INSECTS', 'Insects, meat, sugar water, honey etc.')], max_length=20, null=True, verbose_name='Nutrition'),
+            model_name="antspecies",
+            name="nutrition",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("LEAVES", "Leaves, grass and other vegetables"),
+                    (
+                        "OMNIVOROUS",
+                        "Omnivorous (sugar water, honey, insects, meat,         seeds nuts etc.)",
+                    ),
+                    (
+                        "SEEDS",
+                        "Mainly seeds and nuts but dead insects and sugar water,         honey too.",
+                    ),
+                    ("SUGAR_INSECTS", "Insects, meat, sugar water, honey etc."),
+                ],
+                max_length=20,
+                null=True,
+                verbose_name="Nutrition",
+            ),
         ),
         migrations.AlterField(
-            model_name='antspeciesimage',
-            name='source_caption',
-            field=models.CharField(blank=True, max_length=500, verbose_name='Source caption'),
+            model_name="antspeciesimage",
+            name="source_caption",
+            field=models.CharField(
+                blank=True, max_length=500, verbose_name="Source caption"
+            ),
         ),
     ]

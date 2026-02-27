@@ -1,5 +1,4 @@
 from django.template.defaulttags import register
-from flights.helpers import parse_hostname
 
 
 @register.filter

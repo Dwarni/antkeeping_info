@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flights', '0008_flight_link'),
+        ("flights", "0008_flight_link"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='flight',
-            name='state_long',
+            model_name="flight",
+            name="state_long",
             field=models.CharField(blank=True, max_length=150, null=True),
         ),
         migrations.AlterField(
-            model_name='flight',
-            name='state_short',
+            model_name="flight",
+            name="state_short",
             field=models.CharField(blank=True, max_length=150, null=True),
         ),
     ]

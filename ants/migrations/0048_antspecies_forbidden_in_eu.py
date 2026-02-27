@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0047_antsize_antsize_max_gte_min'),
+        ("ants", "0047_antsize_antsize_max_gte_min"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='antspecies',
-            name='forbidden_in_eu',
-            field=models.BooleanField(default=False, help_text='Indicates if keeping this species is forbidden in the EU (e.g. because it is on the list of invasive alien species of Union concern).', verbose_name='Forbidden in EU'),
+            model_name="antspecies",
+            name="forbidden_in_eu",
+            field=models.BooleanField(
+                default=False,
+                help_text="Indicates if keeping this species is forbidden in the EU (e.g. because it is on the list of invasive alien species of Union concern).",
+                verbose_name="Forbidden in EU",
+            ),
         ),
     ]

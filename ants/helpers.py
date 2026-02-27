@@ -1,26 +1,19 @@
-from typing import Optional, Union
-DEFAULT_NONE_STR = 'No information.'
-DEFAULT_NONE_RANGE_STR = '?'
+DEFAULT_NONE_STR = "No information."
+DEFAULT_NONE_RANGE_STR = "?"
 
 
 def format_value(
-    int_value: int,
-    unit_symbol: Union[str, None],
-    none_str: Optional[str] = DEFAULT_NONE_STR
+    int_value: int, unit_symbol: str | None, none_str: str | None = DEFAULT_NONE_STR
 ) -> str:
     if int_value is None:
         return DEFAULT_NONE_STR
     if unit_symbol is None:
         return str(int_value)
-    return '{} {}'.format(int_value, unit_symbol)
+    return f"{int_value} {unit_symbol}"
 
 
 def format_min_max_integer_range(min_value, max_value, unit_symbol):
-    return ('{} - {}'
-            .format(
-                format_value(min_value, unit_symbol),
-                format_value(max_value, unit_symbol)
-            ))
+    return f"{format_value(min_value, unit_symbol)} - {format_value(max_value, unit_symbol)}"
 
 
 def format_integer_range(int_range, unit_symbol):
@@ -29,7 +22,5 @@ def format_integer_range(int_range, unit_symbol):
     if int_range.lower == int_range.upper + 1:
         return format_value(int_range.lower, unit_symbol)
     return format_min_max_integer_range(
-        int_range.lower,
-        int_range.upper - 1,
-        unit_symbol
+        int_range.lower, int_range.upper - 1, unit_symbol
     )

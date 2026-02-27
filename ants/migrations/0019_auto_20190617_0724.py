@@ -6,30 +6,65 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0018_antspecies_nest_temperature'),
+        ("ants", "0018_antspecies_nest_temperature"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='antspecies',
-            name='nest_humidity',
-            field=django.contrib.postgres.fields.ranges.IntegerRangeField(blank=True, help_text='Note that the upper value is not included so if you want to enter 25 - 28 you have to enter 25 - 29', null=True, validators=[django.contrib.postgres.validators.RangeMinValueValidator(0), django.contrib.postgres.validators.RangeMaxValueValidator(100)], verbose_name='Nest relative humidity (%)'),
+            model_name="antspecies",
+            name="nest_humidity",
+            field=django.contrib.postgres.fields.ranges.IntegerRangeField(
+                blank=True,
+                help_text="Note that the upper value is not included so if you want to enter 25 - 28 you have to enter 25 - 29",
+                null=True,
+                validators=[
+                    django.contrib.postgres.validators.RangeMinValueValidator(0),
+                    django.contrib.postgres.validators.RangeMaxValueValidator(100),
+                ],
+                verbose_name="Nest relative humidity (%)",
+            ),
         ),
         migrations.AddField(
-            model_name='antspecies',
-            name='outworld_humidity',
-            field=django.contrib.postgres.fields.ranges.IntegerRangeField(blank=True, help_text='Note that the upper value is not included so if you want to enter 25 - 28 you have to enter 25 - 29', null=True, validators=[django.contrib.postgres.validators.RangeMinValueValidator(0), django.contrib.postgres.validators.RangeMaxValueValidator(100)], verbose_name='Outworld relative humidty (%)'),
+            model_name="antspecies",
+            name="outworld_humidity",
+            field=django.contrib.postgres.fields.ranges.IntegerRangeField(
+                blank=True,
+                help_text="Note that the upper value is not included so if you want to enter 25 - 28 you have to enter 25 - 29",
+                null=True,
+                validators=[
+                    django.contrib.postgres.validators.RangeMinValueValidator(0),
+                    django.contrib.postgres.validators.RangeMaxValueValidator(100),
+                ],
+                verbose_name="Outworld relative humidty (%)",
+            ),
         ),
         migrations.AddField(
-            model_name='antspecies',
-            name='outworld_temperature',
-            field=django.contrib.postgres.fields.ranges.IntegerRangeField(blank=True, help_text='Note that the upper value is not included so if you want to enter 25 - 28 you have to enter 25 - 29', null=True, validators=[django.contrib.postgres.validators.RangeMinValueValidator(0), django.contrib.postgres.validators.RangeMaxValueValidator(41)], verbose_name='Outworld temperature (°C)'),
+            model_name="antspecies",
+            name="outworld_temperature",
+            field=django.contrib.postgres.fields.ranges.IntegerRangeField(
+                blank=True,
+                help_text="Note that the upper value is not included so if you want to enter 25 - 28 you have to enter 25 - 29",
+                null=True,
+                validators=[
+                    django.contrib.postgres.validators.RangeMinValueValidator(0),
+                    django.contrib.postgres.validators.RangeMaxValueValidator(41),
+                ],
+                verbose_name="Outworld temperature (°C)",
+            ),
         ),
         migrations.AlterField(
-            model_name='antspecies',
-            name='nest_temperature',
-            field=django.contrib.postgres.fields.ranges.IntegerRangeField(blank=True, help_text='Note that the upper value is not included so if you want to enter 25 - 28 you have to enter 25 - 29', null=True, validators=[django.contrib.postgres.validators.RangeMinValueValidator(0), django.contrib.postgres.validators.RangeMaxValueValidator(41)], verbose_name='Nest temperature (°C)'),
+            model_name="antspecies",
+            name="nest_temperature",
+            field=django.contrib.postgres.fields.ranges.IntegerRangeField(
+                blank=True,
+                help_text="Note that the upper value is not included so if you want to enter 25 - 28 you have to enter 25 - 29",
+                null=True,
+                validators=[
+                    django.contrib.postgres.validators.RangeMinValueValidator(0),
+                    django.contrib.postgres.validators.RangeMaxValueValidator(41),
+                ],
+                verbose_name="Nest temperature (°C)",
+            ),
         ),
     ]

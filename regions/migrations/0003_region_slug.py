@@ -4,16 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('regions', '0002_region_official_name'),
+        ("regions", "0002_region_official_name"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='region',
-            name='slug',
-            field=models.SlugField(default='blub', editable=False),
+            model_name="region",
+            name="slug",
+            field=models.SlugField(default="blub", editable=False),
             preserve_default=False,
         ),
     ]

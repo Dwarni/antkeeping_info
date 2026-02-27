@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0044_antspecies_flight_data_source_and_more'),
+        ("ants", "0044_antspecies_flight_data_source_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='antspecies',
-            name='flight_data_source',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='Nuptial flight data source'),
+            model_name="antspecies",
+            name="flight_data_source",
+            field=models.CharField(
+                blank=True,
+                max_length=255,
+                null=True,
+                verbose_name="Nuptial flight data source",
+            ),
         ),
     ]

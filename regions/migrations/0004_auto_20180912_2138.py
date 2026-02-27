@@ -8,18 +8,15 @@ def update_region_slugs(apps, schema_editor):
     """
     Update the slug fields of all regions which have 'blub' as slug.
     """
-    Region = apps.get_model('regions', 'Region')
-    for region in Region.objects.filter(slug='blub'):
+    Region = apps.get_model("regions", "Region")
+    for region in Region.objects.filter(slug="blub"):
         region.slug = slugify(region.name)
         region.save()
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('regions', '0003_region_slug'),
+        ("regions", "0003_region_slug"),
     ]
 
-    operations = [
-        migrations.RunPython(update_region_slugs)
-    ]
+    operations = [migrations.RunPython(update_region_slugs)]

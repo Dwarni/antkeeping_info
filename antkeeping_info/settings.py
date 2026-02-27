@@ -9,8 +9,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import sys
-import environ
 
+import environ
 from corsheaders.signals import check_request_enabled
 
 env = environ.Env(
@@ -168,7 +168,6 @@ if PUBLIC_ROOT is not None:
     }
 
 
-
 # Crispy forms settings
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
@@ -226,7 +225,7 @@ vars().update(EMAIL_CONFIG)
 # prod settings
 
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

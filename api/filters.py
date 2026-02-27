@@ -1,4 +1,5 @@
 import django_filters
+
 from ants.models import AntRegion, AntSpecies
 
 
@@ -10,13 +11,14 @@ class AntSpeciesFilter(django_filters.FilterSet):
 
 class AntRegionFilter(django_filters.FilterSet):
     # Mapping query params to specific filter methods or fields
-    with_ants = django_filters.BooleanFilter(method='filter_with_ants')
+    with_ants = django_filters.BooleanFilter(method="filter_with_ants")
     with_flight_months = django_filters.BooleanFilter(
-            method='filter_with_flight_months')
+        method="filter_with_flight_months"
+    )
 
     class Meta:
         model = AntRegion
-        fields = ['type', 'parent']
+        fields = ["type", "parent"]
 
     def filter_with_ants(self, queryset, name, value):
         if value is True:

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flights', '0002_flight_comment'),
+        ("flights", "0002_flight_comment"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='flight',
-            name='reviewed',
+            model_name="flight",
+            name="reviewed",
             field=models.BooleanField(default=False),
         ),
     ]

@@ -4,14 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0046_alter_antspecies_nutrition_and_more'),
+        ("ants", "0046_alter_antspecies_nutrition_and_more"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='antsize',
-            constraint=models.CheckConstraint(condition=models.Q(('maximum__gte', models.F('minimum'))), name='antsize_max_gte_min'),
+            model_name="antsize",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("maximum__gte", models.F("minimum"))),
+                name="antsize_max_gte_min",
+            ),
         ),
     ]

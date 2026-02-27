@@ -1,18 +1,25 @@
-from typing import Callable, Text, Iterable
 import csv
+from collections.abc import Callable, Iterable
+
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
-from ants.models import AntSpecies, AntRegion, Distribution, Genus, \
-    InvalidName, SubFamily, Tribe
+
+from ants.models import (
+    AntRegion,
+    AntSpecies,
+    Distribution,
+    Genus,
+    InvalidName,
+    SubFamily,
+    Tribe,
+)
 from flights.models import Flight
 
-_delimiter = '\t'
+_delimiter = "\t"
 
 
 def _is_species_and_synonym(name: str, valid_name: str, status: str) -> bool:
-    return name.count(' ') == 1 \
-        and valid_name.count(' ') == 1 \
-        and status == 'synonym'
+    return name.count(" ") == 1 and valid_name.count(" ") == 1 and status == "synonym"
 
 
 def _import_from_csv(csv_file_path: str, import_function: Callable, verbose):
@@ -23,10 +30,10 @@ def _import_from_csv(csv_file_path: str, import_function: Callable, verbose):
 
 def _print_progress(species_name):
     # print(f'{species_name: <150}', end='\r', flush=True)
-    print(f'{species_name: <150}')
+    print(f"{species_name: <150}")
 
 
-def import_invalid_ant_species(csv_file: Iterable[Text], verbose=False):
+def import_invalid_ant_species(csv_file: Iterable[str], verbose=False):
     """
     Imports invalid ant species from given csv file.
     If the new species doesn't exist the existing species
@@ -42,10 +49,7 @@ def import_invalid_ant_species(csv_file: Iterable[Text], verbose=False):
             current_status = line[9]
 
             # only consider species (not sub species) and synonyms
-            if not _is_species_and_synonym(
-                    taxon_name,
-                    valid_name,
-                    current_status):
+            if not _is_species_and_synonym(taxon_name, valid_name, current_status):
                 continue
 
             if verbose:
@@ -75,27 +79,24 @@ def import_invalid_ant_species(csv_file: Iterable[Text], verbose=False):
                 invalid_species.valid = False
                 invalid_species.save()
                 # update flights
-                Flight.objects.filter(ant_species=invalid_species) \
-                    .update(ant_species=valid_species)
+                Flight.objects.filter(ant_species=invalid_species).update(
+                    ant_species=valid_species
+                )
 
             # Add new valid species if not existent
-            valid_species = AntSpecies.objects \
-                .get_or_create_with_name(valid_name)
+            valid_species = AntSpecies.objects.get_or_create_with_name(valid_name)
 
             # Only add invalid name to list of invalid names if it wasn't
             # added yet
-            if not valid_species.invalid_names.filter(
-                    name=taxon_name).exists():
-                InvalidName.objects.create(
-                    name=taxon_name,
-                    species_id=valid_species.id)
+            if not valid_species.invalid_names.filter(name=taxon_name).exists():
+                InvalidName.objects.create(name=taxon_name, species_id=valid_species.id)
 
 
 def import_invalid_ant_species_csv(csv_file: str, verbose: bool = False):
     _import_from_csv(csv_file, import_invalid_ant_species, verbose)
 
 
-def import_valid_ant_species(csv_file: Iterable[Text], verbose=False):
+def import_valid_ant_species(csv_file: Iterable[str], verbose=False):
     """
     Imports valid ant species from given csv file.
     Genera, Tribes and Sub families will also be created
@@ -106,7 +107,7 @@ def import_valid_ant_species(csv_file: Iterable[Text], verbose=False):
             sub_species = line[6]
             taxon_name = line[0]
             # antkeeping.info does not store sub species
-            if sub_species or taxon_name.count(' ') > 1:
+            if sub_species or taxon_name.count(" ") > 1:
                 continue
             else:
                 sub_family = line[1]
@@ -120,11 +121,10 @@ def import_valid_ant_species(csv_file: Iterable[Text], verbose=False):
                     _print_progress(taxon_name)
 
                 try:
-                    ant_species = AntSpecies.objects \
-                        .get_or_create_with_name(taxon_name)
+                    ant_species = AntSpecies.objects.get_or_create_with_name(taxon_name)
                 except ValidationError as e:
                     print(taxon_name)
-                    raise(e)
+                    raise (e)
                 if author:
                     ant_species.author = author
                 if year:
@@ -137,8 +137,7 @@ def import_valid_ant_species(csv_file: Iterable[Text], verbose=False):
                 ant_tribe = Tribe.objects.get_or_create_with_name(tribe)
                 ant_genus.tribe = ant_tribe
                 ant_genus.save()
-                ant_sub_family = SubFamily.objects \
-                    .get_or_create_with_name(sub_family)
+                ant_sub_family = SubFamily.objects.get_or_create_with_name(sub_family)
                 ant_tribe.sub_family = ant_sub_family
                 ant_tribe.save()
 
@@ -147,19 +146,17 @@ def import_valid_ant_species_csv(csv_file: str, verbose: bool = False):
     _import_from_csv(csv_file, import_valid_ant_species, verbose)
 
 
-def _add_distribution(species, region, introduced,
-                      verbose: bool = False) -> None:
+def _add_distribution(species, region, introduced, verbose: bool = False) -> None:
     d = Distribution.objects.filter(species=species, region=region).first()
     if not d:
         d = Distribution(species=species, region=region)
-    d.native = introduced != 'Yes'
+    d.native = introduced != "Yes"
     d.save()
     if verbose:
         _print_progress(species.name)
 
 
-def import_world_distribution(csv_file: Iterable[Text],
-                              verbose: bool = False) -> None:
+def import_world_distribution(csv_file: Iterable[str], verbose: bool = False) -> None:
     """
     Imports distribution of ant species.
     """
@@ -175,23 +172,21 @@ def import_world_distribution(csv_file: Iterable[Text],
             if not species_name or sub_species:
                 continue
 
-            taxon_name = '{0} {1}'.format(genus_name, species_name)
+            taxon_name = f"{genus_name} {species_name}"
             species = AntSpecies.objects.get_or_create_with_name(taxon_name)
             country = AntRegion.objects.find_by_name(country_name).first()
 
             if not country:
-                country = AntRegion.objects.create(
-                    name=country_name, type='Country')
+                country = AntRegion.objects.create(name=country_name, type="Country")
 
             _add_distribution(species, country, occurence, verbose)
 
             if sub_region_name:
-                sub_region = AntRegion.objects \
-                    .find_by_name(sub_region_name).first()
+                sub_region = AntRegion.objects.find_by_name(sub_region_name).first()
 
                 if not sub_region:
                     sub_region = AntRegion.objects.create(
-                        name=sub_region_name, type='Subregion', parent=country
+                        name=sub_region_name, type="Subregion", parent=country
                     )
 
                 _add_distribution(species, sub_region, occurence, verbose)

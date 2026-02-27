@@ -1,5 +1,5 @@
-from django.core.serializers import serialize
 from django.http import JsonResponse
+
 from flights.models import Flight
 
 """
@@ -8,10 +8,7 @@ from flights.models import Flight
 
 
 def years(request):
-    dates = [
-        d.year for d in Flight.objects.all().dates(
-            'date', 'year', order='DESC')
-    ]
+    dates = [d.year for d in Flight.objects.all().dates("date", "year", order="DESC")]
     return JsonResponse(dates, safe=False)
 
 
@@ -22,19 +19,21 @@ def years(request):
 
 
 def flights(request):
-    year = request.GET.get('year')
+    year = request.GET.get("year")
     flights = Flight.objects.all()
 
     if year is not None:
         flights = flights.filter(date__year=year)
 
-    flights = flights.values(
-        'id', 'latitude', 'longitude', 'ant_species__name', 'date')
-    data = [{
-        'id': flight.get('id'),
-        'position': {'lat': flight.get('latitude'), 'lng': flight.get('longitude')},
-        'ant': flight.get('ant_species__name'),
-        'date': flight.get('date')
-    } for flight in flights]
+    flights = flights.values("id", "latitude", "longitude", "ant_species__name", "date")
+    data = [
+        {
+            "id": flight.get("id"),
+            "position": {"lat": flight.get("latitude"), "lng": flight.get("longitude")},
+            "ant": flight.get("ant_species__name"),
+            "date": flight.get("date"),
+        }
+        for flight in flights
+    ]
 
     return JsonResponse(data, safe=False)

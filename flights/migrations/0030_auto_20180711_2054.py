@@ -4,22 +4,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flights', '0029_auto_20180711_2050'),
+        ("flights", "0029_auto_20180711_2050"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='flight',
-            name='city_short',
+            model_name="flight",
+            name="city_short",
         ),
         migrations.RemoveField(
-            model_name='flight',
-            name='county',
+            model_name="flight",
+            name="county",
         ),
         migrations.RemoveField(
-            model_name='flight',
-            name='state_short',
+            model_name="flight",
+            name="state_short",
         ),
     ]

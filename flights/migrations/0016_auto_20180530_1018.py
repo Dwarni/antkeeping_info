@@ -4,15 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flights', '0015_auto_20180530_1009'),
+        ("flights", "0015_auto_20180530_1009"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='flight',
-            name='spotting_type',
-            field=models.CharField(choices=[('F', 'Nuptial Flight'), ('FP', 'Flight preparation'), ('Q', 'Wingless (dealated) queen'), ('QW', 'Queen with wings'), ('M', 'Male')], max_length=2),
+            model_name="flight",
+            name="spotting_type",
+            field=models.CharField(
+                choices=[
+                    ("F", "Nuptial Flight"),
+                    ("FP", "Flight preparation"),
+                    ("Q", "Wingless (dealated) queen"),
+                    ("QW", "Queen with wings"),
+                    ("M", "Male"),
+                ],
+                max_length=2,
+            ),
         ),
     ]

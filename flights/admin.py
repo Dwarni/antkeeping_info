@@ -1,5 +1,7 @@
 """Admin module for flights app."""
+
 from django.contrib import admin
+
 from .models import Flight, Temperature, Velocity
 
 
@@ -15,4 +17,4 @@ class VelocityAdmin(admin.ModelAdmin):
 
 @admin.register(Flight)
 class FlightAdmin(admin.ModelAdmin):
-    search_fields = ['ant_species__name', 'address', 'date', 'link']
+    search_fields = ["ant_species__name", "address", "date", "link"]

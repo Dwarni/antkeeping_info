@@ -2,10 +2,8 @@
 url module for api app
 """
 
-from django.urls import path, include
-
+from django.urls import include, path
 from django.views.generic import TemplateView
-
 from drf_spectacular.views import SpectacularAPIView
 
 from . import views

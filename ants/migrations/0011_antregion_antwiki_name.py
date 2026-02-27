@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ants', '0010_antspecies_information_complete'),
+        ("ants", "0010_antspecies_information_complete"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='antregion',
-            name='antwiki_name',
+            model_name="antregion",
+            name="antwiki_name",
             field=models.CharField(blank=True, max_length=200, null=True),
         ),
     ]
