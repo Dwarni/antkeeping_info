@@ -9,7 +9,7 @@ from ants.services.antwiki import import_valid_ant_species
 _VALID_SPECIES_ROWS = [
     "Acromyrmex diasi\tMyrmicinae\tAttini\tAcromyrmex\t\t\t\t\tGonçalves\t1983",
     # sub_species name has 2 spaces → must not be imported
-    "Acromyrmex coronatus rectispinus\tMyrmicinae\tAttini\tAcromyrmex\t\t\t\t\tSmith\t1858",
+    "Acromyrmex coronatus rectispinus\tMyrmicinae\tAttini\tAcromyrmex\t\t\t\t\tSmith\t1858",  # noqa: E501
 ]
 
 

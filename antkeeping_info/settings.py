@@ -278,7 +278,10 @@ THUMBNAIL_QUALITY = 80
 TINYMCE_DEFAULT_CONFIG = {
     "plugins": "table searchreplace",
     "menubar": "file edit view insert format tools table",
-    "toolbar": "undo redo | bold italic | alignleft aligncenter alignright | bullist numlist outdent indent | searchreplace",
+    "toolbar": (
+        "undo redo | bold italic | alignleft aligncenter alignright"
+        " | bullist numlist outdent indent | searchreplace"
+    ),
     "custom_undo_redo_levels": 10,
 }
 

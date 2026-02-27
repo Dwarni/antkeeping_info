@@ -13,7 +13,9 @@ def format_value(
 
 
 def format_min_max_integer_range(min_value, max_value, unit_symbol):
-    return f"{format_value(min_value, unit_symbol)} - {format_value(max_value, unit_symbol)}"
+    min_str = format_value(min_value, unit_symbol)
+    max_str = format_value(max_value, unit_symbol)
+    return f"{min_str} - {max_str}"
 
 
 def format_integer_range(int_range, unit_symbol):

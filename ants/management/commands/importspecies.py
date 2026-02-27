@@ -107,8 +107,8 @@ class Command(BaseCommand):
                 country.save()
             else:
                 error = (
-                    f"Error getting species for Country: {country.name}, URL: {antwiki_url}"
-                    " is not valid"
+                    f"Error getting species for Country: {country.name},"
+                    f" URL: {antwiki_url} is not valid"
                 )
                 errors.append(error)
                 print(error)

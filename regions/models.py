@@ -29,7 +29,7 @@ class Region(models.Model):
         ordering = ["type", "name"]
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.type)
+        return f"{self.name} ({self.type})"
 
     def save(
         self, force_insert=False, force_update=False, using=None, update_fields=None

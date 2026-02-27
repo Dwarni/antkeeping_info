@@ -569,7 +569,9 @@ class AntSpecies(Species):
         default=False,
         verbose_name=_("Forbidden in EU"),
         help_text=_(
-            "Indicates if keeping this species is forbidden in the EU (e.g. because it is on the list of invasive alien species of Union concern)."
+            "Indicates if keeping this species is forbidden in the EU"
+            " (e.g. because it is on the list of invasive alien species"
+            " of Union concern)."
         ),
     )
 
@@ -632,7 +634,7 @@ class CommonName(models.Model):
         ordering = ["name"]
 
     def __str__(self):
-        return "%s (%s)" % (self.name, dict(LANG_CHOICES)[self.language])
+        return f"{self.name} ({dict(LANG_CHOICES)[self.language]})"
 
 
 class InvalidName(models.Model):
