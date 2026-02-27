@@ -273,8 +273,6 @@ if not DEBUG:
             },
         },
     }
-CELERY_BROKER_URL = env("CELERY_BROKER_URL")
-CELERY_TIMEZONE = "Europe/Berlin"
 
 THUMBNAIL_QUALITY = 80
 
