@@ -3,3 +3,67 @@
         order: 2;
     }
 }
+
+@media print {
+    nav,
+    footer,
+    header,
+    .navbar,
+    #filterDiv,
+    .export-buttons,
+    .pagination,
+    #return-to-top {
+        display: none !important;
+    }
+
+    /* Prevent browsers from computing a scroll-based height that causes blank pages.
+       overflow: hidden on html stops Chrome from including the scroll height in print dimensions. */
+    html {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: hidden;
+    }
+
+    body {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    body {
+        font-size: 10pt;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        border: 1px solid #ccc;
+        padding: 4px 6px;
+        font-size: 9pt;
+    }
+
+    /* Remove link styling; species/genus names are italic (Latin names) */
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    #antTable a {
+        font-style: italic;
+    }
+
+    /* Force red background on EU ban badge — same pattern as .may-fly in nuptial flight table:
+       background-color and print-color-adjust must be in the same CSS rule to work */
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    @page {
+        margin: 1.5cm;
+    }
+}

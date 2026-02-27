@@ -1,10 +1,18 @@
 {% extends 'layout.html' %}
 {% load bootstraptags %}
 {% load i18n %}
+{% load static %}
+
+{% block title %}{% trans 'Forbidden Ant Species (European Union)' %} | Antkeeping.info{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/antspecies_list.css' %}?v=8">
+{% endblock %}
 
 {% block content %}
 <h2 class="mb-4">{% trans 'Forbidden Ant Species (European Union)' %}</h2>
 
+{% if not is_print %}
 <div class="alert alert-warning" role="alert">
   <h4 class="alert-heading">{% trans 'Important Information' %}</h4>
   <p>{% trans 'The ant species listed below are considered invasive alien species of Union concern.' %}</p>
@@ -12,15 +20,31 @@
   <hr />
   <p class="mb-0">{% trans 'It is strictly forbidden to keep, breed, transport, or sell these species within the European Union.' %}</p>
 </div>
+{% endif %}
 
 {% if page_obj %}
-    <p class="lead"><b>{{ total_objects }}</b> {% trans 'ant species found' %}</p>
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <p class="lead mb-0"><b>{{ total_objects }}</b> {% trans 'ant species found' %}</p>
+        {% if not is_print %}
+        <div class="btn-group ms-auto export-buttons">
+            <a href="?print=1" class="btn btn-outline-secondary btn-sm" target="_blank" title="{% trans 'Print' %}">
+                <i class="bi bi-printer"></i>
+            </a>
+            <a href="?export=csv" class="btn btn-outline-secondary btn-sm" title="{% trans 'Export as CSV' %}">
+                <i class="bi bi-filetype-csv"></i>
+            </a>
+            <a href="?export=json" class="btn btn-outline-secondary btn-sm" title="{% trans 'Export as JSON' %}">
+                <i class="bi bi-filetype-json"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
 
-    {% if page_obj.paginator.num_pages > 1 %}
+    {% if not is_print and page_obj.paginator.num_pages > 1 %}
         {% bs_pagination page_obj request %}
     {% endif %}
 
-    <table class="table table-hover">
+    <table class="table table-hover" id="antTable">
       <thead>
         <tr>
           <th>{% trans 'Species Name' %}</th>
@@ -28,7 +52,7 @@
       </thead>
       <tbody>
         {% for ant in page_obj %}
-        <tr style="cursor: pointer">
+        <tr>
           <td>
             <a href="{% url 'ant_detail' ant.slug %}">{{ ant.name }}</a>
           </td>
@@ -37,8 +61,12 @@
       </tbody>
     </table>
 
-    {% if page_obj.paginator.num_pages > 1 %}
+    {% if not is_print and page_obj.paginator.num_pages > 1 %}
         {% bs_pagination page_obj request %}
+    {% endif %}
+
+    {% if is_print %}
+    <script>window.addEventListener('load', () => window.print());</script>
     {% endif %}
 {% else %}
     {% bs_alert 'info' 'No forbidden species found.' %}

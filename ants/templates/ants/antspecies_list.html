@@ -4,12 +4,12 @@
 {% load i18n %}
 {% load static %}
 {% block css %}
-    <link rel="stylesheet" href="{% static 'ants/css/antspecies_list.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'ants/css/antspecies_list.css' %}?v=7">
 {% endblock %}
 {% block content %}
     {% if page_obj %}
         <p class="lead"><b>{{ total_objects }}</b> ant {{ taxonomic_rank_type_lower }} found</i></p>
-        {% if page_obj.paginator.num_pages > 1 %}
+        {% if not is_print and page_obj.paginator.num_pages > 1 %}
             {% bs_pagination page_obj request %}
         {% endif %}
         <table id="antTable" class="table table-hover">
@@ -37,7 +37,7 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if page_obj.paginator.num_pages > 1 %}
+        {% if not is_print and page_obj.paginator.num_pages > 1 %}
             {% bs_pagination page_obj request %}
         {% endif %}
     {% else %}
@@ -48,6 +48,9 @@
         {% else %}
             {% bs_alert 'info' 'Start by selecting a country.' %}
         {% endif %}
+    {% endif %}
+    {% if is_print %}
+    <script>window.addEventListener('load', () => window.print());</script>
     {% endif %}
 {% endblock %}
 {% block script %}

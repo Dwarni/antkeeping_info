@@ -1,11 +1,17 @@
 {% extends 'ants/antspecies_list.html' %}
 {% load i18n %}
 {% load static %}
+{% block title %}
+    {% if subregion_name %}Ant {{ taxonomic_rank_type }} of {{ subregion_name }}{% if country_name %}, {{ country_name }}{% endif %}{% elif country_name %}Ant {{ taxonomic_rank_type }} of {{ country_name }}{% else %}Ant {{ taxonomic_rank_type }} By Region{% endif %} | Antkeeping.info
+{% endblock %}
 {% block content %}
     {% if country_name or subregion_name %}
-        <h2 class="mb-4">Ant {{ taxonomic_rank_type }} Of {% if subregion_name %}{{ subregion_name }}{% else %}{{ country_name }}{% endif %}</h2>
+        <h2 class="mb-4">Ant {{ taxonomic_rank_type }} Of {% if subregion_name %}{{ subregion_name }}{% if country_name %}, {{ country_name }}{% endif %}{% else %}{{ country_name }}{% endif %}</h2>
     {% else %}
         <h2 class="mb-4">Ant {{ taxonomic_rank_type }} By Region</h2>
+    {% endif %}
+    {% if name %}
+        <p class="text-muted small mb-3">{% trans 'Name filter' %}: <em>{{ name }}</em></p>
     {% endif %}
     <div class="row">
         <div class="col-md-4" id="filterDiv">
@@ -25,7 +31,7 @@
                                 {% include "ants/antdb/regions_select.html" with regions=countries code=country id='countrySelect' name='country' label='Country'%}
                                 {% include "ants/antdb/regions_select.html" with regions=sub_regions code=sub_region id='subRegionSelect' name='subRegion' label='Subregion' %}
                                 <div class="mb-3">
-                                    <label for="speciesNameFilter" class="form-label">Name:</label>    
+                                    <label for="speciesNameFilter" class="form-label">Name:</label>
                                     <input type="text" class="form-control" id="nameFilter" name="name" placeholder="Filter" value="{{ name }}">
                                 </div>
                                 <button type="submit" class="btn btn-primary">Apply</button>
@@ -35,6 +41,22 @@
                     </div>
                 </div>
             </div>
+            {% if page_obj %}
+            <div class="d-flex gap-1 mb-3 export-buttons">
+                <a href="?{% if country %}country={{ country }}&{% endif %}{% if sub_region %}subRegion={{ sub_region }}&{% endif %}{% if name %}name={{ name }}&{% endif %}print=1"
+                   class="btn btn-outline-secondary btn-sm" target="_blank" title="{% trans 'Print' %}">
+                    <i class="bi bi-printer"></i>
+                </a>
+                <a href="?{% if country %}country={{ country }}&{% endif %}{% if sub_region %}subRegion={{ sub_region }}&{% endif %}{% if name %}name={{ name }}&{% endif %}export=csv"
+                   class="btn btn-outline-secondary btn-sm" title="{% trans 'Export as CSV' %}">
+                    <i class="bi bi-filetype-csv"></i>
+                </a>
+                <a href="?{% if country %}country={{ country }}&{% endif %}{% if sub_region %}subRegion={{ sub_region }}&{% endif %}{% if name %}name={{ name }}&{% endif %}export=json"
+                   class="btn btn-outline-secondary btn-sm" title="{% trans 'Export as JSON' %}">
+                    <i class="bi bi-filetype-json"></i>
+                </a>
+            </div>
+            {% endif %}
         </div>
         <div class="col-md">
             {{ block.super }}
