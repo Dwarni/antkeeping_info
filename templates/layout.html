@@ -1,6 +1,6 @@
-{% load static %}
+{% load static %}{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -23,6 +23,13 @@
         <meta name="msapplication-TileImage" content="{% static 'img/icons/ms-icon-144x144.png' %}">
         <meta name="theme-color" content="#ffffff">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Open Graph -->
+        <meta property="og:site_name" content="Antkeeping.info">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ request.build_absolute_uri }}">
+        <meta property="og:title" content="{% block og_title %}Antkeeping.info{% endblock %}">
+        <meta property="og:description" content="{% block og_description %}{% endblock %}">
+        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% block og_image %}{% static 'img/og-default.jpg' %}{% endblock %}">
         {% block meta %}{% endblock %}
         <!-- CSS only -->
         <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}?v=5.3.8">

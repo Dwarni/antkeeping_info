@@ -1,5 +1,7 @@
 {% extends 'generic_antspecies_list.html' %}
 {% load i18n %}
+{% block title %}{% trans 'Nuptial Flight Table' %} | Antkeeping.info{% endblock %}
+{% block meta %}<meta name="description" content="{% trans 'A table that lists during which months specific ant species have their nuptial flights.' %}">{% endblock %}
 {% block nav_right_form %}
     <label for="country">{% trans 'Countries' %}:</label>
     <select class="form-control vert-sep" id="country"

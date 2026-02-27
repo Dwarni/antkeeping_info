@@ -139,14 +139,6 @@ class HabitatTagAutocomplete(autocomplete.Select2QuerySetView):
         return qs.distinct().order_by("name")
 
 
-class MatingChartView(TemplateView):
-    """Kept for backwards compatibility – redirects to the new nuptial flight table."""
-
-    def get(self, request, *args, **kwargs):
-        from django.urls import reverse
-
-        return redirect(reverse("nuptial_flight_table"), permanent=True)
-
 
 class RegexpReplace(Func):
     function = "REGEXP_REPLACE"

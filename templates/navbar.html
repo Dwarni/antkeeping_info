@@ -50,7 +50,7 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="nuptialFlightsDropdown">
                         <li><a class="dropdown-item" href="{% url 'flights_map' %}">{% trans "Reports" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'flights_mating_chart' %}">{% trans "Nuptial Flight Table" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'nuptial_flight_table' %}">{% trans "Nuptial Flight Table" %}</a></li>
                     </ul>
                 </li>
                 {% if user.is_staff %}

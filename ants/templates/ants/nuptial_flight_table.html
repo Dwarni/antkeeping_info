@@ -1,11 +1,23 @@
 {% extends 'layout.html' %}
 {% load static %}
 {% load i18n %}
+{% block title %}{% trans 'Nuptial Flight Table' %} | Antkeeping.info{% endblock %}
+{% block og_title %}{% trans 'Nuptial Flight Table' %} | Antkeeping.info{% endblock %}
+{% block og_description %}{% trans 'A table that lists during which months specific ant species have their nuptial flights.' %}{% endblock %}
 {% block meta %}
 <meta name="description" content="{% trans 'A table that lists during which months specific ant species have their nuptial flights.' %}">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "{% trans 'Nuptial Flight Table' %}",
+  "description": "{% trans 'A table that lists during which months specific ant species have their nuptial flights.' %}",
+  "url": "{{ request.build_absolute_uri }}"
+}
+</script>
 {% endblock %}
 {% block content %}
-    <h3>{% trans 'Nuptial Flight Table' %}</h3>
+    <h1 class="h3">{% trans 'Nuptial Flight Table' %}</h1>
     <div id="nuptial-flight-table">
         <div class="d-flex gap-2 mb-2 align-items-center">
             <button v-on:click="toggleFilter()" class="btn btn-light" title="{% trans 'Toggle filter' %}">
