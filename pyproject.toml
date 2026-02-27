@@ -47,5 +47,8 @@ select = [
     "UP",  # pyupgrade (modern Python syntax)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"*/migrations/*.py" = ["E501"]
+
 [tool.ruff.lint.isort]
 known-third-party = ["django"]
