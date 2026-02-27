@@ -30,6 +30,8 @@ dependencies = [
 dev = [
     "django-debug-toolbar>=5.0.1",
     "djlint>=1.36.4",
+    "gitlint>=0.19.1",
+    "pre-commit>=4.0.0",
     "ruff>=0.14.13",
 ]
 

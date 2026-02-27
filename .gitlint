@@ -1,0 +1,12 @@
+[general]
+contrib = contrib-title-conventional-commits
+
+[contrib-title-conventional-commits]
+# Allowed commit types
+types = feat,fix,chore,docs,refactor,test,style,perf,ci,build,revert
+
+[title-max-length]
+line-length = 72
+
+[body-max-line-length]
+line-length = 100
