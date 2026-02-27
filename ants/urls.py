@@ -10,6 +10,11 @@ register_converter(converters.CaseInsensitiveSlugConverter, "islug")
 
 urlpatterns = [
     path(
+        "nuptial-flight-table/",
+        views.NuptialFlightTableView.as_view(),
+        name="nuptial_flight_table",
+    ),
+    path(
         "keeping-forbidden-in-eu-species/",
         views.ForbiddenInEUSpeciesListView.as_view(),
         name="forbidden_in_eu_species_list",

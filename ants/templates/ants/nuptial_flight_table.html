@@ -1,0 +1,58 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% load i18n %}
+{% block meta %}
+<meta name="description" content="{% trans 'A table that lists during which months specific ant species have their nuptial flights.' %}">
+{% endblock %}
+{% block content %}
+    <h3>{% trans 'Nuptial Flight Table' %}</h3>
+    <div id="nuptial-flight-table">
+        <div class="d-flex gap-2 mb-2 align-items-center">
+            <button v-on:click="toggleFilter()" class="btn btn-light" title="{% trans 'Toggle filter' %}">
+                <i class="bi bi-funnel"></i>
+            </button>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm" v-on:click="printTable()" title="{% trans 'Print' %}">
+                    <i class="bi bi-printer"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" v-on:click="exportCSV()" title="{% trans 'Export as CSV' %}">
+                    <i class="bi bi-filetype-csv"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" v-on:click="exportJSON()" title="{% trans 'Export as JSON' %}">
+                    <i class="bi bi-filetype-json"></i>
+                </button>
+            </div>
+            <small class="text-muted ms-2" v-if="!loading">[[ filteredFlightEntries.length ]] {% trans 'species' %}</small>
+        </div>
+
+        <div class="row mb-4">
+            <div v-if="filterVisible" class="col-md-3 order-md-2 mb-4">
+                <nuptial-flight-filter></nuptial-flight-filter>
+            </div>
+            <div class="col-md order-md-1">
+                <div v-if="loading" class="spinner-grow text-primary"></div>
+                <nuptial-flight-table-component v-else-if="flightEntriesCurrentPage.length > 0"></nuptial-flight-table-component>
+                <div v-else class="alert alert-warning" role="alert">
+                    {% trans 'No entries found.' %}
+                </div>
+            </div>
+        </div>
+        <nuptial-flight-pagination></nuptial-flight-pagination>
+
+        <div id="print-area" v-if="isPrinting">
+            <nuptial-flight-print-table></nuptial-flight-print-table>
+        </div>
+    </div>
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/nuptial_flight_table.css' %}?v=5">
+{% endblock %}
+{% block script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"
+    integrity="sha512-BKbSR+cfyxLdMAsE0naLReFSLg8/pjbgfxHh/k/kUC82Hy7r6HtR5hLhobaln2gcTvzkyyehrdREdjpsQwy2Jw=="
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.6.2/vuex.min.js"
+    integrity="sha512-Tkxwo8dZEZTmje5QT9uodCqe2XGbZdBXU8uC4nskBt0kwR99Anzkz8JCSMByfoqjLTHcTuIB8fsmED3b9Ljp3g=="
+    crossorigin="anonymous"></script>
+<script src="{% static 'ants/js/nuptial_flight_table.js' %}?v=2"></script>
+{% endblock %}

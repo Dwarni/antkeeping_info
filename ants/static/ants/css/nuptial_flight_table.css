@@ -1,0 +1,162 @@
+.may-fly {
+    --bs-table-bg: lightgreen;
+    background-color: lightgreen;
+}
+
+.may-not-fly {
+    filter: blur(1px);
+    opacity: 0.3;
+}
+
+.month-column {
+    text-align: center;
+    width: 40px;
+}
+
+.time-column,
+.climate-column {
+    white-space: nowrap;
+    width: 70px;
+}
+
+/* Print area is hidden on screen; v-if keeps it out of DOM until printing starts */
+#print-area {
+    display: none;
+}
+
+@media print {
+    /* Hide layout chrome so only the print area is in the document flow */
+    header,
+    #return-to-top,
+    footer {
+        display: none !important;
+    }
+
+    /* Remove Bootstrap container constraints for full paper width */
+    main.container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+    }
+
+    /* Hide all Vue app siblings of the print area */
+    #nuptial-flight-table > *:not(#print-area) {
+        display: none !important;
+    }
+
+    /* Show the print area (overrides the screen display:none) */
+    #print-area {
+        display: block !important;
+    }
+
+    .nuptial-print-area {
+        width: 100%;
+        background: white;
+        font-size: 9pt;
+        color: #000;
+    }
+
+    .nuptial-print-area h3 {
+        margin-top: 0;
+        margin-bottom: 6px;
+        font-size: 14pt;
+    }
+
+    .nuptial-print-area .filter-summary {
+        font-size: 8pt;
+        color: #555;
+        margin-bottom: 8px;
+    }
+
+    .nuptial-flight-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .nuptial-flight-table th,
+    .nuptial-flight-table td {
+        border: 1px solid #ccc;
+        padding: 3px 5px;
+        font-size: 8pt;
+    }
+
+    .nuptial-flight-table th {
+        background-color: #f2f2f2;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .may-fly {
+        background-color: #c6efce;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Force red background on EU ban badge (same pattern as .may-fly) */
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .may-not-fly {
+        filter: none;
+        opacity: 0.3;
+    }
+
+    .month-column {
+        width: 28px;
+        text-align: center;
+    }
+
+    /* Remove link underline; italic formatting is kept via fst-italic class */
+    .nuptial-print-area a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    /* Hide the AntWiki badge – not useful on paper; display:none removes it from flow */
+    .nuptial-print-area [title="AntWiki"] {
+        display: none;
+    }
+
+    .print-legend {
+        margin-top: 10px;
+        font-size: 8pt;
+        color: #333;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 14px;
+        align-items: center;
+        border-top: 1px solid #ccc;
+        padding-top: 6px;
+    }
+
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+    }
+
+    .legend-swatch {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 1px solid #aaa;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .print-footer {
+        margin-top: 8px;
+        font-size: 8pt;
+        color: #777;
+    }
+
+    @page {
+        margin: 1cm;
+        size: landscape;
+    }
+}
