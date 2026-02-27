@@ -6,16 +6,20 @@
                 <a href="{% url 'legal' %}" class="me-1">Legal Notice</a> |
                 <a href="{% url 'privacy' %}" class="ms-1">Privacy Policy</a>
             </div>
-            <div class="d-flex col-sm justify-content-sm-end">
-                <a target="_blank" rel="noopener noreferrer" href="https://discord.gg/xuuQnGt"
+            <div class="d-flex col-sm justify-content-sm-end align-items-center">
+                <a class="text-dark" target="_blank" rel="noopener noreferrer" href="https://discord.gg/xuuQnGt"
                     title="Antkeeping.info on Discord">
-                    <img src="{% static  'img/Discord-Logo-Color.svg' %}" height="45" width="45" alt="Discord Logo">
+                    <i class="bi bi-discord footer-icon"></i>
                 </a>
-                <a target="_blank" rel="noopener noreferrer" href="https://www.antkeeping.wiki" title="Antkeeping.wiki">
-                    <img src="{% static  'img/antkeeping-wiki-logo.png' %}" height="45" width="45" alt="Antkeeping.wiki Logo">
+                <a class="text-dark ms-1" target="_blank" rel="noopener noreferrer"
+                    href="https://github.com/Dwarni/antkeeping_info/" title="Antkeeping.info on GitHub">
+                    <i class="bi bi-github footer-icon"></i>
                 </a>
-                <a target="_blank" rel="noopener noreferrer" href="https://antcheck.info" title="Antcheck.de">
-                    <img src="{% static  'img/antcheck-logo.png' %}" height="45" width="45" alt="Antcheck.de Logo">
+                <a class="border-start border-secondary ms-2 ps-2" target="_blank" rel="noopener noreferrer" href="https://antcheck.info" title="Antcheck.de">
+                    <img src="{% static  'img/antcheck-logo.png' %}" height="32" width="32" alt="Antcheck.de Logo">
+                </a>
+                <a class="ms-1" target="_blank" rel="noopener noreferrer" href="https://www.antkeeping.wiki" title="Antkeeping.wiki">
+                    <img src="{% static  'img/antkeeping-wiki-logo.png' %}" height="32" width="32" alt="Antkeeping.wiki Logo">
                 </a>
             </div>
         </div>
