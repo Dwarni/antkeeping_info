@@ -43,6 +43,7 @@
 {% endblock %}
 {% block script %}
 <script src="{% static 'flights/js/vendor/leaflet.js' %}"></script>
+<script>L.Icon.Default.imagePath = "{% static 'flights/css/vendor/images/' %}";</script>
 <script src="{% static 'flights/js/vendor/leaflet.markercluster.js' %}"></script>
 <script src="{% static 'flights/js/flights_map.js' %}?v=17"></script>
 {% endblock %}
