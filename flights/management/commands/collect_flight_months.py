@@ -1,23 +1,25 @@
 from django.core.management import BaseCommand
+
 from flights.models import Flight
 
 
 class Command(BaseCommand):
     """
-        The command will collect flight months for all species based on
-        the reported flights in database
+    The command will collect flight months for all species based on
+    the reported flights in database
     """
-    help = 'Collects flight months for all ant species based on the reported '
-    'flights'
+
+    help = "Collects flight months for all ant species based on the reported "
+    "flights"
 
     def add_arguments(self, parser):
-        parser.add_argument('species_name', type=str)
+        parser.add_argument("species_name", type=str)
 
     def handle(self, *args, **options):
         MINIMUM_FLIGHT_COUNT = 3
-        species_name = options['species_name']
+        species_name = options["species_name"]
         flights = Flight.objects
-        if species_name == 'all':
+        if species_name == "all":
             flights = flights.all()
         else:
             flights = flights.filter(ant_species__name=species_name)
