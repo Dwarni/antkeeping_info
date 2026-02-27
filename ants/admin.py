@@ -1,10 +1,22 @@
 from django.contrib import admin
 from django.utils.translation import gettext as _
 from sorl.thumbnail.admin import AdminImageMixin
-from ants.models import AntRegion, AntSize, AntSpecies, \
-     AntSpeciesDistribution, AntSpeciesImage, CommonName, \
-     Distribution, SpeciesDescription, Family, Genus, \
-     InvalidName, SubFamily, Tribe
+
+from ants.models import (
+    AntRegion,
+    AntSize,
+    AntSpecies,
+    AntSpeciesDistribution,
+    AntSpeciesImage,
+    CommonName,
+    Distribution,
+    Family,
+    Genus,
+    InvalidName,
+    SpeciesDescription,
+    SubFamily,
+    Tribe,
+)
 
 
 class AntSizeInline(admin.StackedInline):
@@ -29,7 +41,7 @@ class DistributionInline(admin.StackedInline):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.select_related('region')
+        return qs.select_related("region")
 
 
 class InvalidNameInline(admin.StackedInline):
@@ -48,33 +60,65 @@ class AntSpeciesImageInline(AdminImageMixin, admin.StackedInline):
 
 
 class BaseAdmin(AdminImageMixin, admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ['name']
+    list_display = ("name",)
+    search_fields = ["name"]
 
 
 @admin.register(AntSpecies)
 class AntSpeciesAdmin(BaseAdmin):
-    filter_horizontal = ['flight_months']
+    filter_horizontal = ["flight_months"]
     fieldsets = [
-        (_('General'), {'fields': ['name', 'valid', 'author', 'year', 'genus',
-                                   'group',
-                                   'information_complete',
-                                   'forbidden_in_eu',
-                                   'colony_structure',
-                                   'worker_polymorphism',
-                                   'founding']}),
-        (_('Nuptial flight'), {'fields': ['flight_months', 'flight_hour_range',
-                                          'flight_climate',
-                                          'flight_data_source']}),
-        (_('Keeping parameters'), {'fields': [
-            'nutrition', 'nest_temperature', 'nest_humidity',
-            'outworld_temperature', 'outworld_humidity', 'hibernation'
-        ]})
+        (
+            _("General"),
+            {
+                "fields": [
+                    "name",
+                    "valid",
+                    "author",
+                    "year",
+                    "genus",
+                    "group",
+                    "information_complete",
+                    "forbidden_in_eu",
+                    "colony_structure",
+                    "worker_polymorphism",
+                    "founding",
+                ]
+            },
+        ),
+        (
+            _("Nuptial flight"),
+            {
+                "fields": [
+                    "flight_months",
+                    "flight_hour_range",
+                    "flight_climate",
+                    "flight_data_source",
+                ]
+            },
+        ),
+        (
+            _("Keeping parameters"),
+            {
+                "fields": [
+                    "nutrition",
+                    "nest_temperature",
+                    "nest_humidity",
+                    "outworld_temperature",
+                    "outworld_humidity",
+                    "hibernation",
+                ]
+            },
+        ),
     ]
 
     inlines = [
-        DescriptionInline, AntSpeciesImageInline, AntSizeInline,
-        InvalidNameInline, CommonNameInline]
+        DescriptionInline,
+        AntSpeciesImageInline,
+        AntSizeInline,
+        InvalidNameInline,
+        CommonNameInline,
+    ]
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:
@@ -86,9 +130,9 @@ class AntSpeciesAdmin(BaseAdmin):
 
 @admin.register(AntSpeciesDistribution)
 class AntSpeciesDistributionAdmin(BaseAdmin):
-    search_fields = ['name']
-    fields = ['name']
-    readonly_fields = ['name']
+    search_fields = ["name"]
+    fields = ["name"]
+    readonly_fields = ["name"]
     inlines = [DistributionInline]
 
 
@@ -99,7 +143,7 @@ class FamilyAdmin(BaseAdmin):
 
 @admin.register(Genus)
 class GenusAdmin(BaseAdmin):
-    list_filter = ('tribe',)
+    list_filter = ("tribe",)
 
 
 @admin.register(Tribe)
@@ -114,4 +158,4 @@ class SubFamilyAdmin(BaseAdmin):
 
 @admin.register(AntRegion)
 class RegionAdmin(BaseAdmin):
-    search_fields = ['name', 'code', 'parent__name']
+    search_fields = ["name", "code", "parent__name"]
