@@ -14,7 +14,7 @@ Antkeeping.info is a web platform for ant keepers worldwide. It provides:
 | Backend | Django 5.2 |
 | REST API | Django REST Framework + drf-spectacular |
 | Database | PostgreSQL |
-| Cache | Redis |
+| Cache | Redis (production) / dummycache (development) |
 | Frontend | Bootstrap 5, TinyMCE |
 | Runtime | Python 3.12+ |
 
@@ -22,7 +22,7 @@ Antkeeping.info is a web platform for ant keepers worldwide. It provides:
 
 - Python 3.12+
 - PostgreSQL
-- Redis
+- Redis (production only — not required for local development)
 - [uv](https://docs.astral.sh/uv/) (dependency manager)
 
 > **Windows users:** Development under WSL2 is highly recommended.
