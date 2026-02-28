@@ -211,7 +211,9 @@ check_request_enabled.connect(cors_allow_api_public)
 
 INTERNAL_IPS = env("INTERNAL_IPS")
 
-CACHES = {"default": env.cache(default="dummycache://" if DEBUG else "redis://127.0.0.1:6379")}
+CACHES = {
+    "default": env.cache(default="dummycache://" if DEBUG else "redis://127.0.0.1:6379")
+}
 
 CACHE_MIDDLEWARE_ALIAS = "default"
 CACHE_MIDDLEWARE_SECONDS = 3600
