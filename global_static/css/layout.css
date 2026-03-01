@@ -1,3 +1,31 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('fonts/InterVariable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  --bs-primary: #2d6a4f;
+  --bs-primary-rgb: 45, 106, 79;
+  --bs-link-color: #2d6a4f;
+  --bs-link-color-rgb: 45, 106, 79;
+  --bs-link-hover-color: #1b3a2d;
+  --bs-link-hover-color-rgb: 27, 58, 45;
+  --bs-body-color: #2a2a2a;
+  --bs-body-color-rgb: 42, 42, 42;
+  --bs-heading-color: #1b3a2d;
+}
+
+.navbar-forest {
+  background-color: #1b3a2d;
+}
+
 main {
   margin-bottom: 1rem;
 }
