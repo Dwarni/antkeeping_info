@@ -2,21 +2,93 @@
 Module for all models of ants app.
 """
 
+import datetime
 import json
 
 from dal import autocomplete
 from django.core.paginator import Paginator
 from django.db.models import Count, F
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.text import slugify
-from django.views.generic.base import TemplateView
+from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
 
 from flights.models import Flight
 
 from .models import AntRegion, AntSize, AntSpecies, Genus, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
+
+_MONTH_NAMES_SHORT = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+]
+_MONTH_NAMES_FULL = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
+# List of (month_number, short_name) tuples for templates
+MONTHS = [(i + 1, name) for i, name in enumerate(_MONTH_NAMES_SHORT)]
+MONTHS_FULL = [(i + 1, name) for i, name in enumerate(_MONTH_NAMES_FULL)]
+
+
+def _nuptial_flight_queryset(request):
+    """Return a filtered AntSpecies queryset based on GET params."""
+    qs = (
+        AntSpecies.objects
+        .prefetch_related("flight_months")
+        .filter(flight_months__isnull=False, valid=True)
+        .order_by("name")
+    )
+
+    name = request.GET.get("name", "")
+    if len(name) >= 3:
+        qs = qs.filter(name__icontains=name)
+
+    # Region: prefer state over country
+    state = request.GET.get("state", "all")
+    country = request.GET.get("country", "all")
+    region_id = None
+    if state != "all":
+        region_id = state
+    elif country != "all":
+        region_id = country
+    if region_id:
+        try:
+            qs = qs.filter(distribution__region__id=int(region_id))
+        except (ValueError, TypeError):
+            qs = qs.filter(distribution__region__code__iexact=region_id)
+
+    month = request.GET.get("month", "all")
+    if month == "current":
+        month = str(datetime.date.today().month)
+    if month != "all":
+        try:
+            qs = qs.filter(flight_months__id=int(month))
+        except (ValueError, TypeError):
+            pass
+
+    return qs.distinct()
+
+
+def _build_entries(page_qs):
+    """Convert a queryset page into template-ready dicts."""
+    entries = []
+    for ant in page_qs:
+        flight_month_ids = frozenset(m.id for m in ant.flight_months.all())
+        hr = ant.flight_hour_range
+        entries.append({
+            "name": ant.name,
+            "slug": ant.slug,
+            "forbidden_in_eu": ant.forbidden_in_eu,
+            "flight_months": flight_month_ids,
+            "flight_hour_range_lower": hr.lower if hr else None,
+            "flight_hour_range_upper": (hr.upper - 1) if hr else None,
+            "flight_climate": ant.flight_climate,
+            "antwiki_slug": ant.name.replace(" ", "_"),
+        })
+    return entries
 
 # Create your views here.
 
@@ -39,9 +111,250 @@ def ants_by_country(request, country):
 
 
 class NuptialFlightTableView(TemplateView):
-    """View for the nuptial flight table (formerly 'Ant Mating Chart')."""
+    """Main page for the nuptial flight table."""
 
     template_name = "ants/nuptial_flight_table.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        countries = (
+            AntRegion.countries
+            .filter(distribution__species__flight_months__isnull=False)
+            .distinct()
+            .order_by("name")
+        )
+        today = datetime.date.today()
+        context["countries"] = countries
+        context["months_full"] = MONTHS_FULL
+        context["current_month"] = today.month
+        context["current_month_name"] = _MONTH_NAMES_FULL[today.month - 1]
+
+        # Read and validate initial filter values from URL params for form pre-fill
+        initial_name = self.request.GET.get("name", "")
+        initial_month = self.request.GET.get("month", "all")
+        initial_country = self.request.GET.get("country", "all")
+        initial_state = self.request.GET.get("state", "all")
+
+        valid_months = {"all", "current"} | {str(i) for i in range(1, 13)}
+        if initial_month not in valid_months:
+            initial_month = "all"
+
+        if initial_country != "all":
+            try:
+                obj = countries.filter(id=int(initial_country)).first()
+            except (ValueError, TypeError):
+                obj = countries.filter(code__iexact=initial_country).first()
+            if obj is None or not obj.code:
+                initial_country = "all"
+                initial_state = "all"
+            else:
+                initial_country = obj.code.lower()
+
+        initial_states = []
+        if initial_country != "all":
+            initial_states = list(
+                AntRegion.states
+                .filter(
+                    parent__code__iexact=initial_country,
+                    distribution__species__flight_months__isnull=False,
+                )
+                .distinct()
+                .order_by("name")
+            )
+            if initial_state != "all":
+                valid_state_codes = {s.code.lower() for s in initial_states if s.code}
+                if initial_state.lower() not in valid_state_codes:
+                    initial_state = "all"
+                else:
+                    initial_state = initial_state.lower()
+        else:
+            initial_state = "all"
+
+        loc_parts = []
+        if initial_country != "all":
+            obj = _resolve_region(initial_country)
+            if obj:
+                loc_parts.append(obj.name)
+        if initial_state != "all":
+            obj = _resolve_region(initial_state)
+            if obj:
+                loc_parts.append(obj.name)
+
+        context["initial_name"] = initial_name
+        context["initial_month"] = initial_month
+        context["initial_country"] = initial_country
+        context["initial_state"] = initial_state
+        context["initial_states"] = initial_states
+        context["initial_location_label"] = ", ".join(loc_parts)
+        return context
+
+
+class NuptialFlightTableRowsView(View):
+    """HTMX fragment: paginated table rows + pagination + count.
+
+    When ?print=1 is set, returns all entries using the print template.
+    """
+
+    ENTRIES_PER_PAGE = 30
+
+    def get(self, request):
+        from django.template.loader import render_to_string
+        qs = _nuptial_flight_queryset(request)
+
+        if request.GET.get("print") == "1":
+            entries = _build_entries(qs)
+            context = self._print_context(request, entries)
+            html = render_to_string("ants/nuptial_flight_table_print.html", context, request=request)
+            return HttpResponse(html, content_type="text/html")
+
+        total = qs.count()
+        paginator = Paginator(qs, self.ENTRIES_PER_PAGE)
+        page_obj = paginator.get_page(request.GET.get("page", 1))
+        entries = _build_entries(page_obj.object_list)
+        html = render_to_string(
+            "ants/nuptial_flight_table_rows.html",
+            {"entries": entries, "page_obj": page_obj, "total": total, "months": MONTHS},
+            request=request,
+        )
+        return HttpResponse(html, content_type="text/html")
+
+    def _print_context(self, request, entries):
+        month = request.GET.get("month", "all")
+        if month == "current":
+            month = str(datetime.date.today().month)
+        month_label = ""
+        if month != "all":
+            try:
+                month_label = _MONTH_NAMES_FULL[int(month) - 1]
+            except (ValueError, IndexError):
+                pass
+
+        parts = []
+        country_id = request.GET.get("country", "all")
+        state_id = request.GET.get("state", "all")
+        if state_id != "all":
+            obj = _resolve_region(state_id)
+            if obj:
+                parts.append(obj.name)
+        elif country_id != "all":
+            obj = _resolve_region(country_id)
+            if obj:
+                parts.append(obj.name)
+
+        return {
+            "entries": entries,
+            "months": MONTHS,
+            "month_label": month_label,
+            "location_label": ", ".join(parts),
+            "name_filter": request.GET.get("name", ""),
+        }
+
+
+class NuptialFlightTableStatesView(View):
+    """HTMX fragment: state <select> options for a given country.
+
+    Also sends HX-Trigger: refreshTable so the table auto-refreshes.
+    """
+
+    def get(self, request):
+        country_id = request.GET.get("country", "all")
+        states = []
+        if country_id != "all":
+            try:
+                parent_filter = {"parent_id": int(country_id)}
+            except (ValueError, TypeError):
+                parent_filter = {"parent__code__iexact": country_id}
+            states = (
+                AntRegion.states
+                .filter(
+                    distribution__species__flight_months__isnull=False,
+                    **parent_filter,
+                )
+                .distinct()
+                .order_by("name")
+            )
+        from django.template.loader import render_to_string
+        html = render_to_string(
+            "ants/nuptial_flight_table_states.html",
+            {"states": states},
+            request=request,
+        )
+        response = HttpResponse(html, content_type="text/html")
+        response["HX-Trigger"] = "refreshTable"
+        return response
+
+
+class NuptialFlightCSVExportView(View):
+    """Server-side CSV export with current filter params."""
+
+    def get(self, request):
+        qs = _nuptial_flight_queryset(request)
+        headers = ["Species"] + _MONTH_NAMES_SHORT + ["Flight time", "Climate"]
+        climate_map = {"m": "Moderate", "w": "Warm", "s": "Muggy"}
+
+        def row_getter(ant):
+            flight_ids = frozenset(m.id for m in ant.flight_months.all())
+            month_flags = ["x" if i + 1 in flight_ids else "" for i in range(12)]
+            hr = ant.flight_hour_range
+            time_str = f"{hr.lower}-{hr.upper - 1}" if hr else ""
+            return [ant.name] + month_flags + [time_str, climate_map.get(ant.flight_climate, "")]
+
+        filename = _build_export_filename(request)
+        return export_csv_response(qs, filename, headers, row_getter)
+
+
+class NuptialFlightJSONExportView(View):
+    """Server-side JSON export with current filter params."""
+
+    def get(self, request):
+        qs = _nuptial_flight_queryset(request)
+        data = []
+        for ant in qs:
+            hr = ant.flight_hour_range
+            data.append({
+                "id": ant.id,
+                "name": ant.name,
+                "flight_months": sorted(m.id for m in ant.flight_months.all()),
+                "flight_hour_range": {"lower": hr.lower, "upper": hr.upper - 1} if hr else None,
+                "flight_climate": ant.flight_climate,
+                "forbidden_in_eu": ant.forbidden_in_eu,
+            })
+        return export_json_response(data, _build_export_filename(request))
+
+
+def _resolve_region(value):
+    """Look up AntRegion by code (case-insensitive) or numeric id."""
+    try:
+        return AntRegion.objects.filter(id=int(value)).first()
+    except (ValueError, TypeError):
+        return AntRegion.objects.filter(code__iexact=value).first()
+
+
+def _build_export_filename(request):
+    """Build a descriptive filename based on active filters."""
+    parts = ["nuptial-flight-table"]
+    name = request.GET.get("name", "")
+    if len(name) >= 3:
+        parts.append(slugify(name))
+    country_id = request.GET.get("country", "all")
+    state_id = request.GET.get("state", "all")
+    if state_id != "all":
+        obj = _resolve_region(state_id)
+        if obj:
+            parts.append(slugify(obj.name))
+    elif country_id != "all":
+        obj = _resolve_region(country_id)
+        if obj:
+            parts.append(slugify(obj.name))
+    month = request.GET.get("month", "all")
+    if month == "current":
+        month = str(datetime.date.today().month)
+    if month != "all":
+        try:
+            parts.append(slugify(_MONTH_NAMES_FULL[int(month) - 1]))
+        except (ValueError, IndexError):
+            pass
+    return "-".join(parts)
 
 
 class TaxonomicRanksByRegion(TemplateView):

@@ -1,0 +1,97 @@
+{% load i18n %}
+{# HTMX fragment: paginated table rows + pagination + species count #}
+{# Target: #table-container #}
+
+<small class="text-muted d-block mb-2">{{ total }} {% trans "species" %}</small>
+
+{% if entries %}
+<div class="table-responsive">
+    <table class="table table-sm table-bordered nuptial-flight-table">
+        <thead class="table-light">
+            <tr>
+                <th>Species</th>
+                {% for month_num, month_short in months %}
+                <th class="month-column">{{ month_short }}</th>
+                {% endfor %}
+                <th class="time-column">Time</th>
+                <th class="climate-column">Climate</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td class="name-column">
+                    <a class="fst-italic" href="/ants/{{ entry.slug }}">{{ entry.name }}</a>
+                    <a href="https://antwiki.org/wiki/{{ entry.antwiki_slug }}" class="ms-1"
+                       title="AntWiki" target="_blank" rel="noopener">
+                        <span class="badge rounded-pill bg-success">AW</span>
+                    </a>
+                    {% if entry.forbidden_in_eu %}
+                    <span class="badge bg-danger ms-1" title="Forbidden in EU">
+                        <i class="bi bi-ban"></i> EU
+                    </span>
+                    {% endif %}
+                </td>
+                {% for month_num, month_short in months %}
+                <td class="month-column {% if month_num in entry.flight_months %}may-fly{% else %}may-not-fly{% endif %}">
+                    {{ month_short }}
+                </td>
+                {% endfor %}
+                <td class="time-column">
+                    {% if entry.flight_hour_range_lower is not None %}
+                    <i class="bi bi-clock-fill"></i>
+                    {{ entry.flight_hour_range_lower }}-{{ entry.flight_hour_range_upper }}
+                    {% endif %}
+                </td>
+                <td class="climate-column">
+                    {% if entry.flight_climate == 'm' %}
+                    <i class="bi bi-thermometer-half" title="Moderate climate"></i>
+                    {% elif entry.flight_climate == 'w' %}
+                    <i class="bi bi-thermometer-high" title="Warm climate"></i>
+                    {% elif entry.flight_climate == 's' %}
+                    <i class="bi bi-thermometer-high" title="Muggy climate"></i><i class="bi bi-lightning-fill"></i>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Pagination">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+            <a class="page-link"
+               {% if page_obj.has_previous %}
+               hx-get="{% url 'nuptial_flight_table_rows' %}?page={{ page_obj.previous_page_number }}"
+               hx-target="#table-container"
+               hx-include="#filter-form"
+               {% endif %}
+               href="#">Previous</a>
+        </li>
+        {% for n in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == n %}active{% endif %}">
+            <a class="page-link"
+               hx-get="{% url 'nuptial_flight_table_rows' %}?page={{ n }}"
+               hx-target="#table-container"
+               hx-include="#filter-form"
+               href="#">{{ n }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+            <a class="page-link"
+               {% if page_obj.has_next %}
+               hx-get="{% url 'nuptial_flight_table_rows' %}?page={{ page_obj.next_page_number }}"
+               hx-target="#table-container"
+               hx-include="#filter-form"
+               {% endif %}
+               href="#">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="alert alert-warning" role="alert">{% trans "No entries found." %}</div>
+{% endif %}

@@ -17,54 +17,125 @@
 </script>
 {% endblock %}
 {% block content %}
-    <h1 class="h3">{% trans 'Nuptial Flight Table' %}</h1>
+    <h1 class="h3">{% trans 'Nuptial Flight Table' %}<span id="nuptial-title-location">{% if initial_location_label %} ({{ initial_location_label }}){% endif %}</span></h1>
+
     <div id="nuptial-flight-table">
+
+        {# Toolbar: filter toggle + action buttons #}
         <div class="d-flex gap-2 mb-2 align-items-center">
-            <button v-on:click="toggleFilter()" class="btn btn-light" title="{% trans 'Toggle filter' %}">
+            <button type="button" class="btn btn-light" id="filter-toggle"
+                    title="{% trans 'Toggle filter' %}"
+                    onclick="document.getElementById('filter-sidebar').classList.toggle('d-none')">
                 <i class="bi bi-funnel"></i>
             </button>
             <div class="btn-group">
-                <button class="btn btn-outline-secondary btn-sm" v-on:click="printTable()" title="{% trans 'Print' %}">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        id="print-btn"
+                        title="{% trans 'Print' %}">
                     <i class="bi bi-printer"></i>
                 </button>
-                <button class="btn btn-outline-secondary btn-sm" v-on:click="exportCSV()" title="{% trans 'Export as CSV' %}">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        id="export-csv-btn"
+                        title="{% trans 'Export as CSV' %}">
                     <i class="bi bi-filetype-csv"></i>
                 </button>
-                <button class="btn btn-outline-secondary btn-sm" v-on:click="exportJSON()" title="{% trans 'Export as JSON' %}">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        id="export-json-btn"
+                        title="{% trans 'Export as JSON' %}">
                     <i class="bi bi-filetype-json"></i>
                 </button>
             </div>
-            <small class="text-muted ms-2" v-if="!loading">[[ filteredFlightEntries.length ]] {% trans 'species' %}</small>
+            <div id="htmx-spinner" class="htmx-indicator">
+                <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
+            </div>
         </div>
 
         <div class="row mb-4">
-            <div v-if="filterVisible" class="col-md-3 order-md-2 mb-4">
-                <nuptial-flight-filter></nuptial-flight-filter>
+            {# Filter sidebar #}
+            <div id="filter-sidebar" class="col-md-3 order-md-2 mb-4">
+                <h4 class="text-muted mb-3">Filter</h4>
+                <form id="filter-form"
+                      hx-get="{% url 'nuptial_flight_table_rows' %}"
+                      hx-target="#table-container"
+                      hx-trigger="change, input delay:300ms"
+                      hx-indicator="#htmx-spinner">
+
+                    <div class="mb-3">
+                        <label for="name-filter" class="form-label">Name:</label>
+                        <input type="text" name="name" id="name-filter"
+                               class="form-control" placeholder="e.g. lasius"
+                               value="{{ initial_name }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="country-select" class="form-label">Country:</label>
+                        <select name="country" id="country-select" class="form-select form-select-sm"
+                                hx-get="{% url 'nuptial_flight_table_states' %}"
+                                hx-target="#state-wrapper"
+                                hx-trigger="change"
+                                hx-include="[name=country]"
+                                hx-indicator="#htmx-spinner">
+                            <option value="all" {% if initial_country == "all" %}selected{% endif %}>All</option>
+                            {% for country in countries %}
+                            <option value="{{ country.code|lower }}" {% if country.code|lower == initial_country %}selected{% endif %}>{{ country.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="state-wrapper" class="mb-3">
+                        {% if initial_states %}
+                        <label for="state-select" class="form-label">State:</label>
+                        <select id="state-select" name="state" class="form-select form-select-sm">
+                            <option value="all" {% if initial_state == "all" %}selected{% endif %}>All</option>
+                            {% for state in initial_states %}
+                            <option value="{{ state.code|lower }}" {% if state.code|lower == initial_state %}selected{% endif %}>{{ state.name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="month-select" class="form-label">Month:</label>
+                        <select name="month" id="month-select" class="form-select form-select-sm">
+                            <option value="all" {% if initial_month == "all" %}selected{% endif %}>All Months</option>
+                            <option value="current" {% if initial_month == "current" %}selected{% endif %}>Current Month ({{ current_month_name }})</option>
+                            {% for month_num, month_name in months_full %}
+                            <option value="{{ month_num }}"
+                                    {% if month_num|stringformat:"s" == initial_month %}selected{% endif %}>
+                                {{ month_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-warning btn-sm" id="reset-btn">
+                            Reset
+                        </button>
+                    </div>
+                </form>
             </div>
+
+            {# Table area #}
             <div class="col-md order-md-1">
-                <div v-if="loading" class="spinner-grow text-primary"></div>
-                <nuptial-flight-table-component v-else-if="flightEntriesCurrentPage.length > 0"></nuptial-flight-table-component>
-                <div v-else class="alert alert-warning" role="alert">
-                    {% trans 'No entries found.' %}
+                <div id="table-container"
+                     hx-get="{% url 'nuptial_flight_table_rows' %}"
+                     hx-trigger="load, refreshTable from:body"
+                     hx-include="#filter-form"
+                     hx-indicator="#htmx-spinner">
                 </div>
             </div>
         </div>
-        <nuptial-flight-pagination></nuptial-flight-pagination>
 
-        <div id="print-area" v-if="isPrinting">
-            <nuptial-flight-print-table></nuptial-flight-print-table>
-        </div>
+        {# Print area – hidden on screen, shown only by @media print #}
+        <div id="print-area"></div>
+
     </div>
 {% endblock %}
 {% block css %}
-<link rel="stylesheet" href="{% static 'ants/css/nuptial_flight_table.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'ants/css/nuptial_flight_table.css' %}?v=6">
 {% endblock %}
 {% block script %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.12/vue.min.js"
-    integrity="sha512-BKbSR+cfyxLdMAsE0naLReFSLg8/pjbgfxHh/k/kUC82Hy7r6HtR5hLhobaln2gcTvzkyyehrdREdjpsQwy2Jw=="
-    crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.6.2/vuex.min.js"
-    integrity="sha512-Tkxwo8dZEZTmje5QT9uodCqe2XGbZdBXU8uC4nskBt0kwR99Anzkz8JCSMByfoqjLTHcTuIB8fsmED3b9Ljp3g=="
-    crossorigin="anonymous"></script>
-<script src="{% static 'ants/js/nuptial_flight_table.js' %}?v=2"></script>
+<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script src="{% static 'ants/js/nuptial_flight_table.js' %}?v=7"></script>
 {% endblock %}

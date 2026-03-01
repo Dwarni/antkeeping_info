@@ -1,0 +1,66 @@
+{% load i18n %}
+{# HTMX fragment: full table for printing (no pagination) #}
+{# Target: #print-area — rendered before window.print() is called #}
+<div class="nuptial-print-area">
+    <h3>Nuptial Flight Table{% if location_label %} ({{ location_label }}){% endif %}</h3>
+    {% if month_label %}<p class="filter-summary">Month: {{ month_label }}</p>{% endif %}
+    {% if name_filter %}<p class="filter-summary">Filter: "{{ name_filter }}"</p>{% endif %}
+
+    <table class="nuptial-flight-table">
+        <thead>
+            <tr>
+                <th>Species</th>
+                {% for month_num, month_short in months %}
+                <th class="month-column">{{ month_short }}</th>
+                {% endfor %}
+                <th>Time</th>
+                <th>Climate</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td class="name-column">
+                    <a class="fst-italic" href="/ants/{{ entry.slug }}">{{ entry.name }}</a>
+                    {% if entry.forbidden_in_eu %}
+                    <span class="badge bg-danger ms-1" title="Forbidden in EU">
+                        <i class="bi bi-ban"></i> EU
+                    </span>
+                    {% endif %}
+                </td>
+                {% for month_num, month_short in months %}
+                <td class="month-column {% if month_num in entry.flight_months %}may-fly{% else %}may-not-fly{% endif %}">
+                    {{ month_short }}
+                </td>
+                {% endfor %}
+                <td class="time-column">
+                    {% if entry.flight_hour_range_lower is not None %}
+                    <i class="bi bi-clock-fill"></i>
+                    {{ entry.flight_hour_range_lower }}-{{ entry.flight_hour_range_upper }}
+                    {% endif %}
+                </td>
+                <td class="climate-column">
+                    {% if entry.flight_climate == 'm' %}
+                    <i class="bi bi-thermometer-half" title="Moderate climate"></i>
+                    {% elif entry.flight_climate == 'w' %}
+                    <i class="bi bi-thermometer-high" title="Warm climate"></i>
+                    {% elif entry.flight_climate == 's' %}
+                    <i class="bi bi-thermometer-high" title="Muggy climate"></i><i class="bi bi-lightning-fill"></i>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="print-legend">
+        <strong>Legend:</strong>
+        <span class="legend-item"><span class="legend-swatch may-fly"></span> Flight month</span>
+        <span class="legend-item"><i class="bi bi-clock-fill"></i> Flight time (h)</span>
+        <span class="legend-item"><i class="bi bi-thermometer-half"></i> Moderate climate</span>
+        <span class="legend-item"><i class="bi bi-thermometer-high"></i> Warm climate</span>
+        <span class="legend-item"><i class="bi bi-thermometer-high"></i><i class="bi bi-lightning-fill"></i> Muggy/humid climate</span>
+        <span class="legend-item"><span class="badge bg-danger"><i class="bi bi-ban"></i> EU</span> Forbidden in EU</span>
+    </div>
+    <p class="print-footer">Source: antkeeping.info</p>
+</div>

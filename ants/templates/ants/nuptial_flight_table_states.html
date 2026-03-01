@@ -1,0 +1,11 @@
+{# HTMX fragment: state <select> options for a given country #}
+{# Target: #state-wrapper – if no states, renders nothing (hides the wrapper) #}
+{% if states %}
+<label for="state-select" class="form-label">State:</label>
+<select id="state-select" name="state" class="form-select form-select-sm">
+    <option value="all">All</option>
+    {% for state in states %}
+    <option value="{{ state.code|lower }}">{{ state.name }}</option>
+    {% endfor %}
+</select>
+{% endif %}
