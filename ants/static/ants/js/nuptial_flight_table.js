@@ -1,6 +1,9 @@
 // Month names for display and CSV export
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_NAMES_CSV = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Full month names for the month selector and print output
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
 
 /**
  * Trigger a file download in the browser.
@@ -33,12 +36,18 @@ function escapeCSV(field) {
  * Build a descriptive export filename based on active filters.
  * e.g. "nuptial-flight-table-campo-germany-bavaria"
  */
-function buildExportFilename(nameFilter, countryName, stateName) {
+function buildExportFilename(nameFilter, countryName, stateName, selectedMonth) {
     const slugify = s => s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const parts = ['nuptial-flight-table'];
     if (nameFilter && nameFilter.length >= 3) parts.push(slugify(nameFilter));
     if (countryName) parts.push(slugify(countryName));
     if (stateName) parts.push(slugify(stateName));
+    if (selectedMonth !== undefined && selectedMonth !== 'all') {
+        const monthNum = selectedMonth === 'current'
+            ? new Date().getMonth() + 1
+            : selectedMonth;
+        parts.push(slugify(MONTHS[monthNum - 1]));
+    }
     return parts.join('-');
 }
 
@@ -58,7 +67,7 @@ const store = new Vuex.Store({
         nameFilter: '',
         countryFilter: 'all',
         stateFilter: 'all',
-        flyingNow: false,
+        selectedMonth: 'all',  // 'all' | 'current' | 1-12
         currentPage: 1,
         entriesPerPage: 30,
     },
@@ -92,14 +101,14 @@ const store = new Vuex.Store({
         setStates(state, states) {
             state.states = states;
         },
-        updateFlyingNow(state, flyingNow) {
+        updateSelectedMonth(state, value) {
             state.currentPage = 1;
-            state.flyingNow = flyingNow;
+            state.selectedMonth = value;
         },
         resetFilter(state) {
             state.currentPage = 1;
             state.nameFilter = '';
-            state.flyingNow = false;
+            state.selectedMonth = 'all';
             state.countryFilter = 'all';
             state.stateFilter = 'all';
             state.states = [];
@@ -198,20 +207,29 @@ const store = new Vuex.Store({
             const dataRows = rows.map(row => row.map(escapeCSV).join(',')).join('\n');
             const csv = BOM + headerRow + '\n' + dataRows;
 
-            downloadFile(csv, buildExportFilename(state.nameFilter, getters.selectedCountryName, getters.selectedStateName) + '.csv', 'text/csv;charset=utf-8');
+            downloadFile(csv, buildExportFilename(state.nameFilter, getters.selectedCountryName, getters.selectedStateName, state.selectedMonth) + '.csv', 'text/csv;charset=utf-8');
         },
         exportJSON({ getters, state }) {
             const data = getters.filteredFlightEntries;
             const json = JSON.stringify(data, null, 2);
-            downloadFile(json, buildExportFilename(state.nameFilter, getters.selectedCountryName, getters.selectedStateName) + '.json', 'application/json');
+            downloadFile(json, buildExportFilename(state.nameFilter, getters.selectedCountryName, getters.selectedStateName, state.selectedMonth) + '.json', 'application/json');
         },
-        async printTable({ commit }) {
+        async printTable({ commit, state }) {
             commit('setPrinting', true);
             // Wait for Vue to render the print area before opening the print dialog
             await Vue.nextTick();
+            // Set document.title to influence the browser's default print filename
+            const originalTitle = document.title;
+            if (state.selectedMonth !== 'all') {
+                const monthNum = state.selectedMonth === 'current'
+                    ? new Date().getMonth() + 1
+                    : state.selectedMonth;
+                document.title = 'Nuptial-Flight-Table-' + MONTHS[monthNum - 1];
+            }
             setTimeout(() => {
                 window.print();
                 window.addEventListener('afterprint', function onAfterPrint() {
+                    document.title = originalTitle;
                     commit('setPrinting', false);
                     window.removeEventListener('afterprint', onAfterPrint);
                 }, { once: true });
@@ -221,9 +239,11 @@ const store = new Vuex.Store({
     getters: {
         filteredFlightEntries: state => {
             let entries = state.flightEntries;
-            const currentMonth = new Date().getMonth() + 1;
-            if (state.flyingNow) {
-                entries = entries.filter(e => e.flight_months.includes(currentMonth));
+            if (state.selectedMonth !== 'all') {
+                const monthNum = state.selectedMonth === 'current'
+                    ? new Date().getMonth() + 1
+                    : state.selectedMonth;
+                entries = entries.filter(e => e.flight_months.includes(monthNum));
             }
             const nameLower = state.nameFilter.toLowerCase();
             if (nameLower.length >= 3) {
@@ -361,6 +381,7 @@ Vue.component('nuptial-flight-print-table', {
     template: `
         <div class="nuptial-print-area">
             <h3>Nuptial Flight Table<span v-if="locationLabel"> ({{ locationLabel }})</span></h3>
+            <p v-if="monthLabel" class="filter-summary">Month: {{ monthLabel }}</p>
             <p class="filter-summary">{{ filterSummary }}</p>
             <table class="nuptial-flight-table">
                 <thead>
@@ -396,17 +417,23 @@ Vue.component('nuptial-flight-print-table', {
     },
     computed: {
         ...Vuex.mapGetters(['filteredFlightEntries', 'selectedCountryName', 'selectedStateName']),
-        ...Vuex.mapState(['nameFilter', 'flyingNow']),
+        ...Vuex.mapState(['nameFilter', 'selectedMonth']),
         locationLabel() {
             const parts = [];
             if (this.selectedCountryName) parts.push(this.selectedCountryName);
             if (this.selectedStateName) parts.push(this.selectedStateName);
             return parts.join(', ');
         },
+        monthLabel() {
+            if (this.selectedMonth === 'all') return '';
+            const monthNum = this.selectedMonth === 'current'
+                ? new Date().getMonth() + 1
+                : this.selectedMonth;
+            return MONTHS[monthNum - 1];
+        },
         filterSummary() {
             const parts = [];
             if (this.nameFilter) parts.push('Search: "' + this.nameFilter + '"');
-            if (this.flyingNow) parts.push('Flying now');
             return parts.length ? 'Filter: ' + parts.join(' | ') : 'No filters applied';
         },
     },
@@ -448,9 +475,14 @@ Vue.component('nuptial-flight-filter', {
                 <label for="nameFilter">Name:</label>
                 <input :value="nameFilter" @input="updateNameFilter" type="text" class="form-control" id="nameFilter" placeholder="e.g. lasius">
             </div>
-            <div class="form-check mb-3">
-                <input type="checkbox" class="form-check-input" id="flyingNow" :checked="flyingNow" @click="updateFlyingNow">
-                <label class="form-check-label" for="flyingNow">Flying Now</label>
+            <div class="mb-3">
+                <label for="monthSelect" class="form-label">Month:</label>
+                <select id="monthSelect" class="form-select form-select-sm"
+                        :value="selectedMonth" @change="updateSelectedMonth">
+                    <option value="all">All Months</option>
+                    <option value="current">Current Month ({{ currentMonthName }})</option>
+                    <option v-for="(name, i) in months" :key="i+1" :value="i+1">{{ name }}</option>
+                </select>
             </div>
             <div class="mb-3">
                 <label for="country">Country:</label>
@@ -478,7 +510,15 @@ Vue.component('nuptial-flight-filter', {
     created() {
         this.$store.dispatch('fetchCountries');
     },
-    computed: Vuex.mapState(['countries', 'states', 'nameFilter', 'countryFilter', 'stateFilter', 'flyingNow']),
+    computed: {
+        ...Vuex.mapState(['countries', 'states', 'nameFilter', 'countryFilter', 'stateFilter', 'selectedMonth']),
+        currentMonthName() {
+            return MONTHS[new Date().getMonth()];
+        },
+        months() {
+            return MONTHS;
+        },
+    },
     methods: {
         ...Vuex.mapActions(['resetFilter']),
         updateNameFilter(e) {
@@ -493,8 +533,9 @@ Vue.component('nuptial-flight-filter', {
             this.$store.commit('updateStateFilter', e.target.value);
             this.$store.dispatch('fetchFlightEntries');
         },
-        updateFlyingNow(e) {
-            this.$store.commit('updateFlyingNow', e.target.checked);
+        updateSelectedMonth(e) {
+            const val = e.target.value;
+            this.$store.commit('updateSelectedMonth', isNaN(val) ? val : parseInt(val));
         },
     },
 });
