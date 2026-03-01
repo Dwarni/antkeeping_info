@@ -1,6 +1,6 @@
 .may-fly {
-    --bs-table-bg: lightgreen;
-    background-color: lightgreen;
+    --bs-table-bg: #c8e8d5;
+    background-color: #c8e8d5;
 }
 
 .may-not-fly {
@@ -88,7 +88,7 @@
     }
 
     .may-fly {
-        background-color: #c6efce;
+        background-color: #c8e8d5;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }

@@ -12,8 +12,8 @@
         {% if not is_print and page_obj.paginator.num_pages > 1 %}
             {% bs_pagination page_obj request %}
         {% endif %}
-        <table id="antTable" class="table table-hover">
-            <thead>
+        <table id="antTable" class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
                 <tr>
                     <th>{% trans 'Name' %}</th>
                     {% block table_header %}{% endblock %}
