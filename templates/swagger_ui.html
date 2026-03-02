@@ -1,6 +1,103 @@
 {% extends "layout.html" %}
 {% block css %}
 <link rel="stylesheet" type="text/css" href="//unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+<style>
+/* Dark mode overrides for Swagger UI */
+[data-bs-theme="dark"] .swagger-ui .info .title,
+[data-bs-theme="dark"] .swagger-ui p,
+[data-bs-theme="dark"] .swagger-ui h1,
+[data-bs-theme="dark"] .swagger-ui h2,
+[data-bs-theme="dark"] .swagger-ui h3,
+[data-bs-theme="dark"] .swagger-ui h4,
+[data-bs-theme="dark"] .swagger-ui h5,
+[data-bs-theme="dark"] .swagger-ui td,
+[data-bs-theme="dark"] .swagger-ui th,
+[data-bs-theme="dark"] .swagger-ui label,
+[data-bs-theme="dark"] .swagger-ui .parameter__name,
+[data-bs-theme="dark"] .swagger-ui .parameter__type,
+[data-bs-theme="dark"] .swagger-ui .parameter__in,
+[data-bs-theme="dark"] .swagger-ui .parameter__deprecated,
+[data-bs-theme="dark"] .swagger-ui .opblock .opblock-summary-description,
+[data-bs-theme="dark"] .swagger-ui .opblock .opblock-summary-path,
+[data-bs-theme="dark"] .swagger-ui .opblock .opblock-summary-path__deprecated,
+[data-bs-theme="dark"] .swagger-ui .opblock .opblock-summary-operation-id,
+[data-bs-theme="dark"] .swagger-ui .opblock-tag,
+[data-bs-theme="dark"] .swagger-ui .opblock-tag small,
+[data-bs-theme="dark"] .swagger-ui .response-col_status,
+[data-bs-theme="dark"] .swagger-ui .response-col_description,
+[data-bs-theme="dark"] .swagger-ui .response-col_links,
+[data-bs-theme="dark"] .swagger-ui .model,
+[data-bs-theme="dark"] .swagger-ui .model-title,
+[data-bs-theme="dark"] .swagger-ui section.models h4,
+[data-bs-theme="dark"] .swagger-ui section.models h5 {
+    color: #dee2e6;
+}
+
+[data-bs-theme="dark"] .swagger-ui .scheme-container {
+    background: #2b3035;
+    box-shadow: none;
+}
+
+[data-bs-theme="dark"] .swagger-ui section.models {
+    background: #212529;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui section.models .model-container {
+    background: #2b3035;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui .model-box {
+    background: #343a40;
+}
+
+[data-bs-theme="dark"] .swagger-ui .opblock-body {
+    background: #2b3035;
+}
+
+[data-bs-theme="dark"] .swagger-ui .opblock-tag {
+    border-bottom-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui table thead tr {
+    background: #343a40;
+}
+
+[data-bs-theme="dark"] .swagger-ui table thead tr td,
+[data-bs-theme="dark"] .swagger-ui table thead tr th {
+    color: #adb5bd;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui .responses-table .response td {
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui input[type=text],
+[data-bs-theme="dark"] .swagger-ui input[type=email],
+[data-bs-theme="dark"] .swagger-ui input[type=password],
+[data-bs-theme="dark"] .swagger-ui textarea,
+[data-bs-theme="dark"] .swagger-ui select {
+    background: #343a40;
+    color: #dee2e6;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui .highlight-code > pre {
+    background: #1a1d20 !important;
+}
+
+[data-bs-theme="dark"] .swagger-ui .markdown code,
+[data-bs-theme="dark"] .swagger-ui .renderedMarkdown code {
+    background: #343a40;
+    color: #e9ecef;
+}
+
+[data-bs-theme="dark"] .swagger-ui .topbar {
+    background: #1a1d20;
+}
+</style>
 {% endblock %}
 {% block content %}
 <div id="swagger-ui"></div>
