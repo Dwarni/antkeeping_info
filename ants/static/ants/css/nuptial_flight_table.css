@@ -19,6 +19,16 @@
     width: 70px;
 }
 
+/* Ensure the report success toast appears above the Bootstrap modal (z-index 1055) */
+.report-toast-container {
+    z-index: 1090;
+}
+
+/* Species autocomplete dropdown sits above most page elements */
+.species-suggestions-dropdown {
+    z-index: 1055;
+}
+
 /* Print area is hidden on screen; v-if keeps it out of DOM until printing starts */
 #print-area {
     display: none;

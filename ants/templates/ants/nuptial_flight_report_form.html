@@ -1,0 +1,37 @@
+{% load crispy_forms_tags %}
+<form method="post"
+      action="{% url 'nuptial_flight_report' %}"
+      hx-post="{% url 'nuptial_flight_report' %}"
+      hx-target="#report-form-container"
+      hx-swap="innerHTML">
+    {% csrf_token %}
+
+    {# Species autocomplete — hidden ModelChoiceField + visible text search #}
+    <div class="mb-3">
+        <label for="species-search" class="form-label fw-semibold">
+            Ant species <span class="text-danger">*</span>
+        </label>
+        <input type="text"
+               id="species-search"
+               name="q"
+               class="form-control{% if form.ant_species.errors %} is-invalid{% endif %}"
+               placeholder="Type at least 4 characters to search…"
+               value="{{ species_name }}"
+               autocomplete="off"
+               hx-get="{% url 'nuptial_flight_species_suggest' %}"
+               hx-trigger="input changed delay:300ms[value.length >= 4]"
+               hx-target="#species-suggestions"
+               hx-swap="innerHTML">
+        {# Populated by JS on suggestion click; the actual field submitted to Django #}
+        {{ form.ant_species }}
+        <div id="species-suggestions" class="position-relative species-suggestions-dropdown"></div>
+        {% if form.ant_species.errors %}
+        <div class="invalid-feedback d-block">
+            {% for error in form.ant_species.errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    {# Remaining fields via crispy (ant_species hidden input already rendered above) #}
+    {% crispy form %}
+</form>

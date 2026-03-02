@@ -1,0 +1,12 @@
+{% if species %}
+<div class="list-group border rounded shadow-sm" style="max-height: 220px; overflow-y: auto;">
+    {% for s in species %}
+    <button type="button"
+            class="list-group-item list-group-item-action py-1"
+            data-species-id="{{ s.pk }}"
+            data-species-name="{{ s.name }}">
+        <em>{{ s.name }}</em>
+    </button>
+    {% endfor %}
+</div>
+{% endif %}

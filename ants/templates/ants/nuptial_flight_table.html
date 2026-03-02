@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 {% load static %}
 {% load i18n %}
+{% load crispy_forms_tags %}
 {% block title %}{% trans 'Nuptial Flight Table' %} | Antkeeping.info{% endblock %}
 {% block og_title %}{% trans 'Nuptial Flight Table' %} | Antkeeping.info{% endblock %}
 {% block og_description %}{% trans 'A table that lists during which months specific ant species have their nuptial flights.' %}{% endblock %}
@@ -45,6 +46,11 @@
                     <i class="bi bi-filetype-json"></i>
                 </button>
             </div>
+            <button type="button" class="btn btn-outline-primary btn-sm ms-auto"
+                    data-bs-toggle="modal" data-bs-target="#reportModal"
+                    title="{% trans 'Report flight data' %}">
+                <i class="bi bi-flag"></i> {% trans 'Report Data' %}
+            </button>
             <div id="htmx-spinner" class="htmx-indicator">
                 <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
             </div>
@@ -131,6 +137,45 @@
         <div id="print-area"></div>
 
     </div>
+
+    {# Success toast — shown after a report is submitted #}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3 report-toast-container">
+        <div id="reportSuccessToast"
+             class="toast align-items-center text-bg-success border-0"
+             role="alert" aria-live="assertive" aria-atomic="true"
+             data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle-fill me-2"></i>{% trans 'Thank you! Your report has been submitted.' %}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="{% trans 'Close' %}"></button>
+            </div>
+        </div>
+    </div>
+
+    {# Report data modal #}
+    <div class="modal fade" id="reportModal" tabindex="-1"
+         aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportModalLabel">
+                        <i class="bi bi-flag me-2"></i>{% trans 'Report Nuptial Flight Data' %}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">
+                        {% trans 'Found an error or have additional data? Select the species, tick the months it swarms, and describe your source.' %}
+                    </p>
+                    <div id="report-form-container">
+                        {% include "ants/nuptial_flight_report_form.html" with form=report_form %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block css %}
 <link rel="stylesheet" href="{% static 'ants/css/nuptial_flight_table.css' %}?v=6">
@@ -138,4 +183,65 @@
 {% block script %}
 <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
 <script src="{% static 'ants/js/nuptial_flight_table.js' %}?v=7"></script>
+<script>
+(function () {
+    // --- Species autocomplete ---
+    // Use event delegation from document so listeners survive HTMX swaps.
+
+    // Click on a suggestion: fill text input + hidden field, clear suggestions
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('#species-suggestions [data-species-id]');
+        if (btn) {
+            var search = document.getElementById('species-search');
+            var hidden = document.getElementById('id_ant_species');
+            if (search) search.value = btn.dataset.speciesName;
+            if (hidden) hidden.value = btn.dataset.speciesId;
+            var suggestions = document.getElementById('species-suggestions');
+            if (suggestions) suggestions.innerHTML = '';
+            return;
+        }
+        // Click outside suggestions: close dropdown
+        var suggestions = document.getElementById('species-suggestions');
+        var search = document.getElementById('species-search');
+        if (suggestions && suggestions.innerHTML &&
+                !suggestions.contains(e.target) &&
+                e.target !== search) {
+            suggestions.innerHTML = '';
+        }
+    });
+
+    // Typing clears the stale hidden species ID (forces re-selection)
+    document.addEventListener('input', function (e) {
+        if (e.target && e.target.id === 'species-search') {
+            var hidden = document.getElementById('id_ant_species');
+            if (hidden) hidden.value = '';
+        }
+    });
+
+    // --- Modal reset ---
+    // When the report modal is closed, restore the original form so the next
+    // open shows a fresh form (not a success message or form with errors).
+    var reportModal = document.getElementById('reportModal');
+    if (reportModal) {
+        var container = document.getElementById('report-form-container');
+        var originalContent = container ? container.innerHTML : '';
+        reportModal.addEventListener('hidden.bs.modal', function () {
+            if (container) container.innerHTML = originalContent;
+        });
+    }
+
+    // --- Report success: close modal + show toast ---
+    // Fired by HX-Trigger header from NuptialFlightReportView on successful submission.
+    document.body.addEventListener('flightReportSuccess', function () {
+        if (reportModal) {
+            var modal = bootstrap.Modal.getInstance(reportModal);
+            if (modal) modal.hide();
+        }
+        var toastEl = document.getElementById('reportSuccessToast');
+        if (toastEl) {
+            new bootstrap.Toast(toastEl).show();
+        }
+    });
+})();
+</script>
 {% endblock %}

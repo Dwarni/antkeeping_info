@@ -4,19 +4,26 @@ Module for all models of ants app.
 
 import datetime
 import json
+import logging
 
 from dal import autocomplete
+from django.conf import settings
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db.models import Count, F
-from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.http import HttpResponse, HttpResponseNotAllowed
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.text import slugify
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
+from django.views.generic.edit import FormView
+
+logger = logging.getLogger(__name__)
 
 from flights.models import Flight
 
+from .forms import NuptialFlightReportForm
 from .models import AntRegion, AntSize, AntSpecies, Genus, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
 
@@ -186,6 +193,7 @@ class NuptialFlightTableView(TemplateView):
         context["initial_state"] = initial_state
         context["initial_states"] = initial_states
         context["initial_location_label"] = ", ".join(loc_parts)
+        context["report_form"] = NuptialFlightReportForm()
         return context
 
 
@@ -748,3 +756,112 @@ class AntSpeciesAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = AntSpecies.objects.filter(name__icontains=self.q)
         return qs
+
+
+class NuptialFlightReportView(FormView):
+    """Handles POST submissions of the nuptial flight report form (HTMX partial responses)."""
+
+    form_class = NuptialFlightReportForm
+    http_method_names = ["post"]
+
+    def form_invalid(self, form):
+        # Recover display name so the text input stays populated on re-render
+        species_name = ""
+        raw_id = form.data.get("ant_species")
+        if raw_id:
+            try:
+                species_name = AntSpecies.objects.get(pk=int(raw_id)).name
+            except (AntSpecies.DoesNotExist, ValueError, TypeError):
+                pass
+        return render(
+            self.request,
+            "ants/nuptial_flight_report_form.html",
+            {"form": form, "species_name": species_name},
+        )
+
+    def form_valid(self, form):
+        # Honeypot check: silently discard bot submissions
+        if form.cleaned_data.get("website"):
+            response = HttpResponse("")
+            response["HX-Trigger"] = "flightReportSuccess"
+            return response
+
+        species = form.cleaned_data["ant_species"]
+        months = form.cleaned_data["months"]
+        source = form.cleaned_data["source"]
+        name = form.cleaned_data["name"]
+        email = form.cleaned_data["email"]
+        send_copy = form.cleaned_data["send_copy"]
+
+        month_names = ", ".join(str(m) for m in months)
+        email_body = (
+            f"Nuptial flight data report from {name} <{email}>\n"
+            f"{'=' * 60}\n\n"
+            f"Ant Species  : {species}\n"
+            f"Reported months: {month_names}\n\n"
+            f"Source / Notes:\n{source}\n\n"
+            f"{'=' * 60}\n"
+            f"Reply to: {email}"
+        )
+
+        try:
+            send_mail(
+                subject=f"[Flight Report] {species}",
+                message=email_body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.CONTACT_RECIPIENT_EMAIL],
+                fail_silently=False,
+            )
+        except Exception:
+            logger.exception("Failed to send nuptial flight report email")
+            form.add_error(None, "Sorry, there was an error sending your report. Please try again later.")
+            return render(
+                self.request,
+                "ants/nuptial_flight_report_form.html",
+                {"form": form, "species_name": str(form.cleaned_data["ant_species"])},
+            )
+
+        if send_copy:
+            copy_body = (
+                f"This is a copy of your nuptial flight data report sent via antkeeping.info.\n\n"
+                f"{'=' * 60}\n\n"
+                f"Ant Species  : {species}\n"
+                f"Reported months: {month_names}\n\n"
+                f"Source / Notes:\n{source}\n\n"
+                f"{'=' * 60}\n"
+            )
+            try:
+                send_mail(
+                    subject=f"[Copy] Flight Report – {species}",
+                    message=copy_body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception("Failed to send copy email to %s", email)
+
+        response = HttpResponse("")
+        response["HX-Trigger"] = "flightReportSuccess"
+        return response
+
+
+class NuptialFlightSpeciesSuggestView(View):
+    """HTMX endpoint: returns an HTML list of ant species matching the search query."""
+
+    MIN_QUERY_LENGTH = 4
+
+    def get(self, request):
+        q = request.GET.get("q", "").strip()
+        if len(q) < self.MIN_QUERY_LENGTH:
+            return HttpResponse("")
+        species = (
+            AntSpecies.objects
+            .filter(name__icontains=q, valid=True)
+            .order_by("name")
+        )
+        return render(
+            request,
+            "ants/nuptial_flight_species_suggestions.html",
+            {"species": species},
+        )

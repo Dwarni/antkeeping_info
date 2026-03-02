@@ -44,5 +44,15 @@ urlpatterns = [
         views.AntSpeciesAutocomplete.as_view(),
         name="ant_species_autocomplete",
     ),
+    path(
+        "nuptial-flight-table/report/",
+        views.NuptialFlightReportView.as_view(),
+        name="nuptial_flight_report",
+    ),
+    path(
+        "nuptial-flight-table/species-suggest/",
+        views.NuptialFlightSpeciesSuggestView.as_view(),
+        name="nuptial_flight_species_suggest",
+    ),
     path("<islug:slug>/", views.AntSpeciesDetail.as_view(), name="ant_detail"),
 ]
