@@ -3,6 +3,17 @@
 <html lang="{{ LANGUAGE_CODE }}">
     <head>
         <meta charset="utf-8" />
+        <script>
+        (function() {
+            let theme = 'light';
+            try {
+                const s = localStorage.getItem('colorTheme');
+                if (s === 'dark' || s === 'light') { theme = s; }
+                else if (window.matchMedia('(prefers-color-scheme: dark)').matches) { theme = 'dark'; }
+            } catch(e) {}
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+        </script>
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>{%block title %}Antkeeping.info{% endblock %}</title>
         <link rel="apple-touch-icon" sizes="57x57" href="{% static 'img/icons/apple-icon-57x57.png' %}">
@@ -34,7 +45,7 @@
         <!-- CSS only -->
         <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}?v=5.3.8">
         <link rel="stylesheet" href="{% static 'css/bootstrap-icons.min.css' %}?v=1.13.1">
-        <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=10">
+        <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=11">
         {% block css %} {% endblock %}
         {% if iframe %}
         <style>
@@ -63,6 +74,7 @@
         <!-- JavaScript Bundle with Popper -->
         <script src="{% static 'js/bootstrap.bundle.min.js' %}?v=5.3.8"></script>
         <script src="{% static 'js/layout.js' %}?v=2"></script>
+        <script src="{% static 'js/theme.js' %}?v=1"></script>
         {% block script %} {% endblock %}
     </body>
 </html>
