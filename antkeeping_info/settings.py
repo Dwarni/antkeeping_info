@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "django.contrib.sitemaps",
     "ants",
     "home",
+    "contact",
     "regions",
     "flights",
     "users",
@@ -223,6 +224,9 @@ CACHE_MIDDLEWARE_KEY_PREFIX = "AKI"
 
 EMAIL_CONFIG = env.email_url("EMAIL_URL")
 vars().update(EMAIL_CONFIG)
+
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@antkeeping.info")
+CONTACT_RECIPIENT_EMAIL = env("CONTACT_RECIPIENT_EMAIL")
 
 # prod settings
 

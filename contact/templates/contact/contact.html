@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Contact - Antkeeping.info{% endblock %}
+
+{% block content %}
+<h1>Contact</h1>
+<p>Have a question or feedback? Fill out the form below and we will get back to you.</p>
+{% crispy form %}
+{% endblock %}

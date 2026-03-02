@@ -36,6 +36,7 @@ urlpatterns = [
     path("staff/", include("staff.urls")),
     path("admin/", admin.site.urls),
     path("users/", include("users.urls")),
+    path("contact/", include("contact.urls")),
     path(
         "legal-notice/",
         TemplateView.as_view(template_name="legal_notice.html"),
