@@ -29,7 +29,7 @@
                                 <span class="badge bg-danger ms-1" title="{% trans 'Forbidden Ant Species (EU)' %}"><i class="bi bi-ban"></i> EU</span>
                             {% endif %}
                         {% else %}
-                            <a href="{{ obj.taxonomic_rank_name | antwiki_url }}" target="blank">{{ obj.taxonomic_rank_name }}</a>
+                            <a class="fst-italic" href="{{ obj.taxonomic_rank_name | antwiki_url }}" target="blank">{{ obj.taxonomic_rank_name }}</a>
                         {% endif %}
                     </td>
                     {% block table_column %}{% endblock %}
