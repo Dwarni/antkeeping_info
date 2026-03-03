@@ -1,10 +1,15 @@
-<div class="row">
-    <div class="col text-white bg-primary border border-2 rounded-end mb-1" style="max-width:{{ width }}%">
-        {% if width > 15 %}
-            <div class="p-2"><b>{{ index }}. {{ entry_name }}:</b> {{ entry_total }}</div>
-        {% endif %}
+{% load humanize %}
+<div class="row align-items-center mb-1 g-2">
+    <div class="col-5 col-md-4 text-truncate">
+        <small class="text-muted">{{ index }}.</small> <strong>{{ entry_name }}</strong>
     </div>
-    {% if width <= 15 %}
-        <div class="col"><b>{{ index }}. {{ entry_name }}:</b> {{ entry_total }}</div>
-    {% endif %}
+    <div class="col">
+        <div class="progress" style="height: 1.25rem;" role="progressbar"
+             aria-valuenow="{{ width|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar" style="width: {{ width }}%"></div>
+        </div>
+    </div>
+    <div class="col-auto text-end" style="min-width: 4rem;">
+        {{ entry_total|intcomma }}
+    </div>
 </div>

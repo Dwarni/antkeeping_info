@@ -18,13 +18,23 @@ class AntsViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Lasius niger")
 
-    def test_top_countries_ant_species(self):
-        response = self.client.get(reverse("top_countries_ant_species"))
+    def test_top_lists_hub(self):
+        response = self.client.get(reverse("antdb_top_lists"))
         self.assertEqual(response.status_code, 200)
 
-    def test_top_countries_ant_genera(self):
-        response = self.client.get(reverse("top_countries_ant_genera"))
+    def test_top_lists_hub_with_ranking(self):
+        response = self.client.get(
+            reverse("antdb_top_lists") + "?ranking=countries-by-species&entries=10"
+        )
         self.assertEqual(response.status_code, 200)
+
+    def test_top_countries_ant_species_redirects(self):
+        response = self.client.get(reverse("top_countries_ant_species"))
+        self.assertEqual(response.status_code, 301)
+
+    def test_top_countries_ant_genera_redirects(self):
+        response = self.client.get(reverse("top_countries_ant_genera"))
+        self.assertEqual(response.status_code, 301)
 
     def test_forbidden_in_eu_species_list(self):
         self.ant_species.forbidden_in_eu = True

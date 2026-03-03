@@ -533,13 +533,91 @@ class TaxonomicRanksByRegion(TemplateView):
         return context
 
 
-class Ranking(TemplateView):
-    template_name = "ants/antdb/ranking.html"
-    num_entries = 50
+RANKING_OPTIONS = {
+    "countries-by-species": {
+        "heading": "countries by number of ant species",
+        "query": lambda n: list(
+            AntSpecies.objects.filter(distribution__region__type="Country")
+            .annotate(rank_entry_name=F("distribution__region__name"))
+            .values("rank_entry_name")
+            .annotate(total=Count("rank_entry_name"))
+            .order_by("-total")[:n]
+        ),
+    },
+    "countries-by-genera": {
+        "heading": "countries by number of ant genera",
+        "query": lambda n: list(
+            AntSpecies.objects.filter(distribution__region__type="Country")
+            .annotate(rank_entry_name=F("distribution__region__name"))
+            .values("rank_entry_name")
+            .annotate(total=Count("genus", distinct=True))
+            .order_by("-total")[:n]
+        ),
+    },
+    "species-by-countries": {
+        "heading": "ant species by number of countries",
+        "query": lambda n: list(
+            AntSpecies.objects.filter(distribution__region__type="Country")
+            .annotate(
+                rank_entry_name=F("name"), total=Count("distribution__region__name")
+            )
+            .values("rank_entry_name", "total")
+            .order_by("-total")[:n]
+        ),
+    },
+    "genera-by-countries": {
+        "heading": "ant genera by number of countries",
+        "query": lambda n: list(
+            AntSpecies.objects.filter(
+                distribution__region__type="Country", genus__isnull=False
+            )
+            .values("genus__name")
+            .annotate(
+                rank_entry_name=F("genus__name"),
+                total=Count("distribution__region__code", distinct=True),
+            )
+            .values("rank_entry_name", "total")
+            .order_by("-total")[:n]
+        ),
+    },
+    "genera-by-species": {
+        "heading": "ant genera by number of species",
+        "query": lambda n: list(
+            Genus.objects.annotate(rank_entry_name=F("name"), total=Count("species"))
+            .values("rank_entry_name", "total")
+            .order_by("-total")[:n]
+        ),
+    },
+    "authors-by-species": {
+        "heading": "authors by number of ant species",
+        "query": lambda n: list(
+            AntSpecies.objects.annotate(rank_entry_name=F("author"))
+            .values("rank_entry_name")
+            .annotate(total=Count("rank_entry_name"))
+            .order_by("-total")[:n]
+        ),
+    },
+}
+
+
+class TopListsHub(TemplateView):
+    """Consolidated top lists page for the antdb section."""
+
+    template_name = "ants/antdb/top_lists.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["num_entries"] = self.num_entries
+        ranking_key = self.request.GET.get("ranking")
+        entries_raw = self.request.GET.get("entries", "20")
+        entries = int(entries_raw) if entries_raw in ("10", "20", "50") else 20
+        context["ranking_options"] = RANKING_OPTIONS
+        context["selected_ranking"] = ranking_key
+        context["entries"] = entries
+        if ranking_key in RANKING_OPTIONS:
+            ranking = RANKING_OPTIONS[ranking_key]["query"](entries)
+            context["ranking"] = ranking
+            context["max_total"] = ranking[0]["total"] if ranking else 0
+            context["heading"] = RANKING_OPTIONS[ranking_key]["heading"]
         return context
 
 
@@ -582,119 +660,6 @@ class ForbiddenInEUSpeciesListView(TemplateView):
         context["page_obj"] = page_obj
         context["total_objects"] = total
         add_iframe_to_context(context, self.request)
-        return context
-
-
-class TopCountriesByNumberOfAntSpecies(Ranking):
-    """Shows top countries by number of ant species."""
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        ranking = (
-            AntSpecies.objects.filter(distribution__region__type="Country")
-            .annotate(rank_entry_name=F("distribution__region__name"))
-            .values("rank_entry_name")
-            .annotate(total=Count("rank_entry_name"))
-            .order_by("-total")[: self.num_entries]
-        )
-        context["ranking"] = ranking
-        context["max_total"] = ranking[0]["total"] if ranking else 0
-        context["heading"] = "countries by number of ant species"
-        return context
-
-
-class TopCountriesByNumberOfAntGenera(Ranking):
-    """Shows top countries by number of ant genera."""
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        ranking = (
-            AntSpecies.objects.filter(distribution__region__type="Country")
-            .annotate(rank_entry_name=F("distribution__region__name"))
-            .values("rank_entry_name")
-            .annotate(total=Count("genus", distinct=True))
-            .order_by("-total")[: self.num_entries]
-        )
-
-        context["ranking"] = ranking
-        context["max_total"] = ranking[0]["total"] if ranking else 0
-        context["heading"] = "countries by number of ant genera"
-        return context
-
-
-class TopAntSpeciesByNumberOfCountries(Ranking):
-    """Shows top ant species by number of countries."""
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        ranking = (
-            AntSpecies.objects.filter(distribution__region__type="Country")
-            .annotate(
-                rank_entry_name=F("name"), total=Count("distribution__region__name")
-            )
-            .values("rank_entry_name", "total")
-            .order_by("-total")[: self.num_entries]
-        )
-        context["ranking"] = ranking
-        context["max_total"] = ranking[0]["total"] if ranking else 0
-        context["heading"] = "ant species by number of countries"
-        return context
-
-
-class TopAntGeneraByNumberOfCountries(Ranking):
-    """Shows top ant genera by number of countries."""
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        ranking = (
-            AntSpecies.objects.filter(
-                distribution__region__type="Country", genus__isnull=False
-            )
-            .values("genus__name")
-            .annotate(
-                rank_entry_name=F("genus__name"),
-                total=Count("distribution__region__code", distinct=True),
-            )
-            .values("rank_entry_name", "total")
-            .order_by("-total")[: self.num_entries]
-        )
-
-        context["ranking"] = ranking
-        context["max_total"] = ranking[0]["total"] if ranking else 0
-        context["heading"] = "ant genera by number of countries"
-        return context
-
-
-class TopAntGeneraByNumberOfSpecies(Ranking):
-    """Shows top ant species by number of countries."""
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        ranking = (
-            Genus.objects.annotate(rank_entry_name=F("name"), total=Count("species"))
-            .values("rank_entry_name", "total")
-            .order_by("-total")[: self.num_entries]
-        )
-        context["ranking"] = ranking
-        context["max_total"] = ranking[0]["total"] if ranking else 0
-        context["heading"] = "ant genera by number of species"
-        return context
-
-
-class TopAuthorsByNumberOfAntSpecies(Ranking):
-    """Shows top countries by number of ant species."""
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        ranking = (
-            AntSpecies.objects.annotate(rank_entry_name=F("author"))
-            .values("rank_entry_name")
-            .annotate(total=Count("rank_entry_name"))
-            .order_by("-total")[: self.num_entries]
-        )
-        context["ranking"] = ranking
-        context["max_total"] = ranking[0]["total"] if ranking else 0
-        context["heading"] = "authors by number of ant species"
         return context
 
 

@@ -29,19 +29,8 @@
                         <li><a class="dropdown-item" href="{% url 'forbidden_in_eu_species_list' %}">{% trans "Forbidden Ant Species (EU)" %}</a></li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="rankingsDropdown" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        {% trans "Rankings" %}
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="rankingsDropdown">
-                        <li><a class="dropdown-item" href="{% url 'top_ant_species_countries' %}">{% trans "Ant species by number of countries" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'top_ant_genera_countries' %}">{% trans "Ant genera by number of countries" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'top_ant_genera_species' %}">{% trans "Ant genera by number of species" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'top_countries_ant_species' %}">{% trans "Countries by number of ant species" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'top_countries_ant_genera' %}">{% trans "Countries by number of ant genera" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'top_authors_ant_species' %}">{% trans "Authors by number of ant species" %}</a></li>
-                    </ul>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'antdb_top_lists' %}">{% trans "Rankings" %}</a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="nuptialFlightsDropdown" role="button" data-bs-toggle="dropdown"
