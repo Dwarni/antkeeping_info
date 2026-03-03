@@ -1,0 +1,65 @@
+{% extends 'layout.html' %}
+{% load bootstraptags %}
+{% load ants %}
+{% block content %}
+    <h1 class="mb-4">Top Lists</h1>
+    <form id="rankingForm" method="get" class="row g-2 align-items-end mb-4">
+        <div class="col-sm-auto">
+            <label for="rankingSelect" class="form-label">Ranking</label>
+            <select id="rankingSelect" name="ranking" class="form-select">
+                <option value="">— Select a ranking —</option>
+                <option value="countries-by-species" {% if selected_ranking == "countries-by-species" %}selected{% endif %}>Countries by number of ant species</option>
+                <option value="countries-by-genera" {% if selected_ranking == "countries-by-genera" %}selected{% endif %}>Countries by number of ant genera</option>
+                <option value="species-by-countries" {% if selected_ranking == "species-by-countries" %}selected{% endif %}>Ant species by number of countries</option>
+                <option value="genera-by-countries" {% if selected_ranking == "genera-by-countries" %}selected{% endif %}>Ant genera by number of countries</option>
+                <option value="genera-by-species" {% if selected_ranking == "genera-by-species" %}selected{% endif %}>Ant genera by number of species</option>
+                <option value="authors-by-species" {% if selected_ranking == "authors-by-species" %}selected{% endif %}>Authors by number of ant species</option>
+            </select>
+        </div>
+        <div class="col-sm-auto">
+            <label for="entriesSelect" class="form-label">Show top</label>
+            <select id="entriesSelect" name="entries" class="form-select">
+                <option value="10" {% if entries == 10 %}selected{% endif %}>10</option>
+                <option value="20" {% if entries == 20 %}selected{% endif %}>20</option>
+                <option value="50" {% if entries == 50 %}selected{% endif %}>50</option>
+            </select>
+        </div>
+        <div class="col-sm-auto d-flex align-items-end">
+            <span id="rankingSpinner" class="spinner-border spinner-border-sm text-secondary d-none" role="status" aria-hidden="true"></span>
+        </div>
+        <noscript>
+            <div class="col-sm-auto">
+                <button type="submit" class="btn btn-primary">Show</button>
+            </div>
+        </noscript>
+    </form>
+    {% if ranking %}
+        <h2 class="mb-3">Top {{ entries }} {{ heading }}</h2>
+        {% for entry in ranking %}
+            {% rank_entry forloop.counter entry.rank_entry_name entry.total max_total %}
+        {% endfor %}
+    {% elif selected_ranking %}
+        <p class="text-muted">No data available for the selected ranking.</p>
+    {% else %}
+        <p class="text-muted">Please select a ranking above.</p>
+    {% endif %}
+{% endblock %}
+{% block script %}
+<script>
+    (function () {
+        const spinner = document.getElementById('rankingSpinner');
+
+        function navigate() {
+            if (spinner) spinner.classList.remove('d-none');
+            var params = new URLSearchParams({
+                ranking: document.getElementById('rankingSelect').value,
+                entries: document.getElementById('entriesSelect').value,
+            });
+            window.location.href = window.location.pathname + '?' + params.toString();
+        }
+
+        document.getElementById('rankingSelect').addEventListener('change', navigate);
+        document.getElementById('entriesSelect').addEventListener('change', navigate);
+    })();
+</script>
+{% endblock %}
