@@ -165,6 +165,9 @@ if PUBLIC_ROOT is not None:
     MEDIA_ROOT = PUBLIC_ROOT("media/")
 
     STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
         },

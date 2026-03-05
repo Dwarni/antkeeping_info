@@ -42,7 +42,7 @@ class CommonNamesSerializer(serializers.ModelSerializer):
 
     language = serializers.SerializerMethodField()
 
-    def get_language(self, obj):
+    def get_language(self, obj) -> str:
         return obj.get_language_display()
 
     class Meta:
@@ -135,22 +135,27 @@ class AntSpeciesDetailSerializer(serializers.ModelSerializer):
     hibernation = serializers.SerializerMethodField()
     nutrition = serializers.SerializerMethodField()
     images = AntSpeciesImageSerializer(many=True, read_only=True)
+    flight_hour_range = IntegerRangeField(required=False, allow_null=True)
+    nest_temperature = IntegerRangeField(required=False, allow_null=True)
+    nest_humidity = IntegerRangeField(required=False, allow_null=True)
+    outworld_temperature = IntegerRangeField(required=False, allow_null=True)
+    outworld_humidity = IntegerRangeField(required=False, allow_null=True)
 
     sizes = AntSizeSerializer(many=True, read_only=True)
 
-    def get_colony_structure(self, obj):
+    def get_colony_structure(self, obj) -> str | None:
         return obj.get_colony_structure_display()
 
-    def get_flight_climate(self, obj):
+    def get_flight_climate(self, obj) -> str | None:
         return obj.get_flight_climate_display()
 
-    def get_founding(self, obj):
+    def get_founding(self, obj) -> str | None:
         return obj.get_founding_display()
 
-    def get_hibernation(self, obj):
+    def get_hibernation(self, obj) -> str | None:
         return obj.get_hibernation_display()
 
-    def get_nutrition(self, obj):
+    def get_nutrition(self, obj) -> str | None:
         return obj.get_nutrition_display()
 
     class Meta:

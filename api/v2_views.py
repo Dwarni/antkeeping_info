@@ -1,5 +1,7 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
 from rest_framework.response import Response
 
@@ -42,6 +44,25 @@ class RegionListView(ExperimentalApiMixin, generics.ListAPIView):
     pagination_class = StandardResultsSetPagination
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            "month",
+            OpenApiTypes.INT,
+            description="Filter by flight month ID. Returns only species that swarm in this month.",
+        ),
+        OpenApiParameter(
+            "name",
+            OpenApiTypes.STR,
+            description="Filter by species name (case-insensitive, minimum 3 characters).",
+        ),
+        OpenApiParameter(
+            "region",
+            OpenApiTypes.INT,
+            description="Filter by region ID. Returns only species distributed in this region.",
+        ),
+    ]
+)
 class NuptialFlightMonths(ExperimentalApiMixin, generics.ListAPIView):
     serializer_class = AntsWithNuptialFlightsListSerializer
     pagination_class = StandardResultsSetPagination
@@ -52,6 +73,7 @@ class NuptialFlightMonths(ExperimentalApiMixin, generics.ListAPIView):
         )
         name = self.request.query_params.get("name", None)
         region = self.request.query_params.get("region", None)
+        month = self.request.query_params.get("month", None)
 
         if name is not None and len(name) >= 3:
             ants = ants.filter(name__icontains=name)
@@ -59,10 +81,24 @@ class NuptialFlightMonths(ExperimentalApiMixin, generics.ListAPIView):
         if region is not None:
             ants = ants.filter(distribution__region__pk=region)
 
+        if month is not None:
+            ants = ants.filter(flight_months__id=month)
+
         return ants.distinct()
 
 
 class AntSpeciesDetailView(ExperimentalApiMixin, generics.GenericAPIView):
+    serializer_class = AntSpeciesDetailSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "ant_species",
+                location=OpenApiParameter.PATH,
+                description="Species identifier: integer ID, slug (e.g. lasius-niger), or scientific name (e.g. Lasius niger).",
+            )
+        ]
+    )
     def get(self, request, ant_species):
         ant_species_qs = AntSpecies.objects.select_related("genus").prefetch_related(
             "sizes", "images"
@@ -71,11 +107,10 @@ class AntSpeciesDetailView(ExperimentalApiMixin, generics.GenericAPIView):
             int(ant_species)
             ant_species_qs = ant_species_qs.filter(pk=ant_species)
         except ValueError:
-            slug_query = Q(slug=ant_species)
-            name_query = Q(name=ant_species)
-            ant_species_qs = ant_species_qs.filter(name_query | slug_query)
-        finally:
-            ant_species_object = get_object_or_404(ant_species_qs)
+            ant_species_qs = ant_species_qs.filter(
+                Q(slug=ant_species) | Q(name=ant_species)
+            )
+        ant_species_object = get_object_or_404(ant_species_qs)
 
         serializer = AntSpeciesDetailSerializer(ant_species_object, many=False)
         return Response(serializer.data)

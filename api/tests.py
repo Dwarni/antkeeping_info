@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse
+from psycopg2.extras import NumericRange
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -150,6 +151,49 @@ class APIViewsTest(TestCase):
         self.assertIn("Lasius niger", names)
         self.assertNotIn("Lasius flavus", names)
 
+    def test_ant_species_detail_with_range_fields(self):
+        """Species with IntegerRangeField values must return 200, not 500."""
+        species_with_ranges = AntSpecies.objects.create(
+            name="Lasius flavus",
+            valid=True,
+            genus=self.genus,
+            flight_hour_range=NumericRange(8, 18),
+            nest_temperature=NumericRange(20, 28),
+            nest_humidity=NumericRange(40, 60),
+            outworld_temperature=NumericRange(18, 30),
+            outworld_humidity=NumericRange(30, 50),
+        )
+        response = self.client.get(
+            reverse("api_ant_species_detail", args=[species_with_ranges.id])
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data["flight_hour_range"])
+        self.assertIsNotNone(response.data["nest_temperature"])
+
+    def test_ant_species_detail_range_fields_null(self):
+        """Species without range data must serialize range fields as null without 500."""
+        response = self.client.get(
+            reverse("api_ant_species_detail", args=[self.ant_species.id])
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data["flight_hour_range"])
+        self.assertIsNone(response.data["nest_temperature"])
+
+    def test_ant_species_detail_by_slug_with_range_fields(self):
+        """Slug lookup for a species with range data must also return 200."""
+        species_with_ranges = AntSpecies.objects.create(
+            name="Lasius flavus",
+            valid=True,
+            genus=self.genus,
+            slug="lasius-flavus",
+            flight_hour_range=NumericRange(8, 18),
+        )
+        response = self.client.get(
+            reverse("api_ant_species_detail", args=["lasius-flavus"])
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], species_with_ranges.name)
+
     def test_ants_by_region_common(self):
         other_region = AntRegion.objects.create(
             name="France", code="FR", type="Country"
@@ -227,7 +271,7 @@ class APIv2ViewsTest(TestCase):
         self.region = AntRegion.objects.create(name="Germany", code="DE")
         self.genus = Genus.objects.create(name="Lasius")
         self.ant_species = AntSpecies.objects.create(
-            name="Lasius niger", valid=True, genus=self.genus
+            name="Lasius niger", valid=True, genus=self.genus, slug="lasius-niger"
         )
         for i in range(60):
             AntSpecies.objects.create(name=f"Species {i}", valid=True, genus=self.genus)
@@ -296,3 +340,129 @@ class APIv2ViewsTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # 1 from setUp + 60 generic species, none forbidden
         self.assertEqual(response.data["count"], 61)
+
+    def test_v2_ant_species_detail_by_slug(self):
+        response = self.client.get(
+            reverse("v2_api_ant_species_detail", args=["lasius-niger"])
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "Lasius niger")
+
+    def test_v2_ant_species_detail_by_name(self):
+        response = self.client.get(
+            reverse("v2_api_ant_species_detail", args=["Lasius niger"])
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "Lasius niger")
+
+    def test_v2_ant_species_detail_not_found(self):
+        response = self.client.get(
+            reverse("v2_api_ant_species_detail", args=["nonexistent-species"])
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_v2_ant_species_detail_with_range_fields(self):
+        """Species with IntegerRangeField values must return 200, not 500."""
+        species_with_ranges = AntSpecies.objects.create(
+            name="Lasius flavus",
+            valid=True,
+            genus=self.genus,
+            slug="lasius-flavus",
+            flight_hour_range=NumericRange(8, 18),
+            nest_temperature=NumericRange(20, 28),
+        )
+        response = self.client.get(
+            reverse("v2_api_ant_species_detail", args=[species_with_ranges.id])
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data["flight_hour_range"])
+
+    def test_v2_ant_species_search_filter(self):
+        response = self.client.get(reverse("v2_api_ant_species") + "?search=niger")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    def test_v2_ant_species_search_filter_case_insensitive(self):
+        response = self.client.get(reverse("v2_api_ant_species") + "?search=NIGER")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_v2_ant_species_search_filter_no_match(self):
+        response = self.client.get(
+            reverse("v2_api_ant_species") + "?search=xxxxxxnotfound"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+
+    def test_v2_ant_species_region_filter_by_code(self):
+        response = self.client.get(reverse("v2_api_ant_species") + "?region=DE")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    def test_v2_ant_species_region_filter_by_id(self):
+        response = self.client.get(
+            reverse("v2_api_ant_species") + f"?region={self.region.id}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_v2_ant_species_region_filter_no_match(self):
+        response = self.client.get(reverse("v2_api_ant_species") + "?region=XX")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+
+    def test_v2_ant_species_page_size(self):
+        response = self.client.get(reverse("v2_api_ant_species") + "?page_size=10")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 10)
+        self.assertEqual(response.data["count"], 61)
+        self.assertIsNotNone(response.data["next"])
+
+
+class V2NuptialFlightMonthsTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.genus = Genus.objects.create(name="Lasius")
+        self.july = Month.objects.create(name="July")
+        self.august = Month.objects.create(name="August")
+        self.ant_july = AntSpecies.objects.create(
+            name="Lasius niger", valid=True, genus=self.genus
+        )
+        self.ant_july.flight_months.add(self.july)
+        self.ant_august = AntSpecies.objects.create(
+            name="Lasius flavus", valid=True, genus=self.genus
+        )
+        self.ant_august.flight_months.add(self.august)
+
+    def test_v2_nuptial_flight_months_status(self):
+        response = self.client.get(reverse("v2_api_ants_nuptial_flight_month"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_v2_nuptial_flight_months_paginated(self):
+        response = self.client.get(reverse("v2_api_ants_nuptial_flight_month"))
+        self.assertIn("count", response.data)
+        self.assertIn("results", response.data)
+        self.assertEqual(response.data["count"], 2)
+
+    def test_v2_nuptial_flight_months_experimental_warning(self):
+        response = self.client.get(reverse("v2_api_ants_nuptial_flight_month"))
+        self.assertIn("Warning", response.headers)
+        self.assertIn("experimental", response.headers["Warning"])
+
+    def test_v2_nuptial_flight_months_month_filter(self):
+        response = self.client.get(
+            reverse("v2_api_ants_nuptial_flight_month") + f"?month={self.july.id}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    def test_v2_nuptial_flight_months_month_filter_no_match(self):
+        other_month = Month.objects.create(name="January")
+        response = self.client.get(
+            reverse("v2_api_ants_nuptial_flight_month") + f"?month={other_month.id}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
