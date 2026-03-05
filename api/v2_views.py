@@ -58,8 +58,8 @@ class RegionListView(ExperimentalApiMixin, generics.ListAPIView):
         ),
         OpenApiParameter(
             "region",
-            OpenApiTypes.INT,
-            description="Filter by region ID. Returns only species distributed in this region.",
+            OpenApiTypes.STR,
+            description="Filter by region ID, code (e.g. 'de'), or slug. Returns only species distributed in this region.",
         ),
     ]
 )
@@ -79,7 +79,14 @@ class NuptialFlightMonths(ExperimentalApiMixin, generics.ListAPIView):
             ants = ants.filter(name__icontains=name)
 
         if region is not None:
-            ants = ants.filter(distribution__region__pk=region)
+            try:
+                int(region)
+                ants = ants.filter(distribution__region__pk=region)
+            except ValueError:
+                ants = ants.filter(
+                    Q(distribution__region__code=region)
+                    | Q(distribution__region__slug__iexact=region)
+                )
 
         if month is not None:
             ants = ants.filter(flight_months__id=month)

@@ -46,7 +46,14 @@ class NuptialFlightMonths(generics.ListAPIView):
             ants = ants.filter(name__icontains=name)
 
         if region is not None:
-            ants = ants.filter(distribution__region__pk=region)
+            try:
+                int(region)
+                ants = ants.filter(distribution__region__pk=region)
+            except ValueError:
+                ants = ants.filter(
+                    Q(distribution__region__code=region)
+                    | Q(distribution__region__slug__iexact=region)
+                )
 
         return ants.distinct()
 
@@ -232,6 +239,8 @@ class AntsByGenusView(generics.ListAPIView):
     serializer_class = AntSpeciesNameSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return AntSpecies.objects.none()
         id = self.kwargs["id"]
         ants = AntSpecies.objects.all()
         ants = ants.filter(genus__pk=id)
