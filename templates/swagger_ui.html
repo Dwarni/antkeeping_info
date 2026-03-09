@@ -100,6 +100,10 @@
 </style>
 {% endblock %}
 {% block content %}
+<div class="alert alert-info mb-4" role="alert">
+  <strong>Fair use:</strong> This API is a free, community resource. Rate limits are generous (30 requests/min anonymous, 60/min when logged in), but please cache responses on your end and avoid unnecessary repeated requests.
+  If you need a large data dump, please <a href="{% url 'contact' %}" class="alert-link">get in touch</a> first.
+</div>
 <div id="swagger-ui"></div>
 {% endblock %}
 {% block script %}
