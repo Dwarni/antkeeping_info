@@ -5,6 +5,25 @@
 
 {% block title %}{% trans 'Forbidden Ant Species (European Union)' %} | Antkeeping.info{% endblock %}
 
+{% block meta %}
+<meta name="description" content="{% trans 'A list of ant species that are forbidden to keep, breed, transport, or sell within the European Union.' %}">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "{% trans 'Forbidden Ant Species (European Union)' %}",
+  "description": "{% trans 'A list of ant species that are forbidden to keep, breed, transport, or sell within the European Union.' %}",
+  "url": "{{ request.build_absolute_uri }}",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "creator": {
+    "@type": "Organization",
+    "name": "Antkeeping.info",
+    "url": "https://antkeeping.info"
+  }
+}
+</script>
+{% endblock %}
+
 {% block css %}
 <link rel="stylesheet" href="{% static 'ants/css/antspecies_list.css' %}?v=8">
 {% endblock %}
@@ -71,4 +90,5 @@
 {% else %}
     {% bs_alert 'info' 'No forbidden species found.' %}
 {% endif %}
+
 {% endblock %}

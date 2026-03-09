@@ -4,6 +4,21 @@
 {% load ants %}
 {% block meta %}
     <meta name="description" content="{% trans 'Detailed information for ant species ' %}{{ object.name }}">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Taxon",
+      "name": "{{ object.name }}",
+      "taxonRank": "Species",
+      "url": "{{ request.build_absolute_uri }}",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "creator": {
+        "@type": "Organization",
+        "name": "Antkeeping.info",
+        "url": "https://antkeeping.info"
+      }
+    }
+    </script>
 {% endblock %}
 {% block css %}
     <link rel="stylesheet" href="{% static 'ants/css/antspecies_detail.css' %}?v=7">
@@ -88,7 +103,7 @@
                     Links:
                 </th>
                 <td>
-                    <a target="_blank" rel="noopener" href="http://www.antwiki.org/wiki/{{ object.name_underscore }}">AntWiki</a>
+                    <a target="_blank" rel="noopener" href="https://www.antwiki.org/wiki/{{ object.name_underscore }}">AntWiki</a>
                 </td>
             </tr>
         </tbody>
