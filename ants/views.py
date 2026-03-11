@@ -11,11 +11,11 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db.models import Count, F
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils.text import slugify
 from django.utils.decorators import method_decorator
+from django.utils.text import slugify
 from django.views.decorators.cache import never_cache
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
@@ -30,12 +30,32 @@ from .models import AntRegion, AntSize, AntSpecies, Genus, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
 
 _MONTH_NAMES_SHORT = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
 ]
 _MONTH_NAMES_FULL = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
 ]
 # List of (month_number, short_name) tuples for templates
 MONTHS = [(i + 1, name) for i, name in enumerate(_MONTH_NAMES_SHORT)]
@@ -45,8 +65,7 @@ MONTHS_FULL = [(i + 1, name) for i, name in enumerate(_MONTH_NAMES_FULL)]
 def _nuptial_flight_queryset(request):
     """Return a filtered AntSpecies queryset based on GET params."""
     qs = (
-        AntSpecies.objects
-        .prefetch_related("flight_months")
+        AntSpecies.objects.prefetch_related("flight_months")
         .filter(flight_months__isnull=False, valid=True)
         .order_by("name")
     )
@@ -87,17 +106,20 @@ def _build_entries(page_qs):
     for ant in page_qs:
         flight_month_ids = frozenset(m.id for m in ant.flight_months.all())
         hr = ant.flight_hour_range
-        entries.append({
-            "name": ant.name,
-            "slug": ant.slug,
-            "forbidden_in_eu": ant.forbidden_in_eu,
-            "flight_months": flight_month_ids,
-            "flight_hour_range_lower": hr.lower if hr else None,
-            "flight_hour_range_upper": (hr.upper - 1) if hr else None,
-            "flight_climate": ant.flight_climate,
-            "antwiki_slug": ant.name.replace(" ", "_"),
-        })
+        entries.append(
+            {
+                "name": ant.name,
+                "slug": ant.slug,
+                "forbidden_in_eu": ant.forbidden_in_eu,
+                "flight_months": flight_month_ids,
+                "flight_hour_range_lower": hr.lower if hr else None,
+                "flight_hour_range_upper": (hr.upper - 1) if hr else None,
+                "flight_climate": ant.flight_climate,
+                "antwiki_slug": ant.name.replace(" ", "_"),
+            }
+        )
     return entries
+
 
 # Create your views here.
 
@@ -127,8 +149,9 @@ class NuptialFlightTableView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         countries = (
-            AntRegion.countries
-            .filter(distribution__species__flight_months__isnull=False)
+            AntRegion.countries.filter(
+                distribution__species__flight_months__isnull=False
+            )
             .distinct()
             .order_by("name")
         )
@@ -162,8 +185,7 @@ class NuptialFlightTableView(TemplateView):
         initial_states = []
         if initial_country != "all":
             initial_states = list(
-                AntRegion.states
-                .filter(
+                AntRegion.states.filter(
                     parent__code__iexact=initial_country,
                     distribution__species__flight_months__isnull=False,
                 )
@@ -210,12 +232,15 @@ class NuptialFlightTableRowsView(View):
 
     def get(self, request):
         from django.template.loader import render_to_string
+
         qs = _nuptial_flight_queryset(request)
 
         if request.GET.get("print") == "1":
             entries = _build_entries(qs)
             context = self._print_context(request, entries)
-            html = render_to_string("ants/nuptial_flight_table_print.html", context, request=request)
+            html = render_to_string(
+                "ants/nuptial_flight_table_print.html", context, request=request
+            )
             return HttpResponse(html, content_type="text/html")
 
         total = qs.count()
@@ -224,7 +249,12 @@ class NuptialFlightTableRowsView(View):
         entries = _build_entries(page_obj.object_list)
         html = render_to_string(
             "ants/nuptial_flight_table_rows.html",
-            {"entries": entries, "page_obj": page_obj, "total": total, "months": MONTHS},
+            {
+                "entries": entries,
+                "page_obj": page_obj,
+                "total": total,
+                "months": MONTHS,
+            },
             request=request,
         )
         return HttpResponse(html, content_type="text/html")
@@ -276,8 +306,7 @@ class NuptialFlightTableStatesView(View):
             except (ValueError, TypeError):
                 parent_filter = {"parent__code__iexact": country_id}
             states = (
-                AntRegion.states
-                .filter(
+                AntRegion.states.filter(
                     distribution__species__flight_months__isnull=False,
                     **parent_filter,
                 )
@@ -285,6 +314,7 @@ class NuptialFlightTableStatesView(View):
                 .order_by("name")
             )
         from django.template.loader import render_to_string
+
         html = render_to_string(
             "ants/nuptial_flight_table_states.html",
             {"states": states},
@@ -308,7 +338,11 @@ class NuptialFlightCSVExportView(View):
             month_flags = ["x" if i + 1 in flight_ids else "" for i in range(12)]
             hr = ant.flight_hour_range
             time_str = f"{hr.lower}-{hr.upper - 1}" if hr else ""
-            return [ant.name] + month_flags + [time_str, climate_map.get(ant.flight_climate, "")]
+            return (
+                [ant.name]
+                + month_flags
+                + [time_str, climate_map.get(ant.flight_climate, "")]
+            )
 
         filename = _build_export_filename(request)
         return export_csv_response(qs, filename, headers, row_getter)
@@ -322,14 +356,18 @@ class NuptialFlightJSONExportView(View):
         data = []
         for ant in qs:
             hr = ant.flight_hour_range
-            data.append({
-                "id": ant.id,
-                "name": ant.name,
-                "flight_months": sorted(m.id for m in ant.flight_months.all()),
-                "flight_hour_range": {"lower": hr.lower, "upper": hr.upper - 1} if hr else None,
-                "flight_climate": ant.flight_climate,
-                "forbidden_in_eu": ant.forbidden_in_eu,
-            })
+            data.append(
+                {
+                    "id": ant.id,
+                    "name": ant.name,
+                    "flight_months": sorted(m.id for m in ant.flight_months.all()),
+                    "flight_hour_range": {"lower": hr.lower, "upper": hr.upper - 1}
+                    if hr
+                    else None,
+                    "flight_climate": ant.flight_climate,
+                    "forbidden_in_eu": ant.forbidden_in_eu,
+                }
+            )
         return export_json_response(data, _build_export_filename(request))
 
 
@@ -782,7 +820,10 @@ class NuptialFlightReportView(FormView):
             )
         except Exception:
             logger.exception("Failed to send nuptial flight report email")
-            form.add_error(None, "Sorry, there was an error sending your report. Please try again later.")
+            form.add_error(
+                None,
+                "Sorry, there was an error sending your report. Please try again later.",
+            )
             return render(
                 self.request,
                 "ants/nuptial_flight_report_form.html",
@@ -823,10 +864,8 @@ class NuptialFlightSpeciesSuggestView(View):
         q = request.GET.get("q", "").strip()
         if len(q) < self.MIN_QUERY_LENGTH:
             return HttpResponse("")
-        species = (
-            AntSpecies.objects
-            .filter(name__icontains=q, valid=True)
-            .order_by("name")
+        species = AntSpecies.objects.filter(name__icontains=q, valid=True).order_by(
+            "name"
         )
         return render(
             request,
@@ -871,14 +910,20 @@ def _species_filter_queryset(request):
         # Use a single filter() call so all conditions apply to the same related row,
         # avoiding Django's multi-valued relationship join issue.
         # Range overlap: find ants whose worker size range overlaps with the query.
-        filter_kwargs = {"sizes__type": AntSize.WORKER}
         if size_min:
-            # Ant's maximum must be >= size_min (ant can grow at least that big)
+            # Ant's minimum must be <= size_min and  Ant's maximum must be >= size_min
+            # (ant can grow at least that big)
+            filter_kwargs = {"sizes__type": AntSize.WORKER}
+            filter_kwargs["sizes__minimum__lte"] = size_min
             filter_kwargs["sizes__maximum__gte"] = size_min
+            qs = qs.filter(**filter_kwargs)
         if size_max:
-            # Ant's minimum must be <= size_max (ant's smallest workers fit the range)
+            # Ant's maximum must be >= size_max and Ant's minimum must be <= size_max
+            # (ant's smallest workers fit the range)
+            filter_kwargs = {"sizes__type": AntSize.WORKER}
+            filter_kwargs["sizes__maximum__gte"] = size_max
             filter_kwargs["sizes__minimum__lte"] = size_max
-        qs = qs.filter(**filter_kwargs)
+            qs = qs.filter(**filter_kwargs)
 
     return qs.distinct()
 
@@ -907,7 +952,11 @@ class SpeciesFilterResultsView(View):
         qs = _species_filter_queryset(request)
         paginator = Paginator(qs, self.RESULTS_PER_PAGE)
         page_obj = paginator.get_page(request.GET.get("page", 1))
-        return render(request, "ants/species_filter_results.html", {
-            "page_obj": page_obj,
-            "count": paginator.count,
-        })
+        return render(
+            request,
+            "ants/species_filter_results.html",
+            {
+                "page_obj": page_obj,
+                "count": paginator.count,
+            },
+        )
