@@ -32,15 +32,14 @@
         {% bs_icon "globe" "fs-3 flex-shrink-0 me-3 text-secondary" %}
         <div>
           <h3 class="h5 mb-1"><a href="{% url 'flights_map' %}" class="stretched-link">Reports (archived)</a></h3>
-          <p class="mb-0">Historical nuptial flight reports. No longer actively updated.</p>
+          {% include "snippets/historical_flight_reports_hint.html" %}
         </div>
       </div>
     </div>
   </div>
 </div>
-<p class="text-muted small">Looking for current nuptial flight reports? Check out
-  <a href="https://antflights.com/" rel="noopener noreferrer" target="_blank">antflights.com</a> or the
-  <a href="https://www.inaturalist.org/projects/ant-nuptial-flights" rel="noopener noreferrer" target="_blank">iNaturalist Ant Nuptial Flights project</a>.
+<p class="text-muted small">
+  {% include "snippets/flight_report_links.html" %}
 </p>
 
 <h2 class="pb-2 border-bottom">Ant Database</h2>
