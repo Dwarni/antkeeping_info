@@ -15,6 +15,8 @@ from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.text import slugify
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
@@ -197,6 +199,7 @@ class NuptialFlightTableView(TemplateView):
         return context
 
 
+@method_decorator(never_cache, name="dispatch")
 class NuptialFlightTableRowsView(View):
     """HTMX fragment: paginated table rows + pagination + count.
 
