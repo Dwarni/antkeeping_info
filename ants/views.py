@@ -868,11 +868,17 @@ def _species_filter_queryset(request):
     size_min = request.GET.get("size_min", "")
     size_max = request.GET.get("size_max", "")
     if size_min or size_max:
-        qs = qs.filter(sizes__type=AntSize.WORKER)
+        # Use a single filter() call so all conditions apply to the same related row,
+        # avoiding Django's multi-valued relationship join issue.
+        # Range overlap: find ants whose worker size range overlaps with the query.
+        filter_kwargs = {"sizes__type": AntSize.WORKER}
         if size_min:
-            qs = qs.filter(sizes__minimum__gte=size_min)
+            # Ant's maximum must be >= size_min (ant can grow at least that big)
+            filter_kwargs["sizes__maximum__gte"] = size_min
         if size_max:
-            qs = qs.filter(sizes__maximum__lte=size_max)
+            # Ant's minimum must be <= size_max (ant's smallest workers fit the range)
+            filter_kwargs["sizes__minimum__lte"] = size_max
+        qs = qs.filter(**filter_kwargs)
 
     return qs.distinct()
 
