@@ -15,6 +15,12 @@
 {% endblock %}
 {% block content %}
 {{ block.super }}
+<div class="alert alert-warning" role="alert">
+    {% include "snippets/historical_flight_reports_hint.html" %}
+    <p class="text-muted small mb-0">
+        {% include "snippets/flight_report_links.html" %}
+    </p>
+</div>
 <div>
     <div class="row mb-3">
         <div class="col">
