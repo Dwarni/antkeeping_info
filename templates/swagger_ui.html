@@ -97,6 +97,63 @@
 [data-bs-theme="dark"] .swagger-ui .topbar {
     background: #1a1d20;
 }
+
+/* Dark mode overrides for the Authorize modal */
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .backdrop-ux {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux {
+    background: #2b3035;
+    border-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux-header {
+    background: #212529;
+    border-bottom-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux-header h3 {
+    color: #dee2e6;
+}
+
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content {
+    background: #2b3035;
+}
+
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content h4,
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content p,
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content code {
+    color: #dee2e6;
+}
+
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content code {
+    background: #343a40;
+}
+
+[data-bs-theme="dark"] .swagger-ui .auth-container {
+    border-bottom-color: #495057;
+}
+
+[data-bs-theme="dark"] .swagger-ui .scopes h2,
+[data-bs-theme="dark"] .swagger-ui .scope-def {
+    color: #dee2e6;
+}
+
+[data-bs-theme="dark"] .swagger-ui .dialog-ux .modal-ux-header .close-modal {
+    filter: invert(1);
+}
+
+[data-bs-theme="dark"] .swagger-ui .btn.modal-btn {
+    color: #dee2e6;
+    border-color: #6c757d;
+}
+
+[data-bs-theme="dark"] .swagger-ui .btn.modal-btn.auth.btn-done {
+    background: #343a40;
+    color: #dee2e6;
+    border-color: #6c757d;
+}
 </style>
 {% endblock %}
 {% block content %}
