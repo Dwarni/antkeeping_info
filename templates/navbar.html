@@ -27,6 +27,7 @@
                         <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'sub-families' %}">{% trans "Ant sub families by Region" %}</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'forbidden_in_eu_species_list' %}">{% trans "Forbidden Ant Species (EU)" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'species_filter' %}">{% trans "Advanced Search" %}</a></li>
                     </ul>
                 </li>
                 <li class="nav-item">
@@ -67,6 +68,8 @@
             <form class="d-flex" action="{% url 'search' %}" method="get">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="q"
                     minlength=3 required>
+                <a class="nav-link text-white-50 text-nowrap me-1 small align-self-center"
+                   href="{% url 'species_filter' %}">Advanced</a>
             </form>
             <button class="btn btn-link nav-link theme-toggle ms-2 px-2"
                     type="button"

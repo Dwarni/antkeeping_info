@@ -1,0 +1,52 @@
+{% load i18n %}
+{# HTMX fragment: filtered species list + count + pagination #}
+{# Target: #results-container #}
+
+<small class="text-muted d-block mb-2">{{ count }} species found</small>
+
+{% if page_obj %}
+<ul class="list-group list-group-flush">
+    {% for ant in page_obj %}
+    <li class="list-group-item">
+        <a class="fst-italic" href="{{ ant.get_absolute_url }}">{{ ant.name }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-3" aria-label="Pagination">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+            <a class="page-link"
+               {% if page_obj.has_previous %}
+               hx-get="{% url 'species_filter_results' %}?page={{ page_obj.previous_page_number }}"
+               hx-target="#results-container"
+               hx-include="#filter-form"
+               {% endif %}
+               href="#">Previous</a>
+        </li>
+        {% for n in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == n %}active{% endif %}">
+            <a class="page-link"
+               hx-get="{% url 'species_filter_results' %}?page={{ n }}"
+               hx-target="#results-container"
+               hx-include="#filter-form"
+               href="#">{{ n }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+            <a class="page-link"
+               {% if page_obj.has_next %}
+               hx-get="{% url 'species_filter_results' %}?page={{ page_obj.next_page_number }}"
+               hx-target="#results-container"
+               hx-include="#filter-form"
+               {% endif %}
+               href="#">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info">No species match the selected filters.</div>
+{% endif %}

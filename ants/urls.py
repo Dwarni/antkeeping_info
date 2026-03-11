@@ -54,5 +54,15 @@ urlpatterns = [
         views.NuptialFlightSpeciesSuggestView.as_view(),
         name="nuptial_flight_species_suggest",
     ),
+    path(
+        "species/filter/",
+        views.SpeciesFilterView.as_view(),
+        name="species_filter",
+    ),
+    path(
+        "species/filter/results/",
+        views.SpeciesFilterResultsView.as_view(),
+        name="species_filter_results",
+    ),
     path("<islug:slug>/", views.AntSpeciesDetail.as_view(), name="ant_detail"),
 ]

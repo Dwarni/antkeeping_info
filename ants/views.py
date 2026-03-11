@@ -830,3 +830,75 @@ class NuptialFlightSpeciesSuggestView(View):
             "ants/nuptial_flight_species_suggestions.html",
             {"species": species},
         )
+
+
+def _species_filter_queryset(request):
+    """Return a filtered AntSpecies queryset based on GET filter params."""
+    qs = AntSpecies.objects.filter(valid=True).order_by("name")
+
+    genus = request.GET.get("genus", "")
+    if genus:
+        qs = qs.filter(genus__slug=genus)
+
+    hibernation = request.GET.get("hibernation", "")
+    if hibernation:
+        qs = qs.filter(hibernation=hibernation)
+
+    worker_polymorphism = request.GET.get("worker_polymorphism", "")
+    if worker_polymorphism == "true":
+        qs = qs.filter(worker_polymorphism=True)
+    elif worker_polymorphism == "false":
+        qs = qs.filter(worker_polymorphism=False)
+
+    nutrition = request.GET.get("nutrition", "")
+    if nutrition:
+        qs = qs.filter(nutrition=nutrition)
+
+    colony_structure = request.GET.get("colony_structure", "")
+    if colony_structure:
+        qs = qs.filter(colony_structure=colony_structure)
+
+    founding = request.GET.get("founding", "")
+    if founding:
+        qs = qs.filter(founding=founding)
+
+    size_min = request.GET.get("size_min", "")
+    size_max = request.GET.get("size_max", "")
+    if size_min or size_max:
+        qs = qs.filter(sizes__type=AntSize.WORKER)
+        if size_min:
+            qs = qs.filter(sizes__minimum__gte=size_min)
+        if size_max:
+            qs = qs.filter(sizes__maximum__lte=size_max)
+
+    return qs.distinct()
+
+
+class SpeciesFilterView(TemplateView):
+    """Dedicated species browser: filter ant species by biological attributes."""
+
+    template_name = "ants/species_filter.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["genera"] = Genus.objects.all()
+        context["hibernation_choices"] = AntSpecies.HIBERNATION_CHOICES
+        context["nutrition_choices"] = AntSpecies.NUTRITION_CHOICES
+        context["colony_choices"] = AntSpecies.COLONY_STRUCTURE_CHOICES
+        context["founding_choices"] = AntSpecies.FOUNDING_CHOICES
+        return context
+
+
+class SpeciesFilterResultsView(View):
+    """HTMX partial view: returns the filtered species list fragment."""
+
+    RESULTS_PER_PAGE = 50
+
+    def get(self, request):
+        qs = _species_filter_queryset(request)
+        paginator = Paginator(qs, self.RESULTS_PER_PAGE)
+        page_obj = paginator.get_page(request.GET.get("page", 1))
+        return render(request, "ants/species_filter_results.html", {
+            "page_obj": page_obj,
+            "count": paginator.count,
+        })
