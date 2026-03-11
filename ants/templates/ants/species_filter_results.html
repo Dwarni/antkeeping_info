@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n %}{% load ants %}
 {# HTMX fragment: filtered species list + count + pagination #}
 {# Target: #results-container #}
 
@@ -25,7 +25,11 @@
                {% endif %}
                href="#">Previous</a>
         </li>
-        {% for n in page_obj.paginator.page_range %}
+        {% pagination_range page_obj as page_numbers %}
+        {% for n in page_numbers %}
+        {% if n is None %}
+        <li class="page-item disabled" aria-hidden="true"><span class="page-link">…</span></li>
+        {% else %}
         <li class="page-item {% if page_obj.number == n %}active{% endif %}">
             <a class="page-link"
                hx-get="{% url 'species_filter_results' %}?page={{ n }}"
@@ -33,6 +37,7 @@
                hx-include="#filter-form"
                href="#">{{ n }}</a>
         </li>
+        {% endif %}
         {% endfor %}
         <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
             <a class="page-link"

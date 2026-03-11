@@ -38,6 +38,35 @@ def wikipedia_url(taxonomic_rank_name: str) -> str | None:
     return _wiki_url("https://en.wikipedia.org/wiki", taxonomic_rank_name)
 
 
+@register.simple_tag
+def pagination_range(page_obj, wing=2):
+    """Return a list of page numbers with None as ellipsis placeholder.
+
+    Shows all pages when the total is <= 10; otherwise shows the first two,
+    a window around the current page, and the last two pages, with None
+    inserted wherever pages are skipped.
+    """
+    current = page_obj.number
+    last = page_obj.paginator.num_pages
+
+    if last <= 10:
+        return list(range(1, last + 1))
+
+    pages = set()
+    pages.update(range(1, 3))                                          # always show 1-2
+    pages.update(range(last - 1, last + 1))                           # always show last-1, last
+    pages.update(range(max(1, current - wing), min(last, current + wing) + 1))
+
+    result = []
+    prev = None
+    for p in sorted(pages):
+        if prev is not None and p - prev > 1:
+            result.append(None)  # ellipsis marker
+        result.append(p)
+        prev = p
+    return result
+
+
 @register.inclusion_tag("ants/antdb/tags/rank_entry.html")
 def rank_entry(index: int, entry_name: str, entry_total: int, max_total: int):
     return {
