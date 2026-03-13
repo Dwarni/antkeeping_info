@@ -466,3 +466,139 @@ class V2NuptialFlightMonthsTest(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 0)
+
+
+class V2AntSizeViewsTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.region = AntRegion.objects.create(name="Germany", code="DE")
+        self.genus_lasius = Genus.objects.create(name="Lasius")
+        self.genus_formica = Genus.objects.create(name="Formica")
+
+        self.lasius_niger = AntSpecies.objects.create(
+            name="Lasius niger", valid=True, genus=self.genus_lasius
+        )
+        self.formica_rufa = AntSpecies.objects.create(
+            name="Formica rufa", valid=True, genus=self.genus_formica
+        )
+        Distribution.objects.create(species=self.lasius_niger, region=self.region)
+
+        AntSize.objects.create(
+            ant_species=self.lasius_niger, type="WORKER", minimum=2.0, maximum=4.0
+        )
+        AntSize.objects.create(
+            ant_species=self.lasius_niger, type="QUEEN", minimum=8.0, maximum=10.0
+        )
+        AntSize.objects.create(
+            ant_species=self.formica_rufa, type="WORKER", minimum=5.0, maximum=8.0
+        )
+        AntSize.objects.create(
+            ant_species=self.formica_rufa, type="QUEEN", minimum=9.0, maximum=12.0
+        )
+
+    # --- Experimental warning header ---
+
+    def test_worker_sizes_experimental_warning_header(self):
+        response = self.client.get(reverse("v2_api_ant_worker_sizes"))
+        self.assertIn("Warning", response.headers)
+        self.assertIn("experimental", response.headers["Warning"])
+
+    def test_queen_sizes_experimental_warning_header(self):
+        response = self.client.get(reverse("v2_api_ant_queen_sizes"))
+        self.assertIn("Warning", response.headers)
+        self.assertIn("experimental", response.headers["Warning"])
+
+    # --- Pagination ---
+
+    def test_worker_sizes_paginated(self):
+        response = self.client.get(reverse("v2_api_ant_worker_sizes"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("count", response.data)
+        self.assertIn("results", response.data)
+        self.assertEqual(response.data["count"], 2)
+
+    def test_queen_sizes_paginated(self):
+        response = self.client.get(reverse("v2_api_ant_queen_sizes"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 2)
+
+    # --- Response fields ---
+
+    def test_worker_sizes_response_fields(self):
+        response = self.client.get(reverse("v2_api_ant_worker_sizes"))
+        result = response.data["results"][0]
+        self.assertIn("id", result)
+        self.assertIn("name", result)
+        self.assertIn("minimum", result)
+        self.assertIn("maximum", result)
+
+    # --- Region filter ---
+
+    def test_worker_sizes_filter_by_region_code(self):
+        response = self.client.get(reverse("v2_api_ant_worker_sizes") + "?region=DE")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    def test_worker_sizes_filter_by_region_code_case_insensitive(self):
+        response = self.client.get(reverse("v2_api_ant_worker_sizes") + "?region=de")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_worker_sizes_filter_by_region_id(self):
+        response = self.client.get(
+            reverse("v2_api_ant_worker_sizes") + f"?region={self.region.id}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_worker_sizes_filter_by_region_no_match(self):
+        response = self.client.get(reverse("v2_api_ant_worker_sizes") + "?region=XX")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+
+    # --- Genus filter ---
+
+    def test_worker_sizes_filter_by_genus_name(self):
+        response = self.client.get(
+            reverse("v2_api_ant_worker_sizes") + "?genus=Lasius"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    def test_worker_sizes_filter_by_genus_name_case_insensitive(self):
+        response = self.client.get(
+            reverse("v2_api_ant_worker_sizes") + "?genus=lasius"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_worker_sizes_filter_by_genus_id(self):
+        response = self.client.get(
+            reverse("v2_api_ant_worker_sizes") + f"?genus={self.genus_lasius.id}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_worker_sizes_filter_by_genus_no_match(self):
+        response = self.client.get(
+            reverse("v2_api_ant_worker_sizes") + "?genus=Nonexistent"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+
+    # --- Queen size filters (smoke tests) ---
+
+    def test_queen_sizes_filter_by_region(self):
+        response = self.client.get(reverse("v2_api_ant_queen_sizes") + "?region=DE")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_queen_sizes_filter_by_genus(self):
+        response = self.client.get(
+            reverse("v2_api_ant_queen_sizes") + "?genus=Formica"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Formica rufa")

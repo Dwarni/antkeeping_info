@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -7,9 +7,10 @@ from rest_framework.response import Response
 
 from ants.models import AntRegion, AntSpecies
 
-from .filters import AntRegionFilter, AntSpeciesFilter
+from .filters import AntRegionFilter, AntSizeFilter, AntSpeciesFilter
 from .pagination import StandardResultsSetPagination
 from .serializers import (
+    AntSizeListSerializer,
     AntSpeciesDetailSerializer,
     AntSpeciesNameSerializer,
     AntsWithNuptialFlightsListSerializer,
@@ -121,3 +122,37 @@ class AntSpeciesDetailView(ExperimentalApiMixin, generics.GenericAPIView):
 
         serializer = AntSpeciesDetailSerializer(ant_species_object, many=False)
         return Response(serializer.data)
+
+
+_SIZE_FILTER_PARAMS = [
+    OpenApiParameter(
+        "region",
+        OpenApiTypes.STR,
+        description="Filter by region code (e.g. DE, de-by) or region ID.",
+    ),
+    OpenApiParameter(
+        "genus",
+        OpenApiTypes.STR,
+        description="Filter by genus name (e.g. Lasius) or genus ID.",
+    ),
+]
+
+
+@extend_schema(parameters=_SIZE_FILTER_PARAMS)
+class AntWorkerSizeListView(ExperimentalApiMixin, generics.ListAPIView):
+    queryset = AntSpecies.objects.filter(sizes__type="WORKER").annotate(
+        minimum=F("sizes__minimum"), maximum=F("sizes__maximum")
+    )
+    serializer_class = AntSizeListSerializer
+    pagination_class = StandardResultsSetPagination
+    filterset_class = AntSizeFilter
+
+
+@extend_schema(parameters=_SIZE_FILTER_PARAMS)
+class AntQueenSizeListView(ExperimentalApiMixin, generics.ListAPIView):
+    queryset = AntSpecies.objects.filter(sizes__type="QUEEN").annotate(
+        minimum=F("sizes__minimum"), maximum=F("sizes__maximum")
+    )
+    serializer_class = AntSizeListSerializer
+    pagination_class = StandardResultsSetPagination
+    filterset_class = AntSizeFilter
