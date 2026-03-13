@@ -876,56 +876,10 @@ class NuptialFlightSpeciesSuggestView(View):
 
 def _species_filter_queryset(request):
     """Return a filtered AntSpecies queryset based on GET filter params."""
+    from ants.filters import AntSpeciesFilter
+
     qs = AntSpecies.objects.filter(valid=True).order_by("name")
-
-    genus = request.GET.get("genus", "")
-    if genus:
-        qs = qs.filter(genus__slug=genus)
-
-    hibernation = request.GET.get("hibernation", "")
-    if hibernation:
-        qs = qs.filter(hibernation=hibernation)
-
-    worker_polymorphism = request.GET.get("worker_polymorphism", "")
-    if worker_polymorphism == "true":
-        qs = qs.filter(worker_polymorphism=True)
-    elif worker_polymorphism == "false":
-        qs = qs.filter(worker_polymorphism=False)
-
-    nutrition = request.GET.get("nutrition", "")
-    if nutrition:
-        qs = qs.filter(nutrition=nutrition)
-
-    colony_structure = request.GET.get("colony_structure", "")
-    if colony_structure:
-        qs = qs.filter(colony_structure=colony_structure)
-
-    founding = request.GET.get("founding", "")
-    if founding:
-        qs = qs.filter(founding=founding)
-
-    size_min = request.GET.get("size_min", "")
-    size_max = request.GET.get("size_max", "")
-    if size_min or size_max:
-        # Use a single filter() call so all conditions apply to the same related row,
-        # avoiding Django's multi-valued relationship join issue.
-        # Range overlap: find ants whose worker size range overlaps with the query.
-        if size_min:
-            # Ant's minimum must be <= size_min and  Ant's maximum must be >= size_min
-            # (ant can grow at least that big)
-            filter_kwargs = {"sizes__type": AntSize.WORKER}
-            filter_kwargs["sizes__minimum__lte"] = size_min
-            filter_kwargs["sizes__maximum__gte"] = size_min
-            qs = qs.filter(**filter_kwargs)
-        if size_max:
-            # Ant's maximum must be >= size_max and Ant's minimum must be <= size_max
-            # (ant's smallest workers fit the range)
-            filter_kwargs = {"sizes__type": AntSize.WORKER}
-            filter_kwargs["sizes__maximum__gte"] = size_max
-            filter_kwargs["sizes__minimum__lte"] = size_max
-            qs = qs.filter(**filter_kwargs)
-
-    return qs.distinct()
+    return AntSpeciesFilter(request.GET, queryset=qs).qs
 
 
 class SpeciesFilterView(TemplateView):

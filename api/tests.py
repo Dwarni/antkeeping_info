@@ -602,3 +602,172 @@ class V2AntSizeViewsTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
+
+
+class AntSpeciesFilterTest(TestCase):
+    """Tests for the new filter parameters on /api/v2/ants/."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.genus_lasius = Genus.objects.create(name="Lasius")
+        self.genus_formica = Genus.objects.create(name="Formica")
+
+        self.lasius_niger = AntSpecies.objects.create(
+            name="Lasius niger",
+            valid=True,
+            genus=self.genus_lasius,
+            slug="lasius-niger",
+            hibernation="LONG",
+            worker_polymorphism=False,
+            nutrition="SUGAR_INSECTS",
+            colony_structure="MONO",
+            founding="c",
+        )
+        self.formica_rufa = AntSpecies.objects.create(
+            name="Formica rufa",
+            valid=True,
+            genus=self.genus_formica,
+            slug="formica-rufa",
+            hibernation="SHORT",
+            worker_polymorphism=True,
+            nutrition="OMNIVOROUS",
+            colony_structure="POLY",
+            founding="sc",
+        )
+        self.invalid_species = AntSpecies.objects.create(
+            name="Lasius obsoletus",
+            valid=False,
+            genus=self.genus_lasius,
+            slug="lasius-obsoletus",
+        )
+        # Worker sizes for Lasius niger: 2–4 mm
+        AntSize.objects.create(
+            ant_species=self.lasius_niger,
+            type=AntSize.WORKER,
+            minimum=2,
+            maximum=4,
+        )
+        # Worker sizes for Formica rufa: 5–9 mm
+        AntSize.objects.create(
+            ant_species=self.formica_rufa,
+            type=AntSize.WORKER,
+            minimum=5,
+            maximum=9,
+        )
+
+    def _get(self, params):
+        return self.client.get(reverse("v2_api_ant_species") + "?" + params)
+
+    # --- valid filter ---
+
+    def test_valid_defaults_to_true(self):
+        response = self._get("")
+        names = [r["name"] for r in response.data["results"]]
+        self.assertIn("Lasius niger", names)
+        self.assertIn("Formica rufa", names)
+        self.assertNotIn("Lasius obsoletus", names)
+
+    def test_valid_false_returns_invalid_species(self):
+        response = self._get("valid=false")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        names = [r["name"] for r in response.data["results"]]
+        self.assertIn("Lasius obsoletus", names)
+        self.assertNotIn("Lasius niger", names)
+
+    # --- genus filter ---
+
+    def test_filter_by_genus_slug(self):
+        response = self._get("genus=lasius")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    def test_filter_by_genus_name(self):
+        response = self._get("genus=Lasius")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    def test_filter_by_genus_id(self):
+        response = self._get(f"genus={self.genus_lasius.pk}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    # --- hibernation filter ---
+
+    def test_filter_by_hibernation(self):
+        response = self._get("hibernation=LONG")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    # --- worker_polymorphism filter ---
+
+    def test_filter_by_worker_polymorphism_true(self):
+        response = self._get("worker_polymorphism=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
+
+    def test_filter_by_worker_polymorphism_false(self):
+        response = self._get("worker_polymorphism=false")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    # --- nutrition filter ---
+
+    def test_filter_by_nutrition(self):
+        response = self._get("nutrition=OMNIVOROUS")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
+
+    # --- colony_structure filter ---
+
+    def test_filter_by_colony_structure(self):
+        response = self._get("colony_structure=MONO")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    # --- founding filter ---
+
+    def test_filter_by_founding(self):
+        response = self._get("founding=sc")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
+
+    # --- size filters ---
+
+    def test_filter_by_size_min_matches_overlapping_range(self):
+        # size_min=3: Lasius niger (2–4) covers 3, Formica rufa (5–9) does not
+        response = self._get("size_min=3")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
+    def test_filter_by_size_max_matches_overlapping_range(self):
+        # size_max=6: Formica rufa (5–9) covers 6, Lasius niger (2–4) does not
+        response = self._get("size_max=6")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
+
+    def test_filter_by_size_min_and_max_combined(self):
+        # Both species have ranges that overlap [3, 6]? No:
+        # Lasius niger 2–4 covers 3 but max=4 < 6, so size_max=6 filter fails for it.
+        # Formica rufa 5–9 covers 6 but min=5 > 3, so size_min=3 filter fails for it.
+        # Result: no species matches both constraints simultaneously.
+        response = self._get("size_min=3&size_max=6")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+
+    def test_filter_by_size_range_both_match(self):
+        # size_min=5&size_max=8: Formica rufa (5–9) covers both 5 and 8
+        response = self._get("size_min=5&size_max=8")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
