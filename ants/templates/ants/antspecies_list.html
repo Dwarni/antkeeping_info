@@ -3,6 +3,8 @@
 {% load ants %}
 {% load i18n %}
 {% load static %}
+{% block og_title %}Ant {{ taxonomic_rank_type|capfirst }}{% if country_name %} in {{ country_name }}{% endif %} — Antkeeping.info{% endblock %}
+{% block og_description %}Browse ant {{ taxonomic_rank_type_lower }}{% if country_name %} found in {{ country_name }}{% else %} by region{% endif %} on Antkeeping.info. Species data from Antwiki and Antmaps.{% endblock %}
 {% block css %}
     <link rel="stylesheet" href="{% static 'ants/css/antspecies_list.css' %}?v=7">
 {% endblock %}

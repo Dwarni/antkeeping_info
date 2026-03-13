@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load static %}
 {% load ants %}
+{% block og_title %}{{ object.name }} — Antkeeping.info{% endblock %}
+{% block og_description %}Detailed information for {{ object.name }}: keeping parameters, worker and queen size, distribution, nuptial flight season, and more.{% endblock %}
 {% block meta %}
     <meta name="description" content="{% trans 'Detailed information for ant species ' %}{{ object.name }}">
     <script type="application/ld+json">
