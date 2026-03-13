@@ -1,0 +1,35 @@
+/* Ant silhouette: background-color is the visible colour; shape comes from mask in template */
+.ant-svg-wrapper {
+    display: block;
+    margin: 0 auto;
+    background-color: #2d6a4f;
+    transform: scaleX(-1);
+    /* Guarantee at least a tiny visible shape for sub-1mm ants */
+    min-width: 6px;
+    min-height: 3px;
+}
+
+[data-bs-theme="dark"] .ant-svg-wrapper {
+    background-color: #52b788;
+}
+
+.ant-size-card {
+    text-align: center;
+    min-width: 4rem;
+}
+
+.ant-size-card .ant-label {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    margin-top: 0.25rem;
+    word-break: break-word;
+}
+
+/* Stack cards in 2 columns on xs screens */
+@media (max-width: 575.98px) {
+    #size-results {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        align-items: end;
+    }
+}

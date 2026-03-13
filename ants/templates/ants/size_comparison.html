@@ -1,0 +1,166 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block title %}Ant Size Comparison | Antkeeping.info{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/size_comparison.css' %}">
+<style>
+/* Ant silhouette via CSS mask — coloured by background-color in size_comparison.css */
+.ant-svg-wrapper {
+    -webkit-mask: url("{% static 'ants/img/ant_sideview.svg' %}") no-repeat center / contain;
+    mask: url("{% static 'ants/img/ant_sideview.svg' %}") no-repeat center / contain;
+}
+</style>
+{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">Ant Size Comparison</h1>
+<p class="text-muted mb-4">Ants are displayed at their approximate real-world size (CSS <code>mm</code> units). The silhouette is a generic illustration — actual body shapes vary greatly between species. Results are limited to the 200 largest or smallest species matching the selected filters.</p>
+
+<div class="row">
+    {# Filter panel #}
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-funnel me-1"></i> Filters
+                </h5>
+                <form id="filter-form"
+                      hx-get="{% url 'size_comparison_results' %}"
+                      hx-target="#size-results-container"
+                      hx-trigger="change delay:300ms"
+                      hx-indicator="#htmx-spinner">
+
+                    <div class="mb-3">
+                        <label for="region-select" class="form-label fw-semibold">Region</label>
+                        <select name="region" id="region-select" class="form-select form-select-sm">
+                            <option value="">Any region</option>
+                            {% for region in regions %}
+                            <option value="{{ region.code }}"{% if request.GET.region == region.code %} selected{% endif %}>{{ region.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Ant type</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="ant_type"
+                                       id="type-worker" value="WORKER"
+                                       {% if request.GET.ant_type != 'QUEEN' %}checked{% endif %}>
+                                <label class="form-check-label" for="type-worker">Worker</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="ant_type"
+                                       id="type-queen" value="QUEEN"
+                                       {% if request.GET.ant_type == 'QUEEN' %}checked{% endif %}>
+                                <label class="form-check-label" for="type-queen">Queen</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Display size</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="size_field"
+                                       id="size-min" value="minimum"
+                                       {% if request.GET.size_field == 'minimum' %}checked{% endif %}>
+                                <label class="form-check-label" for="size-min">Min</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="size_field"
+                                       id="size-avg" value="average"
+                                       {% if request.GET.size_field != 'minimum' and request.GET.size_field != 'maximum' %}checked{% endif %}>
+                                <label class="form-check-label" for="size-avg">Avg</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="size_field"
+                                       id="size-max" value="maximum"
+                                       {% if request.GET.size_field == 'maximum' %}checked{% endif %}>
+                                <label class="form-check-label" for="size-max">Max</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sort</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="sort_order"
+                                       id="sort-asc" value="asc"
+                                       {% if request.GET.sort_order != 'desc' %}checked{% endif %}>
+                                <label class="form-check-label" for="sort-asc">
+                                    <i class="bi bi-sort-up-alt"></i> Ascending
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="sort_order"
+                                       id="sort-desc" value="desc"
+                                       {% if request.GET.sort_order == 'desc' %}checked{% endif %}>
+                                <label class="form-check-label" for="sort-desc">
+                                    <i class="bi bi-sort-down"></i> Descending
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="reset-btn">
+                        <i class="bi bi-x-circle me-1"></i>Reset
+                    </button>
+
+                </form>
+            </div>
+        </div>
+
+        <div id="htmx-spinner" class="htmx-indicator mt-2 text-center">
+            <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
+        </div>
+    </div>
+
+    {# Results area #}
+    <div class="col-md-9">
+        <p class="text-muted small mb-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Missing a species or spotted incorrect data?
+            <a href="{% url 'contact' %}">Let us know via the contact form</a> — contributions are very welcome!
+        </p>
+        <div id="size-results-container"
+             hx-get="{% url 'size_comparison_results' %}"
+             hx-trigger="load"
+             hx-include="#filter-form"
+             hx-indicator="#htmx-spinner">
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script>
+(function () {
+    var form = document.getElementById('filter-form');
+    var resetBtn = document.getElementById('reset-btn');
+
+    function syncUrl() {
+        var params = new URLSearchParams(new FormData(form));
+        for (var key of [...params.keys()]) {
+            if (!params.get(key)) { params.delete(key); }
+        }
+        var search = params.toString();
+        history.replaceState(null, '', search ? location.pathname + '?' + search : location.pathname);
+    }
+
+    form.addEventListener('change', syncUrl);
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            form.querySelectorAll('select').forEach(function (sel) { sel.value = ''; });
+            // Reset radios to defaults
+            document.getElementById('type-worker').checked = true;
+            document.getElementById('size-avg').checked = true;
+            document.getElementById('sort-asc').checked = true;
+            history.replaceState(null, '', location.pathname);
+            htmx.trigger(form, 'change');
+        });
+    }
+})();
+</script>
+{% endblock %}

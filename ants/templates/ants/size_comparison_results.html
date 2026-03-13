@@ -1,0 +1,32 @@
+{# HTMX fragment: ant size comparison cards #}
+{# Target: #size-results-container #}
+
+<small class="text-muted d-block mb-3">
+    {% if total == 0 %}
+        No species with size data match the selected filters.
+    {% elif total > max_results %}
+        Showing {{ max_results }} of {{ total }} species (sorted by size).
+    {% else %}
+        {{ total }} species found.
+    {% endif %}
+</small>
+
+{% if ants %}
+<div id="size-results" class="d-flex flex-wrap gap-3 align-items-end">
+    {% for ant in ants %}
+    <div class="ant-size-card">
+        {# Real ant SVG via CSS mask; width = size / 0.7 because body = 70% of total image width #}
+        <div class="ant-svg-wrapper"
+             style="width: calc({{ ant.display_size }}mm / 0.7); aspect-ratio: 92.604166 / 42.597916;"
+             role="img"
+             aria-label="{{ ant.name }}"></div>
+        <div class="ant-label">
+            <a href="{{ ant.get_absolute_url }}" class="fst-italic d-block text-body-secondary text-decoration-none lh-sm">{{ ant.name }}</a>
+            <span class="text-muted">({{ ant.display_size|floatformat:"-2" }} mm)</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">No species with size data match the selected filters.</div>
+{% endif %}

@@ -64,5 +64,15 @@ urlpatterns = [
         views.SpeciesFilterResultsView.as_view(),
         name="species_filter_results",
     ),
+    path(
+        "size-comparison/",
+        views.SizeComparisonView.as_view(),
+        name="size_comparison",
+    ),
+    path(
+        "size-comparison/results/",
+        views.SizeComparisonResultsView.as_view(),
+        name="size_comparison_results",
+    ),
     path("<islug:slug>/", views.AntSpeciesDetail.as_view(), name="ant_detail"),
 ]

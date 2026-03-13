@@ -10,7 +10,7 @@ from dal import autocomplete
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.db.models import Count, F
+from django.db.models import Count, ExpressionWrapper, F, FloatField, Max, Min, Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -912,5 +912,74 @@ class SpeciesFilterResultsView(View):
             {
                 "page_obj": page_obj,
                 "count": paginator.count,
+            },
+        )
+
+
+class SizeComparisonView(TemplateView):
+    """Ant size comparison page: visualise species at their real-world size."""
+
+    template_name = "ants/size_comparison.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["regions"] = AntRegion.countries.filter(code__isnull=False).order_by("name")
+        return context
+
+
+class SizeComparisonResultsView(View):
+    """HTMX partial view: returns the ant size comparison card fragment."""
+
+    MAX_RESULTS = 200
+
+    def get(self, request):
+        ant_type = request.GET.get("ant_type", AntSize.WORKER)
+        if ant_type not in (AntSize.WORKER, AntSize.QUEEN):
+            ant_type = AntSize.WORKER
+
+        size_field = request.GET.get("size_field", "average")
+        if size_field not in ("minimum", "average", "maximum"):
+            size_field = "average"
+
+        sort_order = request.GET.get("sort_order", "asc")
+        region = request.GET.get("region", "")
+
+        size_q = Q(sizes__type=ant_type)
+        qs = AntSpecies.objects.filter(valid=True).filter(size_q)
+
+        if region:
+            try:
+                qs = qs.filter(distribution__region__pk=int(region))
+            except ValueError:
+                qs = qs.filter(distribution__region__code__iexact=region)
+
+        if size_field == "minimum":
+            qs = qs.annotate(display_size=Min("sizes__minimum", filter=size_q))
+        elif size_field == "average":
+            qs = qs.filter(sizes__maximum__isnull=False, sizes__type=ant_type)
+            qs = qs.annotate(
+                display_size=ExpressionWrapper(
+                    (Min("sizes__minimum", filter=size_q) + Max("sizes__maximum", filter=size_q)) / 2.0,
+                    output_field=FloatField(),
+                )
+            )
+        else:
+            qs = qs.filter(sizes__maximum__isnull=False, sizes__type=ant_type)
+            qs = qs.annotate(display_size=Max("sizes__maximum", filter=size_q))
+
+        qs = qs.filter(display_size__isnull=False)
+        order_prefix = "-" if sort_order == "desc" else ""
+        qs = qs.distinct().order_by(f"{order_prefix}display_size")
+
+        total = qs.count()
+        ants = list(qs[: self.MAX_RESULTS])
+
+        return render(
+            request,
+            "ants/size_comparison_results.html",
+            {
+                "ants": ants,
+                "total": total,
+                "max_results": self.MAX_RESULTS,
             },
         )
