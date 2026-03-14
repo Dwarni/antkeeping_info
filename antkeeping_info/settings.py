@@ -103,6 +103,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "antkeeping_info.context_processors.discord_url",
             ],
         },
     },
@@ -232,6 +233,9 @@ vars().update(EMAIL_CONFIG)
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@antkeeping.info")
 CONTACT_RECIPIENT_EMAIL = env("CONTACT_RECIPIENT_EMAIL")
+
+# Social links
+DISCORD_URL = env("DISCORD_URL", default="https://discord.gg/xuuQnGt")
 
 # prod settings
 
