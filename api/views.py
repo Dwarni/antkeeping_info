@@ -1,6 +1,8 @@
 from django.db.models import F, Q, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 from rest_framework.response import Response
 
@@ -77,6 +79,8 @@ class AntSpeciesDetailView(generics.GenericAPIView):
     Return a specific ant species.
     """
 
+    serializer_class = AntSpeciesDetailSerializer
+
     def get(self, request, ant_species):
         ant_species_qs = AntSpecies.objects.select_related(
             "genus", "genus__tribe", "genus__tribe__sub_family"
@@ -148,6 +152,7 @@ def get_region_query(region):
     return region_query
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
 class AntsByRegionView(generics.GenericAPIView):
     """
     Return a list of ants which occur in the specific region.
@@ -191,6 +196,7 @@ def get_species_in_query(region_query):
     )
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
 class AntsByRegionDiffView(generics.GenericAPIView):
     """
     Return a list of ants which occur in the specific region
@@ -212,6 +218,7 @@ class AntsByRegionDiffView(generics.GenericAPIView):
         return Response(ants)
 
 
+@extend_schema(responses=OpenApiTypes.OBJECT)
 class AntsByRegionCommonView(generics.GenericAPIView):
     """
     Return a list of ants which occur in both regions.

@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "taggit",
     "rest_framework",
+    "django_filters",
     "corsheaders",
     "sorl.thumbnail",
     "tinymce",
