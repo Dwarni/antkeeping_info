@@ -12,7 +12,7 @@ class AntSpeciesFilter(django_filters.FilterSet):
     )
     region = CharFilter(
         method="filter_by_region",
-        label="Filter by region code (e.g. DE, de-by) or region ID.",
+        label="Filter by region code (e.g. de, de-by) or region ID.",
     )
     forbidden_in_eu = BooleanFilter(
         label="Filter by EU import restriction status.",
@@ -22,24 +22,41 @@ class AntSpeciesFilter(django_filters.FilterSet):
         label="Filter by genus slug (e.g. lasius), name (e.g. Lasius), or integer ID.",
     )
     hibernation = CharFilter(
-        field_name="hibernation",
-        label="Filter by hibernation type (e.g. NO, SHORT, LONG).",
+        method="filter_hibernation",
+        label=(
+            "Filter by hibernation type. Values: "
+            "no (no hibernation), "
+            "short (end of november until end of february), "
+            "long (end of september until end of march)."
+        ),
     )
     worker_polymorphism = BooleanFilter(
         field_name="worker_polymorphism",
         label="Filter by worker polymorphism (true/false).",
     )
     nutrition = CharFilter(
-        field_name="nutrition",
-        label="Filter by nutrition type (e.g. OMNIVOROUS, SEEDS, SUGAR_INSECTS).",
+        method="filter_nutrition",
+        label=(
+            "Filter by nutrition type. Values: "
+            "leaves (leaves, grass and other vegetables), "
+            "omnivorous (sugar water, honey, insects, meat, seeds, nuts etc.), "
+            "seeds (mainly seeds and nuts, but also dead insects and sugar water), "
+            "sugar_insects (insects, meat, sugar water, honey etc.)."
+        ),
     )
     colony_structure = CharFilter(
-        field_name="colony_structure",
-        label="Filter by colony structure (e.g. MONOGYNOUS, POLYGYNOUS).",
+        method="filter_colony_structure",
+        label="Filter by colony structure (mono, poly, or olig).",
     )
     founding = CharFilter(
-        field_name="founding",
-        label="Filter by founding type (e.g. CLAUSTRAL, SEMI_CLAUSTRAL).",
+        method="filter_founding",
+        label=(
+            "Filter by founding type. Values: "
+            "c (claustral — queen needs no food), "
+            "sc (semi-claustral — queen needs to be fed), "
+            "sp (social parasitic — queen needs host workers), "
+            "spp (social parasitic — founding possible with host pupae)."
+        ),
     )
     size_min = NumberFilter(
         method="filter_size_min",
@@ -94,6 +111,18 @@ class AntSpeciesFilter(django_filters.FilterSet):
             sizes__maximum__gte=value,
             sizes__minimum__lte=value,
         )
+
+    def filter_colony_structure(self, queryset, name, value):
+        return queryset.filter(colony_structure=value.upper())
+
+    def filter_founding(self, queryset, name, value):
+        return queryset.filter(founding=value.lower())
+
+    def filter_nutrition(self, queryset, name, value):
+        return queryset.filter(nutrition=value.upper())
+
+    def filter_hibernation(self, queryset, name, value):
+        return queryset.filter(hibernation=value.upper())
 
     def filter_valid(self, queryset, name, value):
         return queryset.filter(valid=value)

@@ -702,6 +702,12 @@ class AntSpeciesFilterTest(TestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
 
+    def test_filter_by_hibernation_case_insensitive(self):
+        response = self._get("hibernation=long")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
     # --- worker_polymorphism filter ---
 
     def test_filter_by_worker_polymorphism_true(self):
@@ -724,6 +730,12 @@ class AntSpeciesFilterTest(TestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
 
+    def test_filter_by_nutrition_case_insensitive(self):
+        response = self._get("nutrition=omnivorous")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
+
     # --- colony_structure filter ---
 
     def test_filter_by_colony_structure(self):
@@ -732,10 +744,22 @@ class AntSpeciesFilterTest(TestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
 
+    def test_filter_by_colony_structure_case_insensitive(self):
+        response = self._get("colony_structure=mono")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Lasius niger")
+
     # --- founding filter ---
 
     def test_filter_by_founding(self):
         response = self._get("founding=sc")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
+
+    def test_filter_by_founding_case_insensitive(self):
+        response = self._get("founding=SC")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Formica rufa")
