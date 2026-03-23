@@ -6,14 +6,18 @@ from django.utils.safestring import mark_safe
 
 
 class ContactForm(forms.Form):
-    """Contact form with honeypot spam protection and GDPR consent checkbox."""
+    """Contact form with multi-layer spam protection and GDPR consent checkbox."""
 
     name = forms.CharField(max_length=150, label="Your name")
     email = forms.EmailField(label="Your email address")
     subject = forms.CharField(max_length=200, label="Subject")
     message = forms.CharField(widget=forms.Textarea, label="Message")
-    # Honeypot: invisible to real users, filled by bots that parse the DOM
-    website = forms.CharField(required=False, label="Website")
+    # Honeypot fields: invisible to real users, filled by bots that parse the DOM.
+    # Named after plausible form fields to avoid triggering bot honeypot detection.
+    phone = forms.CharField(required=False, label="Phone")
+    address = forms.CharField(required=False, label="Address")
+    # Signed timestamp token for time-gate check (injected by the view via get_initial).
+    form_token = forms.CharField(required=False, widget=forms.HiddenInput)
     send_copy = forms.BooleanField(required=False, label="Send me a copy of this message")
     gdpr_consent = forms.BooleanField(required=True)
 
@@ -30,10 +34,12 @@ class ContactForm(forms.Form):
             "subject",
             "message",
             Div(
-                Field("website", tabindex="-1", autocomplete="off"),
+                Field("phone", tabindex="-1"),
+                Field("address", tabindex="-1"),
                 css_class="visually-hidden",
                 aria_hidden="true",
             ),
+            "form_token",
             "send_copy",
             "gdpr_consent",
             Submit("submit", "Send Message"),
