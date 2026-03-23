@@ -7,6 +7,8 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from django.views.generic import FormView
 
 from .forms import ContactForm
@@ -18,6 +20,7 @@ MAX_SUBMISSIONS_PER_HOUR = 3
 RATE_LIMIT_TIMEOUT = 3600     # Cache key TTL in seconds
 
 
+@method_decorator(never_cache, name="dispatch")
 class ContactView(FormView):
     template_name = "contact/contact.html"
     form_class = ContactForm
