@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core import signing
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import FormView
 
@@ -59,19 +60,14 @@ class ContactView(FormView):
         try:
             # First check: is the token valid at all and not over an hour old?
             signing.loads(token, max_age=3600)
-        except signing.SignatureExpired:
-            # Legitimate user on a very old cached page — re-render with a fresh token.
+        except (signing.SignatureExpired, signing.BadSignature):
+            # Token missing, expired, or tampered — redirect to GET so a fresh token
+            # is generated via get_initial(). Setting form.initial on a bound form has
+            # no effect (POST data takes precedence), so a redirect is the only way to
+            # serve a page with a valid token.
+            logger.info("Contact form: invalid form_token, redirecting to fresh form (IP: %s)", ip)
             messages.warning(self.request, "Your session has expired. Please try again.")
-            form.initial["form_token"] = signing.dumps("contact_form")
-            return self.form_invalid(form)
-        except signing.BadSignature:
-            # Missing, empty, or tampered token — re-render with a fresh token.
-            # This also handles users who had the page open before deployment
-            # or received a cached page without the token field.
-            logger.info("Contact form: missing/bad form_token, re-rendering (IP: %s)", ip)
-            messages.warning(self.request, "Your session has expired. Please try again.")
-            form.initial["form_token"] = signing.dumps("contact_form")
-            return self.form_invalid(form)
+            return redirect("contact")
 
         try:
             # Second check: was the form submitted too quickly?
