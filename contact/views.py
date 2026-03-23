@@ -65,13 +65,13 @@ class ContactView(FormView):
             form.initial["form_token"] = signing.dumps("contact_form")
             return self.form_invalid(form)
         except signing.BadSignature:
-            # Missing, empty, or tampered token — treat as bot.
-            logger.info("Spam discarded: bad form_token (IP: %s)", ip)
-            messages.success(
-                self.request,
-                "Your message has been sent. Thank you for contacting us!",
-            )
-            return super().form_valid(form)
+            # Missing, empty, or tampered token — re-render with a fresh token.
+            # This also handles users who had the page open before deployment
+            # or received a cached page without the token field.
+            logger.info("Contact form: missing/bad form_token, re-rendering (IP: %s)", ip)
+            messages.warning(self.request, "Your session has expired. Please try again.")
+            form.initial["form_token"] = signing.dumps("contact_form")
+            return self.form_invalid(form)
 
         try:
             # Second check: was the form submitted too quickly?
