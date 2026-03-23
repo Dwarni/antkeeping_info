@@ -36,7 +36,7 @@ class ContactForm(forms.Form):
             Div(
                 Field("phone", tabindex="-1"),
                 Field("address", tabindex="-1"),
-                css_class="visually-hidden",
+                css_class="d-none",
                 aria_hidden="true",
             ),
             "form_token",
