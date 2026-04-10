@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% load i18n %}
+{% block title %}Login Cancelled — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <i class="bi bi-x-circle fs-1 text-secondary mb-3 d-block"></i>
+        <h2>{% trans "Login Cancelled" %}</h2>
+        <p class="mt-3">{% blocktrans with login_url='' %}You decided to cancel logging in to our site using one of your existing accounts.{% endblocktrans %}</p>
+        <a href="{% url 'account_login' %}" class="btn btn-primary mt-2">{% trans "Back to Login" %}</a>
+    </div>
+</div>
+{% endblock %}

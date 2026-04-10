@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% load i18n %}
+{% block title %}Email Addresses — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <h2 class="mb-3">{% trans "Email Addresses" %}</h2>
+        {% if emailaddresses %}
+            <p>{% trans "The following email addresses are associated with your account:" %}</p>
+            <form method="post" action="{% url 'account_email' %}">
+                {% csrf_token %}
+                <div class="list-group mb-3">
+                    {% for radio in emailaddress_radios %}
+                    {% with ea=radio.emailaddress %}
+                    <label class="list-group-item d-flex align-items-center gap-2">
+                        <input type="radio" name="email" value="{{ ea.email }}"
+                               {% if radio.checked %}checked{% endif %}>
+                        <span class="flex-grow-1">{{ ea.email }}</span>
+                        {% if ea.primary %}
+                            <span class="badge bg-primary">{% trans "Primary" %}</span>
+                        {% endif %}
+                        {% if ea.verified %}
+                            <span class="badge bg-success">{% trans "Verified" %}</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">{% trans "Unverified" %}</span>
+                        {% endif %}
+                    </label>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" name="action_primary" class="btn btn-outline-primary btn-sm">
+                        {% trans "Make Primary" %}
+                    </button>
+                    <button type="submit" name="action_send" class="btn btn-outline-secondary btn-sm">
+                        {% trans "Re-send Verification" %}
+                    </button>
+                    <button type="submit" name="action_remove" class="btn btn-outline-danger btn-sm"
+                            onclick="return confirm('{% trans "Do you really want to remove the selected email address?" %}')">
+                        {% trans "Remove" %}
+                    </button>
+                </div>
+            </form>
+            <hr>
+        {% endif %}
+        {% if can_add_email %}
+        <h5>{% trans "Add Email Address" %}</h5>
+        <form method="post" action="{% url 'account_email' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="id_email" class="form-label">{% trans "Email" %}</label>
+                <input type="email" name="email" id="id_email" class="form-control"
+                       value="{{ form.email.value|default:'' }}">
+                {% if form.email.errors %}
+                    <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" name="action_add" class="btn btn-primary btn-sm">
+                {% trans "Add Email" %}
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

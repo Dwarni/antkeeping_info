@@ -7,11 +7,14 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
             <li><a class="dropdown-item" href="{% url "user_profile" %}">{% trans "Profile" %}</a></li>
-            <li><a class="dropdown-item" href="{% url "logout" %}">{% trans "Logout" %}</a></li>
-        </div>
+            <li><a class="dropdown-item" href="{% url "account_logout" %}">{% trans "Logout" %}</a></li>
+        </ul>
     </li>
 {% else %}
     <li class="nav-item">
-        <a class="nav-link" href="{% url "login" %}">{% trans "Login" %}</a>   
+        <a class="nav-link" href="{% url "account_login" %}">{% trans "Login" %}</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url "account_signup" %}">{% trans "Register" %}</a>
     </li>
 {% endif %}

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% load i18n crispy_forms_tags %}
+{% block title %}Complete Sign Up — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5">
+        <h2 class="mb-3">{% trans "Complete Sign Up" %}</h2>
+        <p>{% blocktrans with provider=account.get_provider.name %}You are about to sign in using your {{ provider }} account. Please complete the form below to finish setting up your account.{% endblocktrans %}</p>
+        <form method="post" action="{% url 'socialaccount_signup' %}">
+            {% csrf_token %}
+            {{ form|crispy }}
+            {{ redirect_field }}
+            <button type="submit" class="btn btn-primary w-100">{% trans "Sign Up" %}</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,48 @@
 {% extends "layout.html" %}
-{% load crispy_forms_tags %}
+{% load i18n socialaccount %}
+{% block title %}Profile — Antkeeping.info{% endblock %}
 {% block content %}
-{% crispy form %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <h2 class="mb-4">{% trans "Profile" %}</h2>
+        <h5 class="mb-3">{% trans "Connected accounts" %}</h5>
+        <ul class="list-group mb-2">
+            {% for provider in social_providers %}{% if provider.configured or provider.account %}
+            <li class="list-group-item d-flex align-items-center gap-3">
+                <i class="bi {{ provider.icon }} fs-5"></i>
+                <span class="flex-grow-1">{{ provider.name }}</span>
+                {% if provider.account %}
+                    {% if can_disconnect %}
+                    <form method="post" action="{% url 'profile_disconnect' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="account" value="{{ provider.account.id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            {% trans "Remove" %}
+                        </button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-sm btn-outline-danger" disabled
+                            title="{% trans 'Set a password first to remove this account' %}">
+                        {% trans "Remove" %}
+                    </button>
+                    {% endif %}
+                {% else %}
+                    <a href="{% provider_login_url provider.id process='connect' next=request.path %}"
+                       class="btn btn-sm btn-outline-secondary">
+                        {% trans "Connect" %}
+                    </a>
+                {% endif %}
+            </li>
+            {% endif %}{% endfor %}
+        </ul>
+        {% if not can_disconnect %}
+        <p class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            {% trans "To remove a social account, first" %}
+            <a href="{% url 'account_set_password' %}">{% trans "set a password" %}</a>
+            {% trans "for your account." %}
+        </p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

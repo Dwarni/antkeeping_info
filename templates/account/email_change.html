@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% load i18n %}
+{% block title %}Change Email — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5">
+        <h2 class="mb-3">{% trans "Change Email Address" %}</h2>
+        {% if current_emailaddress %}
+        <div class="mb-3">
+            <label class="form-label text-muted">{% trans "Current email" %}</label>
+            <input type="email" class="form-control" value="{{ current_emailaddress.email }}" disabled>
+        </div>
+        {% endif %}
+        {% if new_emailaddress %}
+        <div class="mb-3">
+            <label class="form-label text-muted">
+                {% if not current_emailaddress %}{% trans "Current email" %}{% else %}{% trans "Changing to" %}{% endif %}
+            </label>
+            <input type="email" class="form-control" value="{{ new_emailaddress.email }}" disabled>
+            <div class="form-text">
+                {% trans "Your email address is still pending verification." %}
+                <form id="pending-email" method="post" action="{% url 'account_email' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="email" value="{{ new_emailaddress.email }}">
+                    <button type="submit" name="action_send" class="btn btn-link btn-sm p-0">{% trans "Re-send Verification" %}</button>
+                    {% if current_emailaddress %}
+                    &nbsp;·&nbsp;
+                    <button type="submit" name="action_remove" class="btn btn-link btn-sm p-0 text-danger">{% trans "Cancel Change" %}</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        <form method="post" action="{% url 'account_email' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="id_email" class="form-label">{% trans "Change to" %}</label>
+                <input type="email" name="email" id="id_email" class="form-control"
+                       value="{{ form.email.value|default:'' }}">
+                {% if form.email.errors %}
+                    <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" name="action_add" class="btn btn-primary">{% trans "Change Email" %}</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% load i18n %}
+{% block title %}Sign Out — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5 text-center">
+        <h2 class="mb-3">{% trans "Sign Out" %}</h2>
+        <p>{% trans "Are you sure you want to sign out?" %}</p>
+        <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            {{ redirect_field }}
+            <button type="submit" class="btn btn-primary">{% trans "Sign Out" %}</button>
+            <a href="/" class="btn btn-outline-secondary ms-2">{% trans "Cancel" %}</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

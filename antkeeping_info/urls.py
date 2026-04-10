@@ -35,6 +35,7 @@ urlpatterns = [
     path("search/", search_views.SearchView.as_view(), name="search"),
     path("staff/", include("staff.urls")),
     path("admin/", admin.site.urls),
+    path("accounts/", include("allauth.urls")),
     path("users/", include("users.urls")),
     path("contact/", include("contact.urls")),
     path(

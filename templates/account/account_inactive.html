@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% load i18n %}
+{% block title %}Account Inactive — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <i class="bi bi-slash-circle fs-1 text-danger mb-3 d-block"></i>
+        <h2>{% trans "Account Inactive" %}</h2>
+        <p class="mt-3">{% trans "This account is inactive." %}</p>
+    </div>
+</div>
+{% endblock %}

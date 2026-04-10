@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% load i18n %}
+{% block title %}
+    {% if process == "connect" %}{% trans "Connect Account" %}{% else %}{% trans "Sign In" %}{% endif %}
+    — Antkeeping.info
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5 text-center">
+        {% if process == "connect" %}
+            <h2 class="mb-3">{% blocktrans with provider=provider.name %}Connect {{ provider }}{% endblocktrans %}</h2>
+            <p>{% blocktrans with provider=provider.name %}You are about to connect a new third-party account from {{ provider }}.{% endblocktrans %}</p>
+        {% else %}
+            <h2 class="mb-3">{% blocktrans with provider=provider.name %}Sign In Via {{ provider }}{% endblocktrans %}</h2>
+            <p>{% blocktrans with provider=provider.name %}You are about to sign in using a third-party account from {{ provider }}.{% endblocktrans %}</p>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">{% trans "Continue" %}</button>
+            <a href="{% url 'account_login' %}" class="btn btn-outline-secondary ms-2">{% trans "Cancel" %}</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

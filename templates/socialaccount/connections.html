@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% load i18n socialaccount crispy_forms_tags %}
+{% block title %}Connected accounts — Antkeeping.info{% endblock %}
+{% block content %}
+{% get_providers as socialaccount_providers %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <h2 class="mb-4">{% trans "Connected accounts" %}</h2>
+        {% if form.accounts %}
+        <h5>{% trans "Currently connected" %}</h5>
+        {% with can_disconnect=request.user.has_usable_password %}
+        <ul class="list-group mb-3">
+            {% for base_account in form.accounts %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                    {% if base_account.provider == "discord" %}<i class="bi bi-discord me-2"></i>{% endif %}
+                    {% if base_account.provider == "google" %}<i class="bi bi-google me-2"></i>{% endif %}
+                    {% if base_account.provider == "facebook" %}<i class="bi bi-facebook me-2"></i>{% endif %}
+                    {{ base_account.get_provider_display }}
+                </span>
+                {% if can_disconnect %}
+                <form method="post" action="{% url 'socialaccount_connections' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="account" value="{{ base_account.id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        {% trans "Disconnect" %}
+                    </button>
+                </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% if not can_disconnect %}
+        <p class="text-muted small">
+            <i class="bi bi-info-circle me-1"></i>
+            {% trans "To disconnect a social account, first set a password for your account." %}
+            <a href="{% url 'account_set_password' %}">{% trans "Set password" %}</a>
+        </p>
+        {% endif %}
+        {% endwith %}
+        {% else %}
+        <p class="text-muted">{% trans "No connected social accounts." %}</p>
+        {% endif %}
+
+        <h5 class="mt-4">{% trans "Connect a new account" %}</h5>
+        <div class="d-grid gap-2">
+            {% for provider in socialaccount_providers %}
+            <a href="{% provider_login_url provider.id process='connect' %}"
+               class="btn btn-outline-secondary">
+                {% if provider.id == "discord" %}<i class="bi bi-discord me-2"></i>{% endif %}
+                {% if provider.id == "google" %}<i class="bi bi-google me-2"></i>{% endif %}
+                {% if provider.id == "facebook" %}<i class="bi bi-facebook me-2"></i>{% endif %}
+                {% blocktrans with name=provider.name %}Connect {{ name }}{% endblocktrans %}
+            </a>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            <a href="{% url 'user_profile' %}" class="btn btn-outline-secondary">
+                {% trans "Back to Profile" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
