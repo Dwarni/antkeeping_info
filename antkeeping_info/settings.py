@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.discord",
     "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.facebook",
     "django_extensions",
     "ants",
     "home",
@@ -199,12 +198,15 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_LOGOUT_ON_GET = True
 
 # django-allauth social account settings
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 # Link social account to existing user if email matches instead of creating a new user
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+# Also automatically connect the social account to the existing user (not just authenticate)
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 
 LOGIN_URL = "/accounts/login/"
 

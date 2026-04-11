@@ -15,7 +15,6 @@ from allauth.socialaccount.views import ConnectionsView
 SOCIAL_PROVIDERS = [
     {"id": "discord", "name": "Discord", "icon": "bi-discord"},
     {"id": "google", "name": "Google", "icon": "bi-google"},
-    {"id": "facebook", "name": "Facebook", "icon": "bi-facebook"},
 ]
 
 

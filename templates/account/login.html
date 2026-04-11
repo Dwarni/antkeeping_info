@@ -22,13 +22,14 @@
         <h5 class="text-center mb-3">{% trans "Or sign in with" %}</h5>
         <div class="d-grid gap-2">
             {% for provider in socialaccount_providers %}
-            <a href="{% provider_login_url provider.id process='login' %}"
-               class="btn btn-outline-secondary">
-                {% if provider.id == "discord" %}<i class="bi bi-discord me-2"></i>{% endif %}
-                {% if provider.id == "google" %}<i class="bi bi-google me-2"></i>{% endif %}
-                {% if provider.id == "facebook" %}<i class="bi bi-facebook me-2"></i>{% endif %}
-                {{ provider.name }}
-            </a>
+            <form method="post" action="{% provider_login_url provider.id process='login' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary w-100">
+                    {% if provider.id == "discord" %}<i class="bi bi-discord me-2"></i>{% endif %}
+                    {% if provider.id == "google" %}<i class="bi bi-google me-2"></i>{% endif %}
+                    {{ provider.name }}
+                </button>
+            </form>
             {% endfor %}
         </div>
         {% endif %}

@@ -5,7 +5,7 @@
 <div class="row justify-content-center mt-4">
     <div class="col-md-6">
         <h2 class="mb-4">{% trans "Profile" %}</h2>
-        <h5 class="mb-3">{% trans "Connected accounts" %}</h5>
+        <h5 class="mb-3">{% trans "Social accounts" %}</h5>
         <ul class="list-group mb-2">
             {% for provider in social_providers %}{% if provider.configured or provider.account %}
             <li class="list-group-item d-flex align-items-center gap-3">
@@ -16,7 +16,8 @@
                     <form method="post" action="{% url 'profile_disconnect' %}">
                         {% csrf_token %}
                         <input type="hidden" name="account" value="{{ provider.account.id }}">
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('{% trans "Remove this connected account?" %}')">
                             {% trans "Remove" %}
                         </button>
                     </form>
@@ -27,10 +28,12 @@
                     </button>
                     {% endif %}
                 {% else %}
-                    <a href="{% provider_login_url provider.id process='connect' next=request.path %}"
-                       class="btn btn-sm btn-outline-secondary">
-                        {% trans "Connect" %}
-                    </a>
+                    <form method="post" action="{% provider_login_url provider.id process='connect' next=request.path %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            {% trans "Connect" %}
+                        </button>
+                    </form>
                 {% endif %}
             </li>
             {% endif %}{% endfor %}

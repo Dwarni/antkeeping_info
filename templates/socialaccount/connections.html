@@ -15,7 +15,6 @@
                 <span>
                     {% if base_account.provider == "discord" %}<i class="bi bi-discord me-2"></i>{% endif %}
                     {% if base_account.provider == "google" %}<i class="bi bi-google me-2"></i>{% endif %}
-                    {% if base_account.provider == "facebook" %}<i class="bi bi-facebook me-2"></i>{% endif %}
                     {{ base_account.get_provider_display }}
                 </span>
                 {% if can_disconnect %}
@@ -49,7 +48,6 @@
                class="btn btn-outline-secondary">
                 {% if provider.id == "discord" %}<i class="bi bi-discord me-2"></i>{% endif %}
                 {% if provider.id == "google" %}<i class="bi bi-google me-2"></i>{% endif %}
-                {% if provider.id == "facebook" %}<i class="bi bi-facebook me-2"></i>{% endif %}
                 {% blocktrans with name=provider.name %}Connect {{ name }}{% endblocktrans %}
             </a>
             {% endfor %}

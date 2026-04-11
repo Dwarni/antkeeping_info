@@ -9,13 +9,14 @@
         {% if socialaccount_providers %}
         <div class="d-grid gap-2 mb-3">
             {% for provider in socialaccount_providers %}
-            <a href="{% provider_login_url provider.id process='login' %}"
-               class="btn btn-outline-secondary">
-                {% if provider.id == "discord" %}<i class="bi bi-discord me-2"></i>{% endif %}
-                {% if provider.id == "google" %}<i class="bi bi-google me-2"></i>{% endif %}
-                {% if provider.id == "facebook" %}<i class="bi bi-facebook me-2"></i>{% endif %}
-                {% blocktrans with name=provider.name %}Sign up with {{ name }}{% endblocktrans %}
-            </a>
+            <form method="post" action="{% provider_login_url provider.id process='login' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary w-100">
+                    {% if provider.id == "discord" %}<i class="bi bi-discord me-2"></i>{% endif %}
+                    {% if provider.id == "google" %}<i class="bi bi-google me-2"></i>{% endif %}
+                    {% blocktrans with name=provider.name %}Sign up with {{ name }}{% endblocktrans %}
+                </button>
+            </form>
             {% endfor %}
         </div>
         <hr class="my-3">
