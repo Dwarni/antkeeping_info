@@ -678,3 +678,36 @@ class AntSpeciesImage(Image):
     class Meta:
         verbose_name = _("Ant species image")
         verbose_name_plural = _("Ant species images")
+
+
+class SpeciesDifficultyRating(models.Model):
+    """Community rating of how difficult an ant species is to keep."""
+
+    BEGINNER = 1
+    INTERMEDIATE = 2
+    ADVANCED = 3
+    EXPERT = 4
+    DIFFICULTY_CHOICES = [
+        (BEGINNER, "Beginner"),
+        (INTERMEDIATE, "Intermediate"),
+        (ADVANCED, "Advanced"),
+        (EXPERT, "Expert"),
+    ]
+
+    species = models.ForeignKey(
+        AntSpecies, on_delete=models.CASCADE, related_name="difficulty_ratings"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="difficulty_ratings",
+    )
+    difficulty = models.PositiveSmallIntegerField(choices=DIFFICULTY_CHOICES)
+    comment = models.TextField(blank=True, max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("species", "user")
+        verbose_name = _("Species difficulty rating")
+        verbose_name_plural = _("Species difficulty ratings")

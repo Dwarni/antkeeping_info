@@ -74,5 +74,10 @@ urlpatterns = [
         views.SizeComparisonResultsView.as_view(),
         name="size_comparison_results",
     ),
+    path(
+        "<islug:slug>/rate-difficulty/",
+        views.SubmitDifficultyRatingView.as_view(),
+        name="rate_difficulty",
+    ),
     path("<islug:slug>/", views.AntSpeciesDetail.as_view(), name="ant_detail"),
 ]

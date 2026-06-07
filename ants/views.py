@@ -10,7 +10,7 @@ from dal import autocomplete
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.db.models import Count, ExpressionWrapper, F, FloatField, Max, Min, Q
+from django.db.models import Avg, Count, ExpressionWrapper, F, FloatField, Max, Min, Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -20,13 +20,14 @@ from django.views.decorators.cache import never_cache
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 logger = logging.getLogger(__name__)
 
 from flights.models import Flight
 
 from .forms import NuptialFlightReportForm
-from .models import AntRegion, AntSize, AntSpecies, Genus, SubFamily, Tribe
+from .models import AntRegion, AntSize, AntSpecies, Genus, SpeciesDifficultyRating, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
 
 _MONTH_NAMES_SHORT = [
@@ -753,7 +754,77 @@ class AntSpeciesDetail(DetailView):
         context["male_size"] = male_size
         context["flight_frequency"] = self.__get_flight_frequency(ant)
 
+        ratings = ant.difficulty_ratings.all()
+        difficulty_ctx = _build_difficulty_context(ratings)
+        context.update(difficulty_ctx)
+        context["user_difficulty_rating"] = (
+            ratings.filter(user=self.request.user).first()
+            if self.request.user.is_authenticated
+            else None
+        )
+
         return context
+
+
+def _build_difficulty_context(ratings):
+    """Return difficulty rating aggregate data for template context."""
+    choices = SpeciesDifficultyRating.DIFFICULTY_CHOICES
+    total = ratings.count()
+    distribution = {
+        level: ratings.filter(difficulty=level).count() for level, _ in choices
+    }
+    avg = ratings.aggregate(avg=Avg("difficulty"))["avg"]
+    avg_rounded = round(avg, 1) if avg is not None else None
+
+    if total > 0:
+        dominant_level = max(distribution, key=distribution.get)
+        dominant_label = dict(choices)[dominant_level]
+    else:
+        dominant_level = None
+        dominant_label = None
+
+    return {
+        "difficulty_distribution": distribution,
+        "difficulty_total": total,
+        "difficulty_choices": choices,
+        "difficulty_avg": avg_rounded,
+        "dominant_difficulty_level": dominant_level,
+        "dominant_difficulty_label": dominant_label,
+    }
+
+
+class SubmitDifficultyRatingView(LoginRequiredMixin, View):
+    """Accept a difficulty rating POST for an ant species and return the updated partial."""
+
+    def post(self, request, slug):
+        species = AntSpecies.objects.get(slug=slug)
+        try:
+            difficulty = int(request.POST.get("difficulty", ""))
+        except (ValueError, TypeError):
+            return HttpResponse(status=400)
+
+        valid_levels = [level for level, _ in SpeciesDifficultyRating.DIFFICULTY_CHOICES]
+        if difficulty not in valid_levels:
+            return HttpResponse(status=400)
+
+        comment = request.POST.get("comment", "").strip()
+        SpeciesDifficultyRating.objects.update_or_create(
+            species=species,
+            user=request.user,
+            defaults={"difficulty": difficulty, "comment": comment},
+        )
+
+        ratings = species.difficulty_ratings.all()
+        context = _build_difficulty_context(ratings)
+        context.update({
+            "object": species,
+            "user_difficulty_rating": ratings.filter(user=request.user).first(),
+        })
+        return render(
+            request,
+            "ants/antspecies_detail/antspecies_detail_difficulty_rating.html",
+            context,
+        )
 
 
 class AntSpeciesAutocomplete(autocomplete.Select2QuerySetView):

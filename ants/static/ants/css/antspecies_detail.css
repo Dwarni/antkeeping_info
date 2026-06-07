@@ -90,3 +90,11 @@ display: inline;
 th {
     width: 220px;
 }
+
+.difficulty-label {
+    min-width: 8rem;
+}
+
+.difficulty-progress {
+    height: 1.1rem;
+}

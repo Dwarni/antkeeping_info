@@ -13,6 +13,7 @@ from ants.models import (
     Family,
     Genus,
     InvalidName,
+    SpeciesDifficultyRating,
     SpeciesDescription,
     SubFamily,
     Tribe,
@@ -159,3 +160,11 @@ class SubFamilyAdmin(BaseAdmin):
 @admin.register(AntRegion)
 class RegionAdmin(BaseAdmin):
     search_fields = ["name", "code", "parent__name"]
+
+
+@admin.register(SpeciesDifficultyRating)
+class SpeciesDifficultyRatingAdmin(admin.ModelAdmin):
+    list_display = ("species", "user", "difficulty", "created_at")
+    list_filter = ("difficulty",)
+    search_fields = ("species__name", "user__username")
+    readonly_fields = ("created_at", "updated_at")

@@ -31,6 +31,28 @@
     <small><a title="{% trans 'Edit species' %}" href="{% url 'admin:ants_antspecies_change' object.id %}"><i class="bi bi-pencil-fill"></i></a></small>
     {% endif %}
 </h2>
+{% if dominant_difficulty_level %}
+<p class="mb-1">
+    <a href="#difficulty-rating-section" class="text-decoration-none">
+        <span class="badge rounded-pill fs-6
+            {% if dominant_difficulty_level == 1 %}bg-success
+            {% elif dominant_difficulty_level == 2 %}bg-info text-dark
+            {% elif dominant_difficulty_level == 3 %}bg-warning text-dark
+            {% else %}bg-danger{% endif %}">
+            {% trans 'Keeping difficulty' %}: {{ dominant_difficulty_label }}
+        </span>
+        <small class="text-muted ms-1">{% blocktrans with count=difficulty_total %}{{ count }} rating{{ count|pluralize }}{% endblocktrans %}</small>
+    </a>
+</p>
+{% endif %}
+{% if not user.is_authenticated %}
+<p class="mb-2 small text-muted">
+    <a href="{% url 'account_login' %}">{% trans 'Log in' %}</a>
+    {% trans 'or' %}
+    <a href="{% url 'account_signup' %}">{% trans 'register' %}</a>
+    {% trans 'to rate the keeping difficulty of this species.' %}
+</p>
+{% endif %}
 {% if object.information_complete == False %}
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
         {% trans 'Species information is not complete yet!' %}
@@ -115,6 +137,9 @@
     {% include 'ants/antspecies_detail/antspecies_detail_keeping_parameters.html' %}
 </section>
 <section class="ant-detail-section">
+    {% include 'ants/antspecies_detail/antspecies_detail_difficulty_rating.html' %}
+</section>
+<section class="ant-detail-section">
     {% include 'ants/antspecies_detail/antspecies_detail_distribution.html' %}
 </section>
 <section class="ant-detail-section">
@@ -128,6 +153,7 @@
 </section>
 {% endblock %}
 {% block script %}
+    <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
     <script src="{% static 'ants/js/vendor/Chart.bundle.min.js' %}"></script>
     <script>
         var chartData = {% if flight_frequency %}{{ flight_frequency|safe }}{% else %}null{% endif %};

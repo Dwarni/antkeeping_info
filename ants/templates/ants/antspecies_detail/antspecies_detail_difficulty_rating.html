@@ -1,0 +1,95 @@
+{% load i18n %}
+<div id="difficulty-rating-section">
+    <h3>{% trans 'Community Difficulty Rating' %}</h3>
+    {% if difficulty_total > 0 %}
+    <div class="d-flex align-items-baseline gap-3 mb-2">
+        <span class="fs-2 fw-bold
+            {% if dominant_difficulty_level == 1 %}text-success
+            {% elif dominant_difficulty_level == 2 %}text-info
+            {% elif dominant_difficulty_level == 3 %}text-warning
+            {% else %}text-danger{% endif %}">
+            {{ difficulty_avg }}<small class="fs-6 text-muted fw-normal"> / 4</small>
+        </span>
+        <span>
+            <span class="fw-semibold">{{ dominant_difficulty_label }}</span><br>
+            <span class="text-muted small">{% blocktrans with count=difficulty_total %}Based on {{ count }} rating{{ count|pluralize }}{% endblocktrans %}</span>
+        </span>
+    </div>
+    <div class="mb-3">
+        {% for level, label in difficulty_choices %}
+        {% with count=difficulty_distribution|get_item:level %}
+        <div class="d-flex align-items-center mb-1 gap-2">
+            <span class="text-nowrap difficulty-label">{{ label }}</span>
+            <div class="progress flex-grow-1 difficulty-progress">
+                <div class="progress-bar
+                    {% if level == 1 %}bg-success
+                    {% elif level == 2 %}bg-info
+                    {% elif level == 3 %}bg-warning
+                    {% else %}bg-danger{% endif %}"
+                    role="progressbar"
+                    style="width:{% widthratio count difficulty_total 100 %}%"
+                    aria-valuenow="{{ count }}"
+                    aria-valuemin="0"
+                    aria-valuemax="{{ difficulty_total }}">
+                </div>
+            </div>
+            <span class="text-muted small text-nowrap">{{ count }}</span>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">{% trans 'No ratings yet. Be the first to rate this species!' %}</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <h4 class="h6 mt-3">{% trans 'Your rating' %}</h4>
+    <form hx-post="{% url 'rate_difficulty' object.slug %}"
+          hx-target="#difficulty-rating-section"
+          hx-swap="outerHTML">
+        {% csrf_token %}
+        <div class="d-flex flex-wrap gap-2 mb-2">
+            {% for level, label in difficulty_choices %}
+            <div>
+                <input class="btn-check"
+                       type="radio"
+                       name="difficulty"
+                       id="difficulty-{{ level }}"
+                       value="{{ level }}"
+                       autocomplete="off"
+                       {% if user_difficulty_rating and user_difficulty_rating.difficulty == level %}checked{% endif %}>
+                <label class="btn btn-sm
+                    {% if level == 1 %}btn-outline-success
+                    {% elif level == 2 %}btn-outline-info
+                    {% elif level == 3 %}btn-outline-warning
+                    {% else %}btn-outline-danger{% endif %}"
+                       for="difficulty-{{ level }}">
+                    {{ label }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mb-2">
+            <label for="difficulty-comment" class="form-label small">{% trans 'Comment (optional)' %}</label>
+            <textarea id="difficulty-comment"
+                      name="comment"
+                      class="form-control form-control-sm"
+                      rows="2"
+                      maxlength="500"
+                      placeholder="{% trans 'Why did you choose this difficulty level?' %}">{% if user_difficulty_rating %}{{ user_difficulty_rating.comment }}{% endif %}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">{% trans 'Save rating' %}</button>
+        {% if user_difficulty_rating %}
+        <small class="text-muted ms-2">{% trans 'You can update your rating at any time.' %}</small>
+        {% endif %}
+    </form>
+    {% else %}
+    <div class="alert alert-info d-inline-block py-2 px-3 mt-2 small" role="alert">
+        <i class="bi bi-star-half"></i>
+        <a href="{% url 'account_login' %}">{% trans 'Log in' %}</a>
+        {% trans 'or' %}
+        <a href="{% url 'account_signup' %}">{% trans 'create a free account' %}</a>
+        {% trans 'to rate the keeping difficulty of this species.' %}
+    </div>
+    {% endif %}
+</div>
