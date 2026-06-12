@@ -15,6 +15,16 @@ urlpatterns = [
         name="antdb_top_lists",
     ),
     path(
+        "food-overview",
+        views.FoodOverviewView.as_view(),
+        name="food_overview",
+    ),
+    path(
+        "food-overview/rate/",
+        views.SubmitFoodRatingFromOverviewView.as_view(),
+        name="food_overview_rate",
+    ),
+    path(
         "top-countries-by-number-of-ant-species",
         RedirectView.as_view(
             url="/antdb/top-lists?ranking=countries-by-species", permanent=True

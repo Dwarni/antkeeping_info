@@ -711,3 +711,69 @@ class SpeciesDifficultyRating(models.Model):
         unique_together = ("species", "user")
         verbose_name = _("Species difficulty rating")
         verbose_name_plural = _("Species difficulty ratings")
+
+
+class FoodItem(models.Model):
+    """A food item that can be offered to ant species. Staff-managed."""
+
+    PROTEIN = "PROTEIN"
+    SUGAR = "SUGAR"
+    SEEDS = "SEEDS"
+    NUTS = "NUTS"
+    PLANT = "PLANT"
+    OTHER = "OTHER"
+    CATEGORY_CHOICES = [
+        (PROTEIN, "Protein (feeder insects)"),
+        (SUGAR, "Sugar (honey, syrups)"),
+        (SEEDS, "Seeds"),
+        (NUTS, "Nuts"),
+        (PLANT, "Leaves"),
+        (OTHER, "Other"),
+    ]
+
+    name = models.CharField(max_length=200, unique=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    description = models.TextField(blank=True, max_length=500)
+    ordering = models.PositiveSmallIntegerField(default=0, db_index=True)
+
+    class Meta:
+        ordering = ["category", "ordering", "name"]
+        verbose_name = _("Food item")
+        verbose_name_plural = _("Food items")
+
+    def __str__(self):
+        return self.name
+
+
+class SpeciesFoodRating(models.Model):
+    """Community rating of how well an ant species accepts a specific food item."""
+
+    LIKED = 1
+    ACCEPTED = 2
+    IGNORED = 3
+    ACCEPTANCE_CHOICES = [
+        (LIKED, "Really liked"),
+        (ACCEPTED, "Accepted (not very interested)"),
+        (IGNORED, "Ignored"),
+    ]
+
+    species = models.ForeignKey(
+        AntSpecies, on_delete=models.CASCADE, related_name="food_ratings"
+    )
+    food_item = models.ForeignKey(
+        FoodItem, on_delete=models.CASCADE, related_name="species_ratings"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="food_ratings",
+    )
+    acceptance = models.PositiveSmallIntegerField(choices=ACCEPTANCE_CHOICES)
+    comment = models.TextField(blank=True, max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("species", "food_item", "user")
+        verbose_name = _("Species food rating")
+        verbose_name_plural = _("Species food ratings")

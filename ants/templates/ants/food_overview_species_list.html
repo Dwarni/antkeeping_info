@@ -1,0 +1,105 @@
+{% load i18n %}
+<div id="food-item-ratings-{{ food_item.pk }}" class="card-body p-0" data-food-item-id="{{ food_item.pk }}">
+  {% if total_ratings %}
+  <div class="px-3 pt-2 pb-1 text-muted small">
+    {{ total_ratings }} rating{{ total_ratings|pluralize }} across {{ total_species }} species{{ total_species|pluralize }}
+  </div>
+  {% endif %}
+
+  {% if not top_species %}
+    <p class="px-3 pb-3 mb-0 text-muted small">No ratings yet for this food item.</p>
+  {% else %}
+    <ul class="list-group list-group-flush">
+      {% for row in top_species %}
+      <li class="list-group-item d-flex align-items-center gap-2 flex-wrap py-2">
+        <a href="{% url 'ant_detail' row.species__slug %}" class="fw-semibold text-decoration-none me-1">
+          <em>{{ row.species__name }}</em>
+        </a>
+        <span class="badge bg-success" title="{% trans 'Really liked' %}">
+          <i class="bi bi-hand-thumbs-up-fill"></i> {{ row.liked_count }}
+        </span>
+        <span class="badge bg-warning text-dark" title="{% trans 'Accepted (not very interested)' %}">
+          <i class="bi bi-dash-circle-fill"></i> {{ row.accepted_count }}
+        </span>
+        <span class="badge bg-secondary" title="{% trans 'Ignored' %}">
+          <i class="bi bi-x-circle-fill"></i> {{ row.ignored_count }}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if extra_count > 0 %}
+    <div class="px-3 py-2 text-muted small border-top">
+      + {{ extra_count }} more species rated this food item.
+    </div>
+    {% endif %}
+  {% endif %}
+
+  {% if user.is_authenticated %}
+  <div class="border-top">
+    <button class="btn btn-sm btn-link text-decoration-none px-3 py-2" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#rate-form-{{ food_item.pk }}">
+      <i class="bi bi-plus-circle"></i> Add rating
+    </button>
+    <div class="collapse px-3 pb-3" id="rate-form-{{ food_item.pk }}">
+      <form hx-post="{% url 'food_overview_rate' %}"
+            hx-target="#food-item-ratings-{{ food_item.pk }}"
+            hx-swap="outerHTML">
+        {% csrf_token %}
+        <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
+        <input type="hidden" name="species_id" id="species-id-{{ food_item.pk }}">
+        <div class="mb-2 position-relative">
+          <label class="form-label small fw-semibold mb-1" for="species-search-{{ food_item.pk }}">Ant species</label>
+          <input type="text"
+                 class="form-control form-control-sm"
+                 id="species-search-{{ food_item.pk }}"
+                 name="q"
+                 placeholder="Type species name (min. 4 characters)…"
+                 autocomplete="off"
+                 hx-get="{% url 'nuptial_flight_species_suggest' %}"
+                 hx-trigger="input changed delay:300ms"
+                 hx-target="next div"
+                 hx-swap="innerHTML"
+                 hx-include="this">
+          <div id="species-suggest-{{ food_item.pk }}" class="position-absolute w-100" style="z-index: 100;"></div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1">Acceptance</label>
+          <div class="d-flex gap-2 flex-wrap">
+            <div>
+              <input class="btn-check" type="radio" name="acceptance"
+                     id="food-ov-{{ food_item.pk }}-1" value="1" autocomplete="off">
+              <label class="btn btn-sm btn-outline-success" for="food-ov-{{ food_item.pk }}-1">
+                <i class="bi bi-hand-thumbs-up"></i> Really liked
+              </label>
+            </div>
+            <div>
+              <input class="btn-check" type="radio" name="acceptance"
+                     id="food-ov-{{ food_item.pk }}-2" value="2" autocomplete="off">
+              <label class="btn btn-sm btn-outline-warning" for="food-ov-{{ food_item.pk }}-2">
+                <i class="bi bi-dash-circle"></i> Accepted
+              </label>
+            </div>
+            <div>
+              <input class="btn-check" type="radio" name="acceptance"
+                     id="food-ov-{{ food_item.pk }}-3" value="3" autocomplete="off">
+              <label class="btn btn-sm btn-outline-secondary" for="food-ov-{{ food_item.pk }}-3">
+                <i class="bi bi-x-circle"></i> Ignored
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="mb-2">
+          <textarea name="comment" class="form-control form-control-sm" rows="1"
+                    maxlength="500" placeholder="Optional comment…"></textarea>
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary">Save rating</button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="border-top px-3 py-2 text-muted small">
+    <a href="{% url 'account_login' %}">Log in</a> to add a rating.
+  </div>
+  {% endif %}
+</div>

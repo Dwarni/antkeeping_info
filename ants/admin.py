@@ -11,9 +11,11 @@ from ants.models import (
     CommonName,
     Distribution,
     Family,
+    FoodItem,
     Genus,
     InvalidName,
     SpeciesDifficultyRating,
+    SpeciesFoodRating,
     SpeciesDescription,
     SubFamily,
     Tribe,
@@ -167,4 +169,21 @@ class SpeciesDifficultyRatingAdmin(admin.ModelAdmin):
     list_display = ("species", "user", "difficulty", "created_at")
     list_filter = ("difficulty",)
     search_fields = ("species__name", "user__username")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(FoodItem)
+class FoodItemAdmin(admin.ModelAdmin):
+    list_display = ("name", "category", "ordering")
+    list_filter = ("category",)
+    search_fields = ("name",)
+    list_editable = ("ordering",)
+    ordering = ("category", "ordering", "name")
+
+
+@admin.register(SpeciesFoodRating)
+class SpeciesFoodRatingAdmin(admin.ModelAdmin):
+    list_display = ("species", "food_item", "user", "acceptance", "created_at")
+    list_filter = ("acceptance", "food_item__category")
+    search_fields = ("species__name", "food_item__name", "user__username")
     readonly_fields = ("created_at", "updated_at")

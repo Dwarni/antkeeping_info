@@ -1,0 +1,112 @@
+{% load i18n ants %}
+<div id="food-ratings-section">
+    <h3>{% trans 'Food Acceptance' %}</h3>
+
+    {% if not food_by_category %}
+    <p class="text-muted">{% trans 'No food items configured yet.' %}</p>
+    {% else %}
+
+    {% if not user.is_authenticated %}
+    <div class="alert alert-info d-inline-block py-2 px-3 mb-3 small" role="alert">
+        <i class="bi bi-star-half"></i>
+        <a href="{% url 'account_login' %}">{% trans 'Log in' %}</a>
+        {% trans 'or' %}
+        <a href="{% url 'account_signup' %}">{% trans 'create a free account' %}</a>
+        {% trans 'to rate how well this species accepts food items.' %}
+    </div>
+    {% endif %}
+
+    {% for category in food_by_category %}
+    <h4 class="h6 mt-3 mb-2 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em;">{{ category.category_label }}</h4>
+
+    {% for item in category.items %}
+    <div class="food-item mb-3">
+        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+            <span class="food-item-name">{{ item.food_item.name }}</span>
+            {% if item.total > 0 %}
+            <span class="badge bg-success food-acceptance-badge" title="{% trans 'Really liked' %}">
+                <i class="bi bi-hand-thumbs-up-fill"></i> {{ item.distribution|get_item:1 }}
+            </span>
+            <span class="badge bg-warning text-dark food-acceptance-badge" title="{% trans 'Accepted (not very interested)' %}">
+                <i class="bi bi-dash-circle-fill"></i> {{ item.distribution|get_item:2 }}
+            </span>
+            <span class="badge bg-secondary food-acceptance-badge" title="{% trans 'Ignored' %}">
+                <i class="bi bi-x-circle-fill"></i> {{ item.distribution|get_item:3 }}
+            </span>
+            <span class="text-muted small">
+                {% blocktrans with count=item.total %}{{ count }} rating{{ count|pluralize }}{% endblocktrans %}
+                {% if item.dominant_label %}
+                &mdash; <span class="fw-semibold">{{ item.dominant_label }}</span>
+                {% endif %}
+            </span>
+            {% else %}
+            <span class="text-muted small">{% trans 'No ratings yet' %}</span>
+            {% endif %}
+        </div>
+
+        {% if item.food_item.description %}
+        <p class="text-muted small mb-1">{{ item.food_item.description }}</p>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+        <form hx-post="{% url 'rate_food' object.slug %}"
+              hx-target="#food-ratings-section"
+              hx-swap="outerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="food_item_id" value="{{ item.food_item.pk }}">
+            <div class="d-flex flex-wrap gap-2 mb-1 align-items-center">
+                <div>
+                    <input class="btn-check"
+                           type="radio"
+                           name="acceptance"
+                           id="food-{{ item.food_item.pk }}-1"
+                           value="1"
+                           autocomplete="off"
+                           {% if item.user_rating and item.user_rating.acceptance == 1 %}checked{% endif %}>
+                    <label class="btn btn-sm btn-outline-success"
+                           for="food-{{ item.food_item.pk }}-1">
+                        <i class="bi bi-hand-thumbs-up"></i> {% trans 'Really liked' %}
+                    </label>
+                </div>
+                <div>
+                    <input class="btn-check"
+                           type="radio"
+                           name="acceptance"
+                           id="food-{{ item.food_item.pk }}-2"
+                           value="2"
+                           autocomplete="off"
+                           {% if item.user_rating and item.user_rating.acceptance == 2 %}checked{% endif %}>
+                    <label class="btn btn-sm btn-outline-warning"
+                           for="food-{{ item.food_item.pk }}-2">
+                        <i class="bi bi-dash-circle"></i> {% trans 'Accepted' %}
+                    </label>
+                </div>
+                <div>
+                    <input class="btn-check"
+                           type="radio"
+                           name="acceptance"
+                           id="food-{{ item.food_item.pk }}-3"
+                           value="3"
+                           autocomplete="off"
+                           {% if item.user_rating and item.user_rating.acceptance == 3 %}checked{% endif %}>
+                    <label class="btn btn-sm btn-outline-secondary"
+                           for="food-{{ item.food_item.pk }}-3">
+                        <i class="bi bi-x-circle"></i> {% trans 'Ignored' %}
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">{% trans 'Save' %}</button>
+            </div>
+            <div class="mb-1">
+                <textarea name="comment"
+                          class="form-control form-control-sm food-comment"
+                          rows="1"
+                          maxlength="500"
+                          placeholder="{% trans 'Optional comment…' %}">{% if item.user_rating %}{{ item.user_rating.comment }}{% endif %}</textarea>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endfor %}
+    {% endif %}
+</div>

@@ -10,7 +10,7 @@ from dal import autocomplete
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
-from django.db.models import Avg, Count, ExpressionWrapper, F, FloatField, Max, Min, Q
+from django.db.models import Avg, Case, Count, ExpressionWrapper, F, FloatField, IntegerField, Max, Min, Q, Sum, When
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 from flights.models import Flight
 
 from .forms import NuptialFlightReportForm
-from .models import AntRegion, AntSize, AntSpecies, Genus, SpeciesDifficultyRating, SubFamily, Tribe
+from .models import AntRegion, AntSize, AntSpecies, FoodItem, Genus, SpeciesDifficultyRating, SpeciesFoodRating, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
 
 _MONTH_NAMES_SHORT = [
@@ -763,6 +763,8 @@ class AntSpeciesDetail(DetailView):
             else None
         )
 
+        context.update(_build_food_context(ant, self.request.user))
+
         return context
 
 
@@ -791,6 +793,185 @@ def _build_difficulty_context(ratings):
         "dominant_difficulty_level": dominant_level,
         "dominant_difficulty_label": dominant_label,
     }
+
+
+def _build_food_context(species, user):
+    """Return food acceptance rating data grouped by category for template context."""
+    food_items = list(FoodItem.objects.all())
+    ratings_qs = species.food_ratings.select_related("food_item", "user").all()
+
+    ratings_by_food = {}
+    user_rating_by_food = {}
+    for rating in ratings_qs:
+        fid = rating.food_item_id
+        ratings_by_food.setdefault(fid, []).append(rating)
+        if user.is_authenticated and rating.user_id == user.pk:
+            user_rating_by_food[fid] = rating
+
+    choices = SpeciesFoodRating.ACCEPTANCE_CHOICES
+    categories = {}
+    for food_item in food_items:
+        item_ratings = ratings_by_food.get(food_item.pk, [])
+        total = len(item_ratings)
+        distribution = {level: 0 for level, _ in choices}
+        for r in item_ratings:
+            distribution[r.acceptance] += 1
+        if total > 0:
+            dominant = max(distribution, key=distribution.get)
+            dominant_label = dict(choices)[dominant]
+        else:
+            dominant = None
+            dominant_label = None
+
+        cat = food_item.category
+        if cat not in categories:
+            categories[cat] = {
+                "category_key": cat,
+                "category_label": dict(FoodItem.CATEGORY_CHOICES)[cat],
+                "items": [],
+            }
+        categories[cat]["items"].append({
+            "food_item": food_item,
+            "total": total,
+            "distribution": distribution,
+            "dominant_acceptance": dominant,
+            "dominant_label": dominant_label,
+            "user_rating": user_rating_by_food.get(food_item.pk),
+        })
+
+    ordered_keys = [key for key, _ in FoodItem.CATEGORY_CHOICES]
+    food_by_category = [categories[k] for k in ordered_keys if k in categories]
+    return {"food_by_category": food_by_category}
+
+
+_FOOD_OVERVIEW_TOP_N = 10
+
+
+def _build_food_overview_item_context(food_item):
+    ratings_qs = (
+        SpeciesFoodRating.objects
+        .filter(food_item=food_item)
+        .values("species_id", "species__name", "species__slug")
+        .annotate(
+            liked_count=Sum(Case(
+                When(acceptance=SpeciesFoodRating.LIKED, then=1), default=0,
+                output_field=IntegerField()
+            )),
+            accepted_count=Sum(Case(
+                When(acceptance=SpeciesFoodRating.ACCEPTED, then=1), default=0,
+                output_field=IntegerField()
+            )),
+            ignored_count=Sum(Case(
+                When(acceptance=SpeciesFoodRating.IGNORED, then=1), default=0,
+                output_field=IntegerField()
+            )),
+        )
+        .order_by("-liked_count", "-accepted_count", "ignored_count")
+    )
+    all_species = list(ratings_qs)
+    total_ratings = sum(
+        r["liked_count"] + r["accepted_count"] + r["ignored_count"]
+        for r in all_species
+    )
+    return {
+        "food_item": food_item,
+        "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
+        "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
+        "total_species": len(all_species),
+        "total_ratings": total_ratings,
+    }
+
+
+class SubmitFoodRatingFromOverviewView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            species = AntSpecies.objects.get(pk=int(request.POST.get("species_id", "")))
+        except (ValueError, TypeError, AntSpecies.DoesNotExist):
+            return HttpResponse(status=400)
+        try:
+            food_item = FoodItem.objects.get(pk=int(request.POST.get("food_item_id", "")))
+        except (ValueError, TypeError, FoodItem.DoesNotExist):
+            return HttpResponse(status=400)
+        try:
+            acceptance = int(request.POST.get("acceptance", ""))
+        except (ValueError, TypeError):
+            return HttpResponse(status=400)
+        valid_levels = [level for level, _ in SpeciesFoodRating.ACCEPTANCE_CHOICES]
+        if acceptance not in valid_levels:
+            return HttpResponse(status=400)
+        comment = request.POST.get("comment", "").strip()[:500]
+        SpeciesFoodRating.objects.update_or_create(
+            species=species,
+            food_item=food_item,
+            user=request.user,
+            defaults={"acceptance": acceptance, "comment": comment},
+        )
+        return render(
+            request,
+            "ants/food_overview_species_list.html",
+            _build_food_overview_item_context(food_item),
+        )
+
+
+class FoodOverviewView(TemplateView):
+    template_name = "ants/food_overview.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        valid_keys = [key for key, _ in FoodItem.CATEGORY_CHOICES]
+        raw = self.request.GET.get("category", "")
+        selected = raw if raw in valid_keys else valid_keys[0]
+
+        context["categories"] = FoodItem.CATEGORY_CHOICES
+        context["selected_category"] = selected
+        context["selected_category_label"] = dict(FoodItem.CATEGORY_CHOICES)[selected]
+
+        food_items = FoodItem.objects.filter(category=selected)
+
+        # Single DB query: aggregate liked/accepted/ignored per (food_item, species)
+        ratings_qs = (
+            SpeciesFoodRating.objects
+            .filter(food_item__category=selected)
+            .values("food_item_id", "species_id", "species__name", "species__slug")
+            .annotate(
+                liked_count=Sum(Case(
+                    When(acceptance=SpeciesFoodRating.LIKED, then=1), default=0,
+                    output_field=IntegerField()
+                )),
+                accepted_count=Sum(Case(
+                    When(acceptance=SpeciesFoodRating.ACCEPTED, then=1), default=0,
+                    output_field=IntegerField()
+                )),
+                ignored_count=Sum(Case(
+                    When(acceptance=SpeciesFoodRating.IGNORED, then=1), default=0,
+                    output_field=IntegerField()
+                )),
+            )
+            .order_by("food_item_id", "-liked_count", "-accepted_count", "ignored_count")
+        )
+
+        ratings_by_food = {}
+        for row in ratings_qs:
+            ratings_by_food.setdefault(row["food_item_id"], []).append(row)
+
+        food_data = []
+        for food_item in food_items:
+            all_species = ratings_by_food.get(food_item.pk, [])
+            total_ratings = sum(
+                r["liked_count"] + r["accepted_count"] + r["ignored_count"]
+                for r in all_species
+            )
+            food_data.append({
+                "food_item": food_item,
+                "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
+                "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
+                "total_species": len(all_species),
+                "total_ratings": total_ratings,
+            })
+
+        context["food_data"] = food_data
+        return context
 
 
 class SubmitDifficultyRatingView(LoginRequiredMixin, View):
@@ -823,6 +1004,43 @@ class SubmitDifficultyRatingView(LoginRequiredMixin, View):
         return render(
             request,
             "ants/antspecies_detail/antspecies_detail_difficulty_rating.html",
+            context,
+        )
+
+
+class SubmitFoodRatingView(LoginRequiredMixin, View):
+    """Accept a food acceptance rating POST for one food item and return the updated food section."""
+
+    def post(self, request, slug):
+        species = AntSpecies.objects.get(slug=slug)
+        try:
+            food_item_id = int(request.POST.get("food_item_id", ""))
+            acceptance = int(request.POST.get("acceptance", ""))
+        except (ValueError, TypeError):
+            return HttpResponse(status=400)
+
+        valid_levels = [level for level, _ in SpeciesFoodRating.ACCEPTANCE_CHOICES]
+        if acceptance not in valid_levels:
+            return HttpResponse(status=400)
+
+        try:
+            food_item = FoodItem.objects.get(pk=food_item_id)
+        except FoodItem.DoesNotExist:
+            return HttpResponse(status=400)
+
+        comment = request.POST.get("comment", "").strip()
+        SpeciesFoodRating.objects.update_or_create(
+            species=species,
+            food_item=food_item,
+            user=request.user,
+            defaults={"acceptance": acceptance, "comment": comment},
+        )
+
+        context = _build_food_context(species, request.user)
+        context["object"] = species
+        return render(
+            request,
+            "ants/antspecies_detail/antspecies_detail_food_ratings.html",
             context,
         )
 

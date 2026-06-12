@@ -98,3 +98,17 @@ th {
 .difficulty-progress {
     height: 1.1rem;
 }
+
+.food-item-name {
+    min-width: 10rem;
+    font-weight: 500;
+}
+
+.food-acceptance-badge {
+    min-width: 3.5rem;
+    text-align: center;
+}
+
+.food-comment {
+    max-width: 30rem;
+}

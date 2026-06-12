@@ -1,0 +1,77 @@
+{% extends 'layout.html' %}
+{% load i18n %}
+{% load static %}
+{% load bootstraptags %}
+{% block title %}Food Ratings | Antkeeping.info{% endblock %}
+{% block og_title %}Food Ratings — Antkeeping.info{% endblock %}
+{% block og_description %}Find out which ant species like a specific food item. Community-rated acceptance for protein, sugar, seeds, nuts, leaves, and more.{% endblock %}
+{% block content %}
+
+<h1 class="h2 mb-1">Food Ratings</h1>
+<p class="text-muted mb-4">Which ant species accept a given food? Ranked by community ratings — most liked first.</p>
+
+<ul class="nav nav-pills mb-4 flex-wrap">
+  {% for key, label in categories %}
+  <li class="nav-item">
+    <a class="nav-link{% if key == selected_category %} active{% endif %}"
+       href="?category={{ key }}">{{ label }}</a>
+  </li>
+  {% endfor %}
+</ul>
+
+{% if not food_data %}
+  <p class="text-muted">No food items in this category yet.</p>
+{% else %}
+  {% for entry in food_data %}
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-baseline gap-2 flex-wrap">
+      <h2 class="h5 mb-0">{{ entry.food_item.name }}</h2>
+      {% if entry.food_item.description %}
+      <span class="text-muted small">{{ entry.food_item.description }}</span>
+      {% endif %}
+    </div>
+    {% include "ants/food_overview_species_list.html" with food_item=entry.food_item top_species=entry.top_species extra_count=entry.extra_count total_species=entry.total_species total_ratings=entry.total_ratings %}
+  </div>
+  {% endfor %}
+{% endif %}
+
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script>
+(function () {
+    document.addEventListener('click', function (e) {
+        // Suggestion selected: fill visible search + hidden species_id, close dropdown
+        var btn = e.target.closest('[data-species-id]');
+        if (btn) {
+            var box = btn.closest('[id^="species-suggest-"]');
+            if (!box) return;
+            var id = box.id.replace('species-suggest-', '');
+            var search = document.getElementById('species-search-' + id);
+            var hidden = document.getElementById('species-id-' + id);
+            if (search) search.value = btn.dataset.speciesName;
+            if (hidden) hidden.value = btn.dataset.speciesId;
+            box.innerHTML = '';
+            return;
+        }
+        // Click outside: close all open suggestion dropdowns
+        document.querySelectorAll('[id^="species-suggest-"]').forEach(function (box) {
+            if (box.innerHTML && !box.contains(e.target)) {
+                var id = box.id.replace('species-suggest-', '');
+                var search = document.getElementById('species-search-' + id);
+                if (e.target !== search) box.innerHTML = '';
+            }
+        });
+    });
+
+    // Typing clears stale hidden species_id (forces re-selection from dropdown)
+    document.addEventListener('input', function (e) {
+        if (e.target.id && e.target.id.startsWith('species-search-')) {
+            var id = e.target.id.replace('species-search-', '');
+            var hidden = document.getElementById('species-id-' + id);
+            if (hidden) hidden.value = '';
+        }
+    });
+})();
+</script>
+{% endblock %}
