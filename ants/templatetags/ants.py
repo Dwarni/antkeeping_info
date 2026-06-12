@@ -1,4 +1,5 @@
 from django.template.defaulttags import register
+from django.utils.html import format_html, mark_safe
 
 from ants.helpers import format_integer_range
 from ants.helpers import format_value as format_value_helper
@@ -7,6 +8,23 @@ from ants.helpers import format_value as format_value_helper
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+
+@register.filter
+def star_display(avg):
+    """Render avg (1.0–5.0) as Bootstrap star icons (filled/half/empty out of 5)."""
+    if avg is None:
+        return mark_safe('<span class="text-muted">—</span>')
+    avg = float(avg)
+    icons = []
+    for i in range(1, 6):
+        if i <= int(avg):
+            icons.append('<i class="bi bi-star-fill text-warning"></i>')
+        elif i == int(avg) + 1 and (avg - int(avg)) >= 0.25:
+            icons.append('<i class="bi bi-star-half text-warning"></i>')
+        else:
+            icons.append('<i class="bi bi-star" style="opacity:.35;"></i>')
+    return mark_safe("".join(icons))
 
 
 @register.filter

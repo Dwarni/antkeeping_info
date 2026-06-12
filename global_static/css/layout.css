@@ -216,6 +216,21 @@ body.iframe {
   --bs-table-bg: #1e3d2c;
 }
 
+.species-suggest-dropdown {
+  z-index: 100;
+}
+
+.star-select-label {
+  cursor: pointer;
+  padding: 0 0.15rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+}
+
 @media print {
   html { color-scheme: light only; }
   [data-bs-theme="dark"] {

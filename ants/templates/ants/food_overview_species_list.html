@@ -1,8 +1,12 @@
-{% load i18n %}
+{% load i18n ants %}
 <div id="food-item-ratings-{{ food_item.pk }}" class="card-body p-0" data-food-item-id="{{ food_item.pk }}">
   {% if total_ratings %}
-  <div class="px-3 pt-2 pb-1 text-muted small">
-    {{ total_ratings }} rating{{ total_ratings|pluralize }} across {{ total_species }} species{{ total_species|pluralize }}
+  <div class="px-3 pt-2 pb-1 d-flex align-items-center gap-2 flex-wrap">
+    {{ overall_avg|star_display }}
+    <span class="text-muted small">
+      {{ overall_avg|floatformat:"-1" }}/5 —
+      {{ total_ratings }} rating{{ total_ratings|pluralize }} across {{ total_species }} species{{ total_species|pluralize }}
+    </span>
   </div>
   {% endif %}
 
@@ -15,15 +19,8 @@
         <a href="{% url 'ant_detail' row.species__slug %}" class="fw-semibold text-decoration-none me-1">
           <em>{{ row.species__name }}</em>
         </a>
-        <span class="badge bg-success" title="{% trans 'Really liked' %}">
-          <i class="bi bi-hand-thumbs-up-fill"></i> {{ row.liked_count }}
-        </span>
-        <span class="badge bg-warning text-dark" title="{% trans 'Accepted (not very interested)' %}">
-          <i class="bi bi-dash-circle-fill"></i> {{ row.accepted_count }}
-        </span>
-        <span class="badge bg-secondary" title="{% trans 'Ignored' %}">
-          <i class="bi bi-x-circle-fill"></i> {{ row.ignored_count }}
-        </span>
+        {{ row.species_avg|star_display }}
+        <small class="text-muted">({{ row.rating_count }})</small>
       </li>
       {% endfor %}
     </ul>
@@ -61,32 +58,39 @@
                  hx-target="next div"
                  hx-swap="innerHTML"
                  hx-include="this">
-          <div id="species-suggest-{{ food_item.pk }}" class="position-absolute w-100" style="z-index: 100;"></div>
+          <div id="species-suggest-{{ food_item.pk }}" class="position-absolute w-100 species-suggest-dropdown"></div>
         </div>
         <div class="mb-2">
           <label class="form-label small fw-semibold mb-1">Acceptance</label>
-          <div class="d-flex gap-2 flex-wrap">
-            <div>
-              <input class="btn-check" type="radio" name="acceptance"
+          <div class="star-selector" id="star-ov-{{ food_item.pk }}">
+            <div class="d-flex gap-0 align-items-center">
+              <input class="star-radio visually-hidden" type="radio" name="acceptance"
                      id="food-ov-{{ food_item.pk }}-1" value="1" autocomplete="off">
-              <label class="btn btn-sm btn-outline-success" for="food-ov-{{ food_item.pk }}-1">
-                <i class="bi bi-hand-thumbs-up"></i> Really liked
+              <label class="star-select-label" for="food-ov-{{ food_item.pk }}-1">
+                <i class="bi bi-star text-secondary"></i>
               </label>
-            </div>
-            <div>
-              <input class="btn-check" type="radio" name="acceptance"
+              <input class="star-radio visually-hidden" type="radio" name="acceptance"
                      id="food-ov-{{ food_item.pk }}-2" value="2" autocomplete="off">
-              <label class="btn btn-sm btn-outline-warning" for="food-ov-{{ food_item.pk }}-2">
-                <i class="bi bi-dash-circle"></i> Accepted
+              <label class="star-select-label" for="food-ov-{{ food_item.pk }}-2">
+                <i class="bi bi-star text-secondary"></i>
               </label>
-            </div>
-            <div>
-              <input class="btn-check" type="radio" name="acceptance"
+              <input class="star-radio visually-hidden" type="radio" name="acceptance"
                      id="food-ov-{{ food_item.pk }}-3" value="3" autocomplete="off">
-              <label class="btn btn-sm btn-outline-secondary" for="food-ov-{{ food_item.pk }}-3">
-                <i class="bi bi-x-circle"></i> Ignored
+              <label class="star-select-label" for="food-ov-{{ food_item.pk }}-3">
+                <i class="bi bi-star text-secondary"></i>
+              </label>
+              <input class="star-radio visually-hidden" type="radio" name="acceptance"
+                     id="food-ov-{{ food_item.pk }}-4" value="4" autocomplete="off">
+              <label class="star-select-label" for="food-ov-{{ food_item.pk }}-4">
+                <i class="bi bi-star text-secondary"></i>
+              </label>
+              <input class="star-radio visually-hidden" type="radio" name="acceptance"
+                     id="food-ov-{{ food_item.pk }}-5" value="5" autocomplete="off">
+              <label class="star-select-label" for="food-ov-{{ food_item.pk }}-5">
+                <i class="bi bi-star text-secondary"></i>
               </label>
             </div>
+            <div class="star-hint text-muted small mt-1"></div>
           </div>
         </div>
         <div class="mb-2">
@@ -103,3 +107,60 @@
   </div>
   {% endif %}
 </div>
+<script>
+(function () {
+    var STAR_LABELS = {
+        "1": "Ignored",
+        "2": "Hardly interested",
+        "3": "Moderately interested",
+        "4": "Above average interest",
+        "5": "Extremely interested (strong recruitment)"
+    };
+
+    function initStarSelector(sel) {
+        var labels = sel.querySelectorAll("label.star-select-label");
+        var inputs = sel.querySelectorAll("input.star-radio");
+        var hint = sel.querySelector(".star-hint");
+
+        function paint(upTo) {
+            labels.forEach(function (lbl, idx) {
+                var icon = lbl.querySelector("i");
+                if (idx < upTo) {
+                    icon.className = "bi bi-star-fill text-warning";
+                } else {
+                    icon.className = "bi bi-star text-secondary";
+                }
+            });
+        }
+
+        function currentVal() {
+            for (var i = 0; i < inputs.length; i++) {
+                if (inputs[i].checked) return parseInt(inputs[i].value, 10);
+            }
+            return 0;
+        }
+
+        labels.forEach(function (lbl, idx) {
+            lbl.addEventListener("mouseenter", function () {
+                paint(idx + 1);
+                if (hint) hint.textContent = STAR_LABELS[String(idx + 1)];
+            });
+            lbl.addEventListener("mouseleave", function () {
+                var val = currentVal();
+                paint(val);
+                if (hint) hint.textContent = val ? STAR_LABELS[String(val)] : "";
+            });
+        });
+
+        inputs.forEach(function (inp) {
+            inp.addEventListener("change", function () {
+                var val = parseInt(this.value, 10);
+                paint(val);
+                if (hint) hint.textContent = STAR_LABELS[String(val)];
+            });
+        });
+    }
+
+    document.querySelectorAll(".star-selector").forEach(initStarSelector);
+})();
+</script>

@@ -30,7 +30,7 @@
       <span class="text-muted small">{{ entry.food_item.description }}</span>
       {% endif %}
     </div>
-    {% include "ants/food_overview_species_list.html" with food_item=entry.food_item top_species=entry.top_species extra_count=entry.extra_count total_species=entry.total_species total_ratings=entry.total_ratings %}
+    {% include "ants/food_overview_species_list.html" with food_item=entry.food_item top_species=entry.top_species extra_count=entry.extra_count total_species=entry.total_species total_ratings=entry.total_ratings overall_avg=entry.overall_avg %}
   </div>
   {% endfor %}
 {% endif %}

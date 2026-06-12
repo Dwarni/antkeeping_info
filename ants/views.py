@@ -798,7 +798,7 @@ def _build_difficulty_context(ratings):
 def _build_food_context(species, user):
     """Return food acceptance rating data grouped by category for template context."""
     food_items = list(FoodItem.objects.all())
-    ratings_qs = species.food_ratings.select_related("food_item", "user").all()
+    ratings_qs = species.food_ratings.select_related("food_item").all()
 
     ratings_by_food = {}
     user_rating_by_food = {}
@@ -808,20 +808,11 @@ def _build_food_context(species, user):
         if user.is_authenticated and rating.user_id == user.pk:
             user_rating_by_food[fid] = rating
 
-    choices = SpeciesFoodRating.ACCEPTANCE_CHOICES
     categories = {}
     for food_item in food_items:
         item_ratings = ratings_by_food.get(food_item.pk, [])
         total = len(item_ratings)
-        distribution = {level: 0 for level, _ in choices}
-        for r in item_ratings:
-            distribution[r.acceptance] += 1
-        if total > 0:
-            dominant = max(distribution, key=distribution.get)
-            dominant_label = dict(choices)[dominant]
-        else:
-            dominant = None
-            dominant_label = None
+        avg = round(sum(r.acceptance for r in item_ratings) / total, 1) if total > 0 else None
 
         cat = food_item.category
         if cat not in categories:
@@ -833,9 +824,7 @@ def _build_food_context(species, user):
         categories[cat]["items"].append({
             "food_item": food_item,
             "total": total,
-            "distribution": distribution,
-            "dominant_acceptance": dominant,
-            "dominant_label": dominant_label,
+            "avg": avg,
             "user_rating": user_rating_by_food.get(food_item.pk),
         })
 
@@ -852,33 +841,19 @@ def _build_food_overview_item_context(food_item):
         SpeciesFoodRating.objects
         .filter(food_item=food_item)
         .values("species_id", "species__name", "species__slug")
-        .annotate(
-            liked_count=Sum(Case(
-                When(acceptance=SpeciesFoodRating.LIKED, then=1), default=0,
-                output_field=IntegerField()
-            )),
-            accepted_count=Sum(Case(
-                When(acceptance=SpeciesFoodRating.ACCEPTED, then=1), default=0,
-                output_field=IntegerField()
-            )),
-            ignored_count=Sum(Case(
-                When(acceptance=SpeciesFoodRating.IGNORED, then=1), default=0,
-                output_field=IntegerField()
-            )),
-        )
-        .order_by("-liked_count", "-accepted_count", "ignored_count")
+        .annotate(species_avg=Avg("acceptance"), rating_count=Count("id"))
+        .order_by("-species_avg", "-rating_count")
     )
     all_species = list(ratings_qs)
-    total_ratings = sum(
-        r["liked_count"] + r["accepted_count"] + r["ignored_count"]
-        for r in all_species
-    )
+    agg = food_item.species_ratings.aggregate(avg=Avg("acceptance"), total=Count("id"))
+    overall_avg = round(float(agg["avg"]), 1) if agg["avg"] is not None else None
     return {
         "food_item": food_item,
         "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
         "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
         "total_species": len(all_species),
-        "total_ratings": total_ratings,
+        "total_ratings": agg["total"],
+        "overall_avg": overall_avg,
     }
 
 
@@ -896,7 +871,7 @@ class SubmitFoodRatingFromOverviewView(LoginRequiredMixin, View):
             acceptance = int(request.POST.get("acceptance", ""))
         except (ValueError, TypeError):
             return HttpResponse(status=400)
-        valid_levels = [level for level, _ in SpeciesFoodRating.ACCEPTANCE_CHOICES]
+        valid_levels = [level for level, _ in SpeciesFoodRating.STAR_CHOICES]
         if acceptance not in valid_levels:
             return HttpResponse(status=400)
         comment = request.POST.get("comment", "").strip()[:500]
@@ -929,45 +904,39 @@ class FoodOverviewView(TemplateView):
 
         food_items = FoodItem.objects.filter(category=selected)
 
-        # Single DB query: aggregate liked/accepted/ignored per (food_item, species)
-        ratings_qs = (
+        # Per (food_item, species): avg acceptance and rating count
+        species_qs = (
             SpeciesFoodRating.objects
             .filter(food_item__category=selected)
             .values("food_item_id", "species_id", "species__name", "species__slug")
-            .annotate(
-                liked_count=Sum(Case(
-                    When(acceptance=SpeciesFoodRating.LIKED, then=1), default=0,
-                    output_field=IntegerField()
-                )),
-                accepted_count=Sum(Case(
-                    When(acceptance=SpeciesFoodRating.ACCEPTED, then=1), default=0,
-                    output_field=IntegerField()
-                )),
-                ignored_count=Sum(Case(
-                    When(acceptance=SpeciesFoodRating.IGNORED, then=1), default=0,
-                    output_field=IntegerField()
-                )),
-            )
-            .order_by("food_item_id", "-liked_count", "-accepted_count", "ignored_count")
+            .annotate(species_avg=Avg("acceptance"), rating_count=Count("id"))
+            .order_by("food_item_id", "-species_avg")
         )
+        # Per food_item: overall avg and total count
+        overall_qs = (
+            SpeciesFoodRating.objects
+            .filter(food_item__category=selected)
+            .values("food_item_id")
+            .annotate(overall_avg=Avg("acceptance"), total_ratings=Count("id"))
+        )
+        overall_by_food = {r["food_item_id"]: r for r in overall_qs}
 
         ratings_by_food = {}
-        for row in ratings_qs:
+        for row in species_qs:
             ratings_by_food.setdefault(row["food_item_id"], []).append(row)
 
         food_data = []
         for food_item in food_items:
             all_species = ratings_by_food.get(food_item.pk, [])
-            total_ratings = sum(
-                r["liked_count"] + r["accepted_count"] + r["ignored_count"]
-                for r in all_species
-            )
+            ov = overall_by_food.get(food_item.pk, {})
+            ov_avg = ov.get("overall_avg")
             food_data.append({
                 "food_item": food_item,
                 "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
                 "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
                 "total_species": len(all_species),
-                "total_ratings": total_ratings,
+                "total_ratings": ov.get("total_ratings", 0),
+                "overall_avg": round(float(ov_avg), 1) if ov_avg is not None else None,
             })
 
         context["food_data"] = food_data
@@ -1019,7 +988,7 @@ class SubmitFoodRatingView(LoginRequiredMixin, View):
         except (ValueError, TypeError):
             return HttpResponse(status=400)
 
-        valid_levels = [level for level, _ in SpeciesFoodRating.ACCEPTANCE_CHOICES]
+        valid_levels = [level for level, _ in SpeciesFoodRating.STAR_CHOICES]
         if acceptance not in valid_levels:
             return HttpResponse(status=400)
 

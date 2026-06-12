@@ -719,14 +719,12 @@ class FoodItem(models.Model):
     PROTEIN = "PROTEIN"
     SUGAR = "SUGAR"
     SEEDS = "SEEDS"
-    NUTS = "NUTS"
     PLANT = "PLANT"
     OTHER = "OTHER"
     CATEGORY_CHOICES = [
-        (PROTEIN, "Protein (feeder insects)"),
-        (SUGAR, "Sugar (honey, syrups)"),
+        (PROTEIN, "Protein"),
+        (SUGAR, "Carbohydrates"),
         (SEEDS, "Seeds"),
-        (NUTS, "Nuts"),
         (PLANT, "Leaves"),
         (OTHER, "Other"),
     ]
@@ -748,13 +746,17 @@ class FoodItem(models.Model):
 class SpeciesFoodRating(models.Model):
     """Community rating of how well an ant species accepts a specific food item."""
 
-    LIKED = 1
-    ACCEPTED = 2
-    IGNORED = 3
-    ACCEPTANCE_CHOICES = [
-        (LIKED, "Really liked"),
-        (ACCEPTED, "Accepted (not very interested)"),
-        (IGNORED, "Ignored"),
+    ONE_STAR = 1
+    TWO_STARS = 2
+    THREE_STARS = 3
+    FOUR_STARS = 4
+    FIVE_STARS = 5
+    STAR_CHOICES = [
+        (ONE_STAR, "Ignored"),
+        (TWO_STARS, "Hardly interested"),
+        (THREE_STARS, "Moderately interested"),
+        (FOUR_STARS, "Above average interest"),
+        (FIVE_STARS, "Extremely interested (strong recruitment)"),
     ]
 
     species = models.ForeignKey(
@@ -768,7 +770,7 @@ class SpeciesFoodRating(models.Model):
         on_delete=models.CASCADE,
         related_name="food_ratings",
     )
-    acceptance = models.PositiveSmallIntegerField(choices=ACCEPTANCE_CHOICES)
+    acceptance = models.PositiveSmallIntegerField(choices=STAR_CHOICES)
     comment = models.TextField(blank=True, max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
