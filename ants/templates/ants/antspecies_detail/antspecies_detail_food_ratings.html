@@ -97,6 +97,11 @@
     {% endfor %}
     {% endfor %}
     {% endif %}
+
+    <p class="text-muted small mt-2">
+        {% trans "Don't see a food item you fed this species?" %}
+        <a href="{% url 'food_overview' %}">{% trans 'Add a new food item' %}</a>
+    </p>
 </div>
 <script>
 (function () {

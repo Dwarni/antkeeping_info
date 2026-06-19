@@ -1,0 +1,10 @@
+{% load i18n %}
+{% if matches %}
+<div class="list-group position-absolute shadow-sm" style="z-index: 10;">
+  {% for item in matches %}
+  <a href="#food-item-card-{{ item.pk }}" class="list-group-item list-group-item-action py-1 small">
+    {% blocktrans with name=item.name %}'{{ name }}' already exists — see it below{% endblocktrans %}
+  </a>
+  {% endfor %}
+</div>
+{% endif %}

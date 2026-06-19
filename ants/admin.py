@@ -1,4 +1,5 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.db import transaction
 from django.utils.translation import gettext as _
 from sorl.thumbnail.admin import AdminImageMixin
 
@@ -172,13 +173,81 @@ class SpeciesDifficultyRatingAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "updated_at")
 
 
+class FoodItemOriginFilter(admin.SimpleListFilter):
+    title = _("origin")
+    parameter_name = "origin"
+
+    def lookups(self, request, model_admin):
+        return [("staff", _("Original (staff)")), ("user", _("User-submitted"))]
+
+    def queryset(self, request, queryset):
+        if self.value() == "staff":
+            return queryset.filter(created_by__isnull=True)
+        if self.value() == "user":
+            return queryset.filter(created_by__isnull=False)
+        return queryset
+
+
 @admin.register(FoodItem)
 class FoodItemAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "ordering")
-    list_filter = ("category",)
+    list_display = ("name", "category", "ordering", "created_by", "created_at")
+    list_filter = ("category", FoodItemOriginFilter)
     search_fields = ("name",)
     list_editable = ("ordering",)
+    readonly_fields = ("created_by", "created_at")
     ordering = ("category", "ordering", "name")
+    actions = ["merge_food_items"]
+
+    @admin.action(description=_("Merge selected items into one (lowest pk survives)"))
+    def merge_food_items(self, request, queryset):
+        items = list(queryset.order_by("pk"))
+        if len(items) < 2:
+            self.message_user(
+                request,
+                _("Select at least two food items to merge."),
+                level=messages.WARNING,
+            )
+            return
+
+        survivor, *losers = items
+        loser_ids = [item.pk for item in losers]
+
+        with transaction.atomic():
+            survivor_ratings = {
+                (rating.species_id, rating.user_id): rating
+                for rating in SpeciesFoodRating.objects.filter(food_item=survivor)
+            }
+            for rating in SpeciesFoodRating.objects.filter(food_item_id__in=loser_ids):
+                key = (rating.species_id, rating.user_id)
+                existing = survivor_ratings.get(key)
+                if existing is None:
+                    rating.food_item = survivor
+                    rating.save(update_fields=["food_item"])
+                    survivor_ratings[key] = rating
+                    continue
+
+                # Collision: keep the higher acceptance, tie-break on most recent update.
+                keep_existing = existing.acceptance > rating.acceptance or (
+                    existing.acceptance == rating.acceptance
+                    and existing.updated_at >= rating.updated_at
+                )
+                if keep_existing:
+                    rating.delete()
+                else:
+                    existing.delete()
+                    rating.food_item = survivor
+                    rating.save(update_fields=["food_item"])
+                    survivor_ratings[key] = rating
+
+            FoodItem.objects.filter(pk__in=loser_ids).delete()
+
+        self.message_user(
+            request,
+            _(
+                "Merged %(n)d item(s) into '%(name)s' (lowest pk of the selection survives)."
+            )
+            % {"n": len(losers), "name": survivor.name},
+        )
 
 
 @admin.register(SpeciesFoodRating)

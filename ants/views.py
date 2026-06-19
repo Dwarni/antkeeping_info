@@ -10,10 +10,13 @@ from dal import autocomplete
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
+from django.db import IntegrityError, transaction
 from django.db.models import Avg, Case, Count, ExpressionWrapper, F, FloatField, IntegerField, Max, Min, Q, Sum, When
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.text import slugify
 from django.views.decorators.cache import never_cache
@@ -26,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 from flights.models import Flight
 
-from .forms import NuptialFlightReportForm
+from .forms import FoodItemCreateForm, NuptialFlightReportForm
 from .models import AntRegion, AntSize, AntSpecies, FoodItem, Genus, SpeciesDifficultyRating, SpeciesFoodRating, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
 
@@ -888,6 +891,48 @@ class SubmitFoodRatingFromOverviewView(LoginRequiredMixin, View):
         )
 
 
+def _build_food_overview_list_context(selected_category):
+    """Return food_data for one category, grouped by food item, for the overview list partial."""
+    food_items = FoodItem.objects.filter(category=selected_category)
+
+    # Per (food_item, species): avg acceptance and rating count
+    species_qs = (
+        SpeciesFoodRating.objects
+        .filter(food_item__category=selected_category)
+        .values("food_item_id", "species_id", "species__name", "species__slug")
+        .annotate(species_avg=Avg("acceptance"), rating_count=Count("id"))
+        .order_by("food_item_id", "-species_avg")
+    )
+    # Per food_item: overall avg and total count
+    overall_qs = (
+        SpeciesFoodRating.objects
+        .filter(food_item__category=selected_category)
+        .values("food_item_id")
+        .annotate(overall_avg=Avg("acceptance"), total_ratings=Count("id"))
+    )
+    overall_by_food = {r["food_item_id"]: r for r in overall_qs}
+
+    ratings_by_food = {}
+    for row in species_qs:
+        ratings_by_food.setdefault(row["food_item_id"], []).append(row)
+
+    food_data = []
+    for food_item in food_items:
+        all_species = ratings_by_food.get(food_item.pk, [])
+        ov = overall_by_food.get(food_item.pk, {})
+        ov_avg = ov.get("overall_avg")
+        food_data.append({
+            "food_item": food_item,
+            "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
+            "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
+            "total_species": len(all_species),
+            "total_ratings": ov.get("total_ratings", 0),
+            "overall_avg": round(float(ov_avg), 1) if ov_avg is not None else None,
+        })
+
+    return {"food_data": food_data}
+
+
 class FoodOverviewView(TemplateView):
     template_name = "ants/food_overview.html"
 
@@ -901,46 +946,111 @@ class FoodOverviewView(TemplateView):
         context["categories"] = FoodItem.CATEGORY_CHOICES
         context["selected_category"] = selected
         context["selected_category_label"] = dict(FoodItem.CATEGORY_CHOICES)[selected]
-
-        food_items = FoodItem.objects.filter(category=selected)
-
-        # Per (food_item, species): avg acceptance and rating count
-        species_qs = (
-            SpeciesFoodRating.objects
-            .filter(food_item__category=selected)
-            .values("food_item_id", "species_id", "species__name", "species__slug")
-            .annotate(species_avg=Avg("acceptance"), rating_count=Count("id"))
-            .order_by("food_item_id", "-species_avg")
-        )
-        # Per food_item: overall avg and total count
-        overall_qs = (
-            SpeciesFoodRating.objects
-            .filter(food_item__category=selected)
-            .values("food_item_id")
-            .annotate(overall_avg=Avg("acceptance"), total_ratings=Count("id"))
-        )
-        overall_by_food = {r["food_item_id"]: r for r in overall_qs}
-
-        ratings_by_food = {}
-        for row in species_qs:
-            ratings_by_food.setdefault(row["food_item_id"], []).append(row)
-
-        food_data = []
-        for food_item in food_items:
-            all_species = ratings_by_food.get(food_item.pk, [])
-            ov = overall_by_food.get(food_item.pk, {})
-            ov_avg = ov.get("overall_avg")
-            food_data.append({
-                "food_item": food_item,
-                "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
-                "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
-                "total_species": len(all_species),
-                "total_ratings": ov.get("total_ratings", 0),
-                "overall_avg": round(float(ov_avg), 1) if ov_avg is not None else None,
-            })
-
-        context["food_data"] = food_data
+        context.update(_build_food_overview_list_context(selected))
         return context
+
+
+class FoodOverviewNewItemFormView(LoginRequiredMixin, View):
+    """HTMX endpoint: returns the 'add new food item' form, pre-filled with a category."""
+
+    def get(self, request):
+        valid_keys = [key for key, _ in FoodItem.CATEGORY_CHOICES]
+        category = request.GET.get("category", "")
+        if category not in valid_keys:
+            return HttpResponse(status=400)
+        return render(
+            request,
+            "ants/food_overview_new_item_form.html",
+            {
+                "form": FoodItemCreateForm(initial={"category": category}),
+                "category": category,
+                "category_label": dict(FoodItem.CATEGORY_CHOICES)[category],
+            },
+        )
+
+
+class FoodOverviewCreateItemView(LoginRequiredMixin, View):
+    """HTMX endpoint: creates a new FoodItem suggested by a logged-in user."""
+
+    MAX_CREATIONS_PER_WINDOW = 5
+    RATE_LIMIT_WINDOW = datetime.timedelta(hours=1)
+
+    def post(self, request):
+        valid_keys = [key for key, _ in FoodItem.CATEGORY_CHOICES]
+        category = request.POST.get("category", "")
+        form = FoodItemCreateForm(request.POST)
+
+        recent_count = FoodItem.objects.filter(
+            created_by=request.user,
+            created_at__gte=timezone.now() - self.RATE_LIMIT_WINDOW,
+        ).count()
+        if recent_count >= self.MAX_CREATIONS_PER_WINDOW:
+            form.add_error(
+                None,
+                "You've added several food items recently. Please wait a bit before adding more.",
+            )
+            return render(
+                request,
+                "ants/food_overview_new_item_form.html",
+                {
+                    "form": form,
+                    "category": category,
+                    "category_label": dict(FoodItem.CATEGORY_CHOICES).get(category, ""),
+                },
+            )
+
+        if category not in valid_keys or not form.is_valid():
+            if category not in valid_keys:
+                form.add_error(None, "Please choose a valid category.")
+            return render(
+                request,
+                "ants/food_overview_new_item_form.html",
+                {
+                    "form": form,
+                    "category": category,
+                    "category_label": dict(FoodItem.CATEGORY_CHOICES).get(category, ""),
+                },
+            )
+
+        try:
+            with transaction.atomic():
+                item = form.save(commit=False)
+                item.created_by = request.user
+                item.save()
+        except IntegrityError:
+            form.add_error(
+                "name",
+                "This name was just taken by another submission. Please use a different name or rate the existing item.",
+            )
+            return render(
+                request,
+                "ants/food_overview_new_item_form.html",
+                {
+                    "form": form,
+                    "category": category,
+                    "category_label": dict(FoodItem.CATEGORY_CHOICES)[category],
+                },
+            )
+
+        list_html = render_to_string(
+            "ants/food_overview_list.html",
+            _build_food_overview_list_context(category),
+            request=request,
+        )
+        return HttpResponse(list_html)
+
+
+class FoodOverviewSuggestSimilarView(LoginRequiredMixin, View):
+    """HTMX endpoint: returns existing FoodItems whose name resembles the typed query."""
+
+    MIN_QUERY_LENGTH = 3
+
+    def get(self, request):
+        name = request.GET.get("name", "").strip()
+        if len(name) < self.MIN_QUERY_LENGTH:
+            return HttpResponse("")
+        matches = FoodItem.objects.filter(name__icontains=name).order_by("name")[:10]
+        return render(request, "ants/food_overview_suggest.html", {"matches": matches})
 
 
 class SubmitDifficultyRatingView(LoginRequiredMixin, View):

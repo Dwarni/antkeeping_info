@@ -19,21 +19,22 @@
   {% endfor %}
 </ul>
 
-{% if not food_data %}
-  <p class="text-muted">No food items in this category yet.</p>
-{% else %}
-  {% for entry in food_data %}
-  <div class="card mb-4">
-    <div class="card-header d-flex align-items-baseline gap-2 flex-wrap">
-      <h2 class="h5 mb-0">{{ entry.food_item.name }}</h2>
-      {% if entry.food_item.description %}
-      <span class="text-muted small">{{ entry.food_item.description }}</span>
-      {% endif %}
-    </div>
-    {% include "ants/food_overview_species_list.html" with food_item=entry.food_item top_species=entry.top_species extra_count=entry.extra_count total_species=entry.total_species total_ratings=entry.total_ratings overall_avg=entry.overall_avg %}
-  </div>
-  {% endfor %}
-{% endif %}
+<div class="d-flex gap-2 align-items-center flex-wrap mb-3">
+  <input type="text" id="food-filter-input" class="form-control form-control-sm"
+         style="max-width: 320px;" autocomplete="off"
+         placeholder="Filter foods in this category…">
+  {% if user.is_authenticated %}
+  <button type="button" class="btn btn-sm btn-outline-primary"
+          hx-get="{% url 'food_overview_new_item_form' %}?category={{ selected_category }}"
+          hx-target="#new-food-item-panel" hx-swap="innerHTML">
+    <i class="bi bi-plus-circle"></i> {% trans 'Add new food item' %}
+  </button>
+  {% endif %}
+</div>
+
+<div id="new-food-item-panel" class="mb-3"></div>
+
+{% include "ants/food_overview_list.html" %}
 
 {% endblock %}
 {% block script %}
@@ -71,6 +72,19 @@
             var hidden = document.getElementById('species-id-' + id);
             if (hidden) hidden.value = '';
         }
+    });
+})();
+
+// Client-side filter: hide food cards whose name doesn't match the typed text.
+(function () {
+    var input = document.getElementById('food-filter-input');
+    if (!input) return;
+    input.addEventListener('input', function () {
+        var query = input.value.trim().toLowerCase();
+        document.querySelectorAll('#food-data-list [data-food-name]').forEach(function (card) {
+            var name = card.dataset.foodName.toLowerCase();
+            card.style.display = name.indexOf(query) === -1 ? 'none' : '';
+        });
     });
 })();
 </script>

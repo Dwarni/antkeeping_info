@@ -733,6 +733,16 @@ class FoodItem(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     description = models.TextField(blank=True, max_length=500)
     ordering = models.PositiveSmallIntegerField(default=0, db_index=True)
+    # NULL means staff/original entry -- intentionally never stamped by the
+    # admin, since FoodItemAdmin's origin filter relies on this distinction.
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="created_food_items",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    created_at = models.DateTimeField(null=True, blank=True, auto_now_add=True)
 
     class Meta:
         ordering = ["category", "ordering", "name"]

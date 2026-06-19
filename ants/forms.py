@@ -4,7 +4,7 @@ from django import forms
 from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
 
-from ants.models import AntSpecies, Month
+from ants.models import AntSpecies, FoodItem, Month
 
 
 class NuptialFlightReportForm(forms.Form):
@@ -60,3 +60,12 @@ class NuptialFlightReportForm(forms.Form):
             "gdpr_consent",
             Submit("submit", "Submit Report"),
         )
+
+
+class FoodItemCreateForm(forms.ModelForm):
+    """Form for logged-in users to suggest a new food item for the catalog."""
+
+    class Meta:
+        model = FoodItem
+        fields = ["name", "category", "description"]
+        widgets = {"category": forms.HiddenInput()}

@@ -1,0 +1,39 @@
+{% load i18n %}
+<div class="card mb-3">
+  <div class="card-body">
+    <h3 class="h6">{% trans 'Add new food item' %} — {{ category_label }}</h3>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form hx-post="{% url 'food_overview_new_item' %}"
+          hx-target="#new-food-item-panel" hx-swap="innerHTML">
+      {% csrf_token %}
+      <input type="hidden" name="category" value="{{ category }}">
+      <div class="mb-2 position-relative">
+        <label class="form-label small fw-semibold mb-1" for="new-food-name">{% trans 'Name' %}</label>
+        <input type="text" class="form-control form-control-sm{% if form.name.errors %} is-invalid{% endif %}"
+               id="new-food-name" name="name" value="{{ form.name.value|default:'' }}"
+               placeholder="{% trans 'e.g. Mealworms' %}" autocomplete="off"
+               hx-get="{% url 'food_overview_suggest_similar' %}"
+               hx-trigger="input changed delay:300ms"
+               hx-target="next div" hx-swap="innerHTML" hx-include="this">
+        <div id="new-food-name-suggest" class="position-absolute w-100 species-suggest-dropdown"></div>
+        {% if form.name.errors %}
+        <div class="invalid-feedback d-block small">{{ form.name.errors|join:" " }}</div>
+        {% endif %}
+      </div>
+      <div class="mb-2">
+        <label class="form-label small fw-semibold mb-1" for="new-food-description">{% trans 'Description (optional)' %}</label>
+        <textarea class="form-control form-control-sm" id="new-food-description" name="description"
+                  rows="2" maxlength="500">{{ form.description.value|default:'' }}</textarea>
+      </div>
+      <button type="submit" class="btn btn-sm btn-primary">{% trans 'Add food item' %}</button>
+      <button type="button" class="btn btn-sm btn-link"
+              onclick="document.getElementById('new-food-item-panel').innerHTML='';">
+        {% trans 'Cancel' %}
+      </button>
+    </form>
+  </div>
+</div>
