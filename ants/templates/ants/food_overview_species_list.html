@@ -16,11 +16,11 @@
     <ul class="list-group list-group-flush">
       {% for row in top_species %}
       <li class="list-group-item d-flex align-items-center gap-2 flex-wrap py-2">
-        <a href="{% url 'ant_detail' row.species__slug %}" class="fw-semibold text-decoration-none me-1">
+        <a href="{% url 'food_item_species_ratings' food_item.pk row.species__slug %}" class="fw-semibold text-decoration-none me-1">
           <em>{{ row.species__name }}</em>
         </a>
         {{ row.species_avg|star_display }}
-        <small class="text-muted">({{ row.rating_count }})</small>
+        <span class="text-muted small">({{ row.rating_count }})</span>
       </li>
       {% endfor %}
     </ul>
@@ -39,7 +39,7 @@
       <i class="bi bi-plus-circle"></i> Add rating
     </button>
     <div class="collapse px-3 pb-3" id="rate-form-{{ food_item.pk }}">
-      <form hx-post="{% url 'food_overview_rate' %}"
+      <form hx-post="{% url 'food_overview_rate' %}" hx-encoding="multipart/form-data"
             hx-target="#food-item-ratings-{{ food_item.pk }}"
             hx-swap="outerHTML">
         {% csrf_token %}
@@ -96,6 +96,11 @@
         <div class="mb-2">
           <textarea name="comment" class="form-control form-control-sm" rows="1"
                     maxlength="500" placeholder="Optional comment…"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1" for="food-ov-image-{{ food_item.pk }}">Photo (optional)</label>
+          <input type="file" class="form-control form-control-sm" id="food-ov-image-{{ food_item.pk }}"
+                 name="image" accept="image/*">
         </div>
         <button type="submit" class="btn btn-sm btn-primary">Save rating</button>
       </form>

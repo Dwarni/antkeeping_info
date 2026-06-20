@@ -40,6 +40,11 @@ urlpatterns = [
         name="food_overview_suggest_similar",
     ),
     path(
+        "food-overview/<int:food_item_id>/<slug:species_slug>/ratings/",
+        views.FoodItemSpeciesRatingsView.as_view(),
+        name="food_item_species_ratings",
+    ),
+    path(
         "top-countries-by-number-of-ant-species",
         RedirectView.as_view(
             url="/antdb/top-lists?ranking=countries-by-species", permanent=True

@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% load i18n ants thumbnail %}
+{% block title %}{{ food_item.name }} — {{ species.name }} | Antkeeping.info{% endblock %}
+{% block og_title %}{{ food_item.name }} ratings for {{ species.name }} — Antkeeping.info{% endblock %}
+{% block og_description %}Community ratings of how well {{ species.name }} accepts {{ food_item.name }}.{% endblock %}
+{% block content %}
+
+<p class="mb-2">
+  <a href="{% url 'food_overview' %}?category={{ food_item.category }}">&laquo; {% trans 'Back to Food Ratings' %}</a>
+</p>
+<h1 class="h3 mb-1">{{ food_item.name }} &mdash; <a href="{% url 'ant_detail' species.slug %}"><em>{{ species.name }}</em></a></h1>
+<p class="text-muted mb-4">
+  {% blocktrans with food=food_item.name name=species.name %}All community ratings for how well {{ name }} accepts {{ food }}.{% endblocktrans %}
+</p>
+
+{% if not ratings %}
+<p class="text-muted">{% trans 'No ratings yet.' %}</p>
+{% else %}
+<ul class="list-group">
+  {% for rating in ratings %}
+  <li class="list-group-item">
+    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+      {{ rating.acceptance|star_display }}
+      <span class="text-muted small">
+        {% blocktrans with username=rating.user.username %}by {{ username }}{% endblocktrans %}
+        &middot; {{ rating.created_at|date:"N j, Y" }}
+      </span>
+    </div>
+    {% if rating.comment %}
+    <p class="mb-1">{{ rating.comment }}</p>
+    {% endif %}
+    {% if rating.image %}
+    {% thumbnail rating.image "400x400" as im %}
+    <a href="{{ rating.image.url }}" target="_blank" rel="noopener">
+      <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+           class="rounded" alt="{% blocktrans with username=rating.user.username %}Photo by {{ username }}{% endblocktrans %}">
+    </a>
+    {% endthumbnail %}
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% endblock %}

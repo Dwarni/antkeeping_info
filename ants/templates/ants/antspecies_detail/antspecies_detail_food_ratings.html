@@ -1,4 +1,4 @@
-{% load i18n ants %}
+{% load i18n ants thumbnail %}
 <div id="food-ratings-section">
     <h3>{% trans 'Food Acceptance' %}</h3>
 
@@ -22,13 +22,25 @@
     {% for item in category.items %}
     <div class="food-item mb-3">
         <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+            {% if item.food_item.image %}
+            {% thumbnail item.food_item.image "32x32" crop="center" as im %}
+            <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+                 class="rounded flex-shrink-0" alt="{{ item.food_item.name }}">
+            {% endthumbnail %}
+            {% else %}
+            <span class="rounded bg-light text-muted d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                  style="width: 32px; height: 32px; font-size: 0.875rem;">
+              <i class="bi bi-bug-fill"></i>
+            </span>
+            {% endif %}
             <span class="food-item-name">{{ item.food_item.name }}</span>
             {% if item.total > 0 %}
             {{ item.avg|star_display }}
-            <span class="text-muted small">
+            <a href="{% url 'food_item_species_ratings' item.food_item.pk object.slug %}"
+               class="text-muted small text-decoration-none">
                 {{ item.avg|floatformat:"-1" }}/5 &mdash;
                 {% blocktrans with count=item.total %}{{ count }} rating{{ count|pluralize }}{% endblocktrans %}
-            </span>
+            </a>
             {% else %}
             <span class="text-muted small">{% trans 'No ratings yet' %}</span>
             {% endif %}
@@ -39,7 +51,7 @@
         {% endif %}
 
         {% if user.is_authenticated %}
-        <form hx-post="{% url 'rate_food' object.slug %}"
+        <form hx-post="{% url 'rate_food' object.slug %}" hx-encoding="multipart/form-data"
               hx-target="#food-ratings-section"
               hx-swap="outerHTML">
             {% csrf_token %}
@@ -90,6 +102,11 @@
                           rows="1"
                           maxlength="500"
                           placeholder="{% trans 'Optional comment…' %}">{% if item.user_rating %}{{ item.user_rating.comment }}{% endif %}</textarea>
+            </div>
+            <div class="mb-1">
+                <label class="form-label small fw-semibold mb-1" for="food-image-{{ item.food_item.pk }}">{% trans 'Photo (optional)' %}</label>
+                <input type="file" class="form-control form-control-sm" id="food-image-{{ item.food_item.pk }}"
+                       name="image" accept="image/*">
             </div>
         </form>
         {% endif %}

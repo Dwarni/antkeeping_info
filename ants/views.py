@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Avg, Case, Count, ExpressionWrapper, F, FloatField, IntegerField, Max, Min, Q, Sum, When
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 from flights.models import Flight
 
-from .forms import FoodItemCreateForm, NuptialFlightReportForm
+from .forms import FoodItemCreateForm, FoodRatingImageForm, NuptialFlightReportForm
 from .models import AntRegion, AntSize, AntSpecies, FoodItem, Genus, SpeciesDifficultyRating, SpeciesFoodRating, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
 
@@ -877,12 +877,19 @@ class SubmitFoodRatingFromOverviewView(LoginRequiredMixin, View):
         valid_levels = [level for level, _ in SpeciesFoodRating.STAR_CHOICES]
         if acceptance not in valid_levels:
             return HttpResponse(status=400)
+        image_form = FoodRatingImageForm(request.POST, request.FILES)
+        if not image_form.is_valid():
+            return HttpResponse(status=400)
         comment = request.POST.get("comment", "").strip()[:500]
+        defaults = {"acceptance": acceptance, "comment": comment}
+        image = image_form.cleaned_data.get("image")
+        if image is not None:
+            defaults["image"] = image
         SpeciesFoodRating.objects.update_or_create(
             species=species,
             food_item=food_item,
             user=request.user,
-            defaults={"acceptance": acceptance, "comment": comment},
+            defaults=defaults,
         )
         return render(
             request,
@@ -978,7 +985,7 @@ class FoodOverviewCreateItemView(LoginRequiredMixin, View):
     def post(self, request):
         valid_keys = [key for key, _ in FoodItem.CATEGORY_CHOICES]
         category = request.POST.get("category", "")
-        form = FoodItemCreateForm(request.POST)
+        form = FoodItemCreateForm(request.POST, request.FILES)
 
         recent_count = FoodItem.objects.filter(
             created_by=request.user,
@@ -1038,6 +1045,26 @@ class FoodOverviewCreateItemView(LoginRequiredMixin, View):
             request=request,
         )
         return HttpResponse(list_html)
+
+
+class FoodItemSpeciesRatingsView(TemplateView):
+    """Full list of individual ratings (with comment + rater) for one food item / species pair."""
+
+    template_name = "ants/food_item_species_ratings.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        food_item = get_object_or_404(FoodItem, pk=kwargs["food_item_id"])
+        species = get_object_or_404(AntSpecies, slug=kwargs["species_slug"])
+        context["food_item"] = food_item
+        context["species"] = species
+        context["ratings"] = (
+            SpeciesFoodRating.objects
+            .filter(food_item=food_item, species=species)
+            .select_related("user")
+            .order_by("-created_at")
+        )
+        return context
 
 
 class FoodOverviewSuggestSimilarView(LoginRequiredMixin, View):
@@ -1107,12 +1134,20 @@ class SubmitFoodRatingView(LoginRequiredMixin, View):
         except FoodItem.DoesNotExist:
             return HttpResponse(status=400)
 
+        image_form = FoodRatingImageForm(request.POST, request.FILES)
+        if not image_form.is_valid():
+            return HttpResponse(status=400)
+
         comment = request.POST.get("comment", "").strip()
+        defaults = {"acceptance": acceptance, "comment": comment}
+        image = image_form.cleaned_data.get("image")
+        if image is not None:
+            defaults["image"] = image
         SpeciesFoodRating.objects.update_or_create(
             species=species,
             food_item=food_item,
             user=request.user,
-            defaults={"acceptance": acceptance, "comment": comment},
+            defaults=defaults,
         )
 
         context = _build_food_context(species, request.user)

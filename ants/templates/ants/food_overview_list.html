@@ -1,15 +1,30 @@
-{% load i18n %}
+{% load i18n thumbnail %}
 <div id="food-data-list" hx-swap-oob="true">
 {% if not food_data %}
   <p class="text-muted">No food items in this category yet.</p>
 {% else %}
   {% for entry in food_data %}
   <div class="card mb-4" id="food-item-card-{{ entry.food_item.pk }}" data-food-name="{{ entry.food_item.name }}">
-    <div class="card-header d-flex align-items-baseline gap-2 flex-wrap">
-      <h2 class="h5 mb-0">{{ entry.food_item.name }}</h2>
-      {% if entry.food_item.description %}
-      <span class="text-muted small">{{ entry.food_item.description }}</span>
-      {% endif %}
+    <div class="card-header d-flex flex-column flex-sm-row align-items-sm-start gap-2">
+      <div class="food-item-thumb-wrap flex-shrink-0">
+        {% if entry.food_item.image %}
+        {% thumbnail entry.food_item.image "768x768" crop="center" as im %}
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+             class="rounded food-item-thumb" alt="{{ entry.food_item.name }}">
+        {% endthumbnail %}
+        {% else %}
+        <span class="rounded bg-light text-muted d-flex flex-column align-items-center justify-content-center food-item-thumb">
+          <i class="bi bi-bug-fill"></i>
+          <span class="food-item-thumb-label">{% trans 'No image yet' %}</span>
+        </span>
+        {% endif %}
+      </div>
+      <div class="d-flex align-items-baseline gap-2 flex-wrap">
+        <h2 class="h5 mb-0">{{ entry.food_item.name }}</h2>
+        {% if entry.food_item.description %}
+        <span class="text-muted small">{{ entry.food_item.description }}</span>
+        {% endif %}
+      </div>
     </div>
     {% include "ants/food_overview_species_list.html" with food_item=entry.food_item top_species=entry.top_species extra_count=entry.extra_count total_species=entry.total_species total_ratings=entry.total_ratings overall_avg=entry.overall_avg %}
   </div>

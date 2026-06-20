@@ -7,7 +7,7 @@
     <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
     {% endif %}
 
-    <form hx-post="{% url 'food_overview_new_item' %}"
+    <form hx-post="{% url 'food_overview_new_item' %}" hx-encoding="multipart/form-data"
           hx-target="#new-food-item-panel" hx-swap="innerHTML">
       {% csrf_token %}
       <input type="hidden" name="category" value="{{ category }}">
@@ -28,6 +28,14 @@
         <label class="form-label small fw-semibold mb-1" for="new-food-description">{% trans 'Description (optional)' %}</label>
         <textarea class="form-control form-control-sm" id="new-food-description" name="description"
                   rows="2" maxlength="500">{{ form.description.value|default:'' }}</textarea>
+      </div>
+      <div class="mb-2">
+        <label class="form-label small fw-semibold mb-1" for="new-food-image">{% trans 'Image (optional)' %}</label>
+        <input type="file" class="form-control form-control-sm{% if form.image.errors %} is-invalid{% endif %}"
+               id="new-food-image" name="image" accept="image/*">
+        {% if form.image.errors %}
+        <div class="invalid-feedback d-block small">{{ form.image.errors|join:" " }}</div>
+        {% endif %}
       </div>
       <button type="submit" class="btn btn-sm btn-primary">{% trans 'Add food item' %}</button>
       <button type="button" class="btn btn-sm btn-link"

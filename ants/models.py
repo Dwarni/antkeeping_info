@@ -7,6 +7,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.postgres import fields as psql_fields
 from django.contrib.postgres import validators as psql_validators
+from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import MinValueValidator, RegexValidator, ValidationError
 from django.db import models
 from django.urls import reverse
@@ -25,6 +26,7 @@ from ants.managers import (
     StateAntRegionManager,
     TaxonomicRankManager,
 )
+from ants.utils.images import downscale_to_max_dimension
 from regions.models import Region
 
 # Create your models here.
@@ -729,9 +731,12 @@ class FoodItem(models.Model):
         (OTHER, "Other"),
     ]
 
+    MAX_IMAGE_DIMENSION = 1920
+
     name = models.CharField(max_length=200, unique=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     description = models.TextField(blank=True, max_length=500)
+    image = ImageField("Image file", upload_to="food_items", null=True, blank=True)
     ordering = models.PositiveSmallIntegerField(default=0, db_index=True)
     # NULL means staff/original entry -- intentionally never stamped by the
     # admin, since FoodItemAdmin's origin filter relies on this distinction.
@@ -748,6 +753,13 @@ class FoodItem(models.Model):
         ordering = ["category", "ordering", "name"]
         verbose_name = _("Food item")
         verbose_name_plural = _("Food items")
+
+    def save(self, *args, **kwargs):
+        # Only a freshly-assigned upload is an UploadedFile; a previously
+        # saved image is a plain FieldFile and must not be re-encoded here.
+        if self.image and isinstance(self.image.file, UploadedFile):
+            downscale_to_max_dimension(self.image, self.MAX_IMAGE_DIMENSION)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -769,6 +781,8 @@ class SpeciesFoodRating(models.Model):
         (FIVE_STARS, "Extremely interested (strong recruitment)"),
     ]
 
+    MAX_IMAGE_DIMENSION = 1920
+
     species = models.ForeignKey(
         AntSpecies, on_delete=models.CASCADE, related_name="food_ratings"
     )
@@ -782,6 +796,7 @@ class SpeciesFoodRating(models.Model):
     )
     acceptance = models.PositiveSmallIntegerField(choices=STAR_CHOICES)
     comment = models.TextField(blank=True, max_length=500)
+    image = ImageField("Image file", upload_to="food_ratings", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -789,3 +804,8 @@ class SpeciesFoodRating(models.Model):
         unique_together = ("species", "food_item", "user")
         verbose_name = _("Species food rating")
         verbose_name_plural = _("Species food ratings")
+
+    def save(self, *args, **kwargs):
+        if self.image and isinstance(self.image.file, UploadedFile):
+            downscale_to_max_dimension(self.image, self.MAX_IMAGE_DIMENSION)
+        super().save(*args, **kwargs)

@@ -189,7 +189,7 @@ class FoodItemOriginFilter(admin.SimpleListFilter):
 
 
 @admin.register(FoodItem)
-class FoodItemAdmin(admin.ModelAdmin):
+class FoodItemAdmin(AdminImageMixin, admin.ModelAdmin):
     list_display = ("name", "category", "ordering", "created_by", "created_at")
     list_filter = ("category", FoodItemOriginFilter)
     search_fields = ("name",)
@@ -251,7 +251,7 @@ class FoodItemAdmin(admin.ModelAdmin):
 
 
 @admin.register(SpeciesFoodRating)
-class SpeciesFoodRatingAdmin(admin.ModelAdmin):
+class SpeciesFoodRatingAdmin(AdminImageMixin, admin.ModelAdmin):
     list_display = ("species", "food_item", "user", "acceptance", "created_at")
     list_filter = ("acceptance", "food_item__category")
     search_fields = ("species__name", "food_item__name", "user__username")

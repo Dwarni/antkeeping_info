@@ -67,5 +67,11 @@ class FoodItemCreateForm(forms.ModelForm):
 
     class Meta:
         model = FoodItem
-        fields = ["name", "category", "description"]
+        fields = ["name", "category", "description", "image"]
         widgets = {"category": forms.HiddenInput()}
+
+
+class FoodRatingImageForm(forms.Form):
+    """Validates an optional photo attached to a species food rating."""
+
+    image = forms.ImageField(required=False)
