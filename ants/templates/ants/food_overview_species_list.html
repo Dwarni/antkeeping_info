@@ -101,6 +101,7 @@
           <label class="form-label small fw-semibold mb-1" for="food-ov-image-{{ food_item.pk }}">Photo (optional)</label>
           <input type="file" class="form-control form-control-sm" id="food-ov-image-{{ food_item.pk }}"
                  name="image" accept="image/*">
+          {% include "ants/_image_rights_notice.html" %}
         </div>
         <button type="submit" class="btn btn-sm btn-primary">Save rating</button>
       </form>

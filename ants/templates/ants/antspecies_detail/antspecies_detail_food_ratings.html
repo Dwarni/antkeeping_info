@@ -107,6 +107,7 @@
                 <label class="form-label small fw-semibold mb-1" for="food-image-{{ item.food_item.pk }}">{% trans 'Photo (optional)' %}</label>
                 <input type="file" class="form-control form-control-sm" id="food-image-{{ item.food_item.pk }}"
                        name="image" accept="image/*">
+                {% include "ants/_image_rights_notice.html" %}
             </div>
         </form>
         {% endif %}

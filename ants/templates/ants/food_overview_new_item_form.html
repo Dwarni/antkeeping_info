@@ -36,6 +36,7 @@
         {% if form.image.errors %}
         <div class="invalid-feedback d-block small">{{ form.image.errors|join:" " }}</div>
         {% endif %}
+        {% include "ants/_image_rights_notice.html" %}
       </div>
       <button type="submit" class="btn btn-sm btn-primary">{% trans 'Add food item' %}</button>
       <button type="button" class="btn btn-sm btn-link"

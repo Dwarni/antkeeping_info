@@ -32,6 +32,13 @@
           hx-target="#new-food-item-panel" hx-swap="innerHTML">
     <i class="bi bi-plus-circle"></i> {% trans 'Add new food item' %}
   </button>
+  {% else %}
+  <span class="text-muted small">
+    <a href="{% url 'account_login' %}">{% trans 'Log in' %}</a>
+    {% trans 'or' %}
+    <a href="{% url 'account_signup' %}">{% trans 'create a free account' %}</a>
+    {% trans 'to add a new food item.' %}
+  </span>
   {% endif %}
 </div>
 
