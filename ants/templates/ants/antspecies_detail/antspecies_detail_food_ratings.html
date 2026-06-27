@@ -93,6 +93,27 @@
                     {% if item.user_rating %}{{ item.user_rating.get_acceptance_display }}{% endif %}
                 </div>
             </div>
+            {% if item.food_item.category == "PROTEIN" or item.food_item.category == "PLANT" %}
+            <div class="mb-1">
+                <label class="form-label small fw-semibold mb-1" for="food-condition-{{ item.food_item.pk }}">
+                    {% trans 'Condition offered' %} <span class="text-danger" title="{% trans 'Required' %}">*</span>
+                </label>
+                <select class="form-select form-select-sm" id="food-condition-{{ item.food_item.pk }}" name="condition" required>
+                    <option value="" disabled {% if not item.user_rating or not item.user_rating.condition %}selected{% endif %}>{% trans 'Select…' %}</option>
+                    {% if item.food_item.category == "PROTEIN" %}
+                    <option value="ALIVE" {% if item.user_rating.condition == "ALIVE" %}selected{% endif %}>{% trans 'Alive' %}</option>
+                    <option value="FRESHLY_KILLED" {% if item.user_rating.condition == "FRESHLY_KILLED" %}selected{% endif %}>{% trans 'Freshly killed' %}</option>
+                    <option value="SCALDED" {% if item.user_rating.condition == "SCALDED" %}selected{% endif %}>{% trans 'Scalded' %}</option>
+                    <option value="FROZEN" {% if item.user_rating.condition == "FROZEN" %}selected{% endif %}>{% trans 'Frozen (thawed)' %}</option>
+                    <option value="DRIED" {% if item.user_rating.condition == "DRIED" %}selected{% endif %}>{% trans 'Dried' %}</option>
+                    {% else %}
+                    <option value="FRESH" {% if item.user_rating.condition == "FRESH" %}selected{% endif %}>{% trans 'Fresh' %}</option>
+                    <option value="FROZEN" {% if item.user_rating.condition == "FROZEN" %}selected{% endif %}>{% trans 'Frozen (thawed)' %}</option>
+                    <option value="DRIED" {% if item.user_rating.condition == "DRIED" %}selected{% endif %}>{% trans 'Dried' %}</option>
+                    {% endif %}
+                </select>
+            </div>
+            {% endif %}
             <div class="mb-1 d-flex gap-2 align-items-center">
                 <button type="submit" class="btn btn-primary btn-sm">{% trans 'Save' %}</button>
             </div>

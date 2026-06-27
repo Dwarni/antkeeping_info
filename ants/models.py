@@ -781,6 +781,27 @@ class SpeciesFoodRating(models.Model):
         (FIVE_STARS, "Extremely interested (strong recruitment)"),
     ]
 
+    ALIVE = "ALIVE"
+    FRESHLY_KILLED = "FRESHLY_KILLED"
+    FRESH = "FRESH"
+    SCALDED = "SCALDED"
+    FROZEN = "FROZEN"
+    DRIED = "DRIED"
+    CONDITION_CHOICES = [
+        (ALIVE, "Alive"),
+        (FRESHLY_KILLED, "Freshly killed"),
+        (FRESH, "Fresh"),
+        (SCALDED, "Scalded"),
+        (FROZEN, "Frozen (thawed)"),
+        (DRIED, "Dried"),
+    ]
+    # Which condition codes are valid/required for a given FoodItem category;
+    # categories absent here don't use the condition field at all.
+    CONDITIONS_BY_CATEGORY = {
+        FoodItem.PROTEIN: [ALIVE, FRESHLY_KILLED, SCALDED, FROZEN, DRIED],
+        FoodItem.PLANT: [FRESH, FROZEN, DRIED],
+    }
+
     MAX_IMAGE_DIMENSION = 1920
 
     species = models.ForeignKey(
@@ -795,6 +816,7 @@ class SpeciesFoodRating(models.Model):
         related_name="food_ratings",
     )
     acceptance = models.PositiveSmallIntegerField(choices=STAR_CHOICES)
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, null=True, blank=True)
     comment = models.TextField(blank=True, max_length=500)
     image = ImageField("Image file", upload_to="food_ratings", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -809,3 +831,8 @@ class SpeciesFoodRating(models.Model):
         if self.image and isinstance(self.image.file, UploadedFile):
             downscale_to_max_dimension(self.image, self.MAX_IMAGE_DIMENSION)
         super().save(*args, **kwargs)
+
+    @classmethod
+    def conditions_for_category(cls, category):
+        """Valid condition codes for a FoodItem category, or [] if not applicable."""
+        return cls.CONDITIONS_BY_CATEGORY.get(category, [])

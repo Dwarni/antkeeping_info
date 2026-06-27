@@ -45,7 +45,12 @@ class RateFoodImageUploadTest(TestCase):
     def test_uploading_image_attaches_and_downscales_it(self):
         response = self.client.post(
             self.url,
-            {"food_item_id": self.food.pk, "acceptance": 4, "image": _make_upload()},
+            {
+                "food_item_id": self.food.pk,
+                "acceptance": 4,
+                "condition": SpeciesFoodRating.ALIVE,
+                "image": _make_upload(),
+            },
         )
         self.assertEqual(response.status_code, 200)
         rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
@@ -57,7 +62,12 @@ class RateFoodImageUploadTest(TestCase):
         bogus = SimpleUploadedFile("notes.txt", b"not an image", content_type="text/plain")
         response = self.client.post(
             self.url,
-            {"food_item_id": self.food.pk, "acceptance": 4, "image": bogus},
+            {
+                "food_item_id": self.food.pk,
+                "acceptance": 4,
+                "condition": SpeciesFoodRating.ALIVE,
+                "image": bogus,
+            },
         )
         self.assertEqual(response.status_code, 400)
         self.assertFalse(SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food).exists())
@@ -65,12 +75,25 @@ class RateFoodImageUploadTest(TestCase):
     def test_updating_rating_without_new_image_keeps_existing_one(self):
         self.client.post(
             self.url,
-            {"food_item_id": self.food.pk, "acceptance": 4, "image": _make_upload()},
+            {
+                "food_item_id": self.food.pk,
+                "acceptance": 4,
+                "condition": SpeciesFoodRating.ALIVE,
+                "image": _make_upload(),
+            },
         )
         rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
         original_image_name = rating.image.name
 
-        self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 2, "comment": "changed my mind"})
+        self.client.post(
+            self.url,
+            {
+                "food_item_id": self.food.pk,
+                "acceptance": 2,
+                "condition": SpeciesFoodRating.DRIED,
+                "comment": "changed my mind",
+            },
+        )
         rating.refresh_from_db()
         self.assertEqual(rating.acceptance, SpeciesFoodRating.TWO_STARS)
         self.assertEqual(rating.image.name, original_image_name)
@@ -97,6 +120,7 @@ class FoodOverviewRateImageUploadTest(TestCase):
                 "species_id": self.species.pk,
                 "food_item_id": self.food.pk,
                 "acceptance": 5,
+                "condition": SpeciesFoodRating.ALIVE,
                 "image": _make_upload(),
             },
         )
@@ -112,6 +136,7 @@ class FoodOverviewRateImageUploadTest(TestCase):
                 "species_id": self.species.pk,
                 "food_item_id": self.food.pk,
                 "acceptance": 5,
+                "condition": SpeciesFoodRating.ALIVE,
                 "image": bogus,
             },
         )

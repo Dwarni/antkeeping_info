@@ -93,6 +93,27 @@
             <div class="star-hint text-muted small mt-1"></div>
           </div>
         </div>
+        {% if food_item.category == "PROTEIN" or food_item.category == "PLANT" %}
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1" for="food-ov-condition-{{ food_item.pk }}">
+            Condition offered <span class="text-danger" title="Required">*</span>
+          </label>
+          <select class="form-select form-select-sm" id="food-ov-condition-{{ food_item.pk }}" name="condition" required>
+            <option value="" disabled selected>Select…</option>
+            {% if food_item.category == "PROTEIN" %}
+            <option value="ALIVE">Alive</option>
+            <option value="FRESHLY_KILLED">Freshly killed</option>
+            <option value="SCALDED">Scalded</option>
+            <option value="FROZEN">Frozen (thawed)</option>
+            <option value="DRIED">Dried</option>
+            {% else %}
+            <option value="FRESH">Fresh</option>
+            <option value="FROZEN">Frozen (thawed)</option>
+            <option value="DRIED">Dried</option>
+            {% endif %}
+          </select>
+        </div>
+        {% endif %}
         <div class="mb-2">
           <textarea name="comment" class="form-control form-control-sm" rows="1"
                     maxlength="500" placeholder="Optional comment…"></textarea>

@@ -92,6 +92,47 @@ class SpeciesFoodRatingModelTest(TestCase):
         )
         self.assertEqual(SpeciesFoodRating.objects.filter(user=self.user).count(), 2)
 
+    def test_create_rating_with_condition(self):
+        rating = SpeciesFoodRating.objects.create(
+            species=self.species,
+            food_item=self.food,
+            user=self.user,
+            acceptance=SpeciesFoodRating.THREE_STARS,
+            condition=SpeciesFoodRating.ALIVE,
+        )
+        self.assertEqual(rating.condition, SpeciesFoodRating.ALIVE)
+
+    def test_condition_optional_at_model_level(self):
+        rating = SpeciesFoodRating.objects.create(
+            species=self.species,
+            food_item=self.food,
+            user=self.user,
+            acceptance=SpeciesFoodRating.THREE_STARS,
+        )
+        self.assertIsNone(rating.condition)
+
+    def test_conditions_for_category_protein(self):
+        self.assertEqual(
+            SpeciesFoodRating.conditions_for_category(FoodItem.PROTEIN),
+            [
+                SpeciesFoodRating.ALIVE,
+                SpeciesFoodRating.FRESHLY_KILLED,
+                SpeciesFoodRating.SCALDED,
+                SpeciesFoodRating.FROZEN,
+                SpeciesFoodRating.DRIED,
+            ],
+        )
+
+    def test_conditions_for_category_plant(self):
+        self.assertEqual(
+            SpeciesFoodRating.conditions_for_category(FoodItem.PLANT),
+            [SpeciesFoodRating.FRESH, SpeciesFoodRating.FROZEN, SpeciesFoodRating.DRIED],
+        )
+
+    def test_conditions_for_category_not_applicable(self):
+        for category in (FoodItem.SEEDS, FoodItem.SUGAR, FoodItem.OTHER):
+            self.assertEqual(SpeciesFoodRating.conditions_for_category(category), [])
+
 
 class AntSpeciesDetailFoodContextTest(TestCase):
     def setUp(self):
@@ -213,7 +254,12 @@ class SubmitFoodRatingViewTest(TestCase):
         self.client.login(username="tester", password="pass")
         response = self.client.post(
             self.url,
-            {"food_item_id": self.food.pk, "acceptance": 3, "comment": "gobbled it up"},
+            {
+                "food_item_id": self.food.pk,
+                "acceptance": 3,
+                "condition": SpeciesFoodRating.ALIVE,
+                "comment": "gobbled it up",
+            },
         )
         self.assertEqual(response.status_code, 200)
         rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
@@ -222,8 +268,19 @@ class SubmitFoodRatingViewTest(TestCase):
 
     def test_second_post_updates_existing_rating(self):
         self.client.login(username="tester", password="pass")
-        self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 3})
-        self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 1, "comment": "ignored"})
+        self.client.post(
+            self.url,
+            {"food_item_id": self.food.pk, "acceptance": 3, "condition": SpeciesFoodRating.ALIVE},
+        )
+        self.client.post(
+            self.url,
+            {
+                "food_item_id": self.food.pk,
+                "acceptance": 1,
+                "condition": SpeciesFoodRating.DRIED,
+                "comment": "ignored",
+            },
+        )
         self.assertEqual(
             SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food, user=self.user).count(),
             1,
@@ -234,9 +291,15 @@ class SubmitFoodRatingViewTest(TestCase):
 
     def test_four_and_five_star_ratings_accepted(self):
         self.client.login(username="tester", password="pass")
-        response = self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 4})
+        response = self.client.post(
+            self.url,
+            {"food_item_id": self.food.pk, "acceptance": 4, "condition": SpeciesFoodRating.ALIVE},
+        )
         self.assertEqual(response.status_code, 200)
-        self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 5})
+        self.client.post(
+            self.url,
+            {"food_item_id": self.food.pk, "acceptance": 5, "condition": SpeciesFoodRating.ALIVE},
+        )
         rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
         self.assertEqual(rating.acceptance, SpeciesFoodRating.FIVE_STARS)
 
@@ -267,11 +330,167 @@ class SubmitFoodRatingViewTest(TestCase):
 
     def test_response_contains_food_ratings_section(self):
         self.client.login(username="tester", password="pass")
-        response = self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 3})
+        response = self.client.post(
+            self.url,
+            {"food_item_id": self.food.pk, "acceptance": 3, "condition": SpeciesFoodRating.ALIVE},
+        )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="food-ratings-section"')
 
     def test_response_contains_food_item_name(self):
         self.client.login(username="tester", password="pass")
-        response = self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 3})
+        response = self.client.post(
+            self.url,
+            {"food_item_id": self.food.pk, "acceptance": 3, "condition": SpeciesFoodRating.ALIVE},
+        )
         self.assertContains(response, self.food.name)
+
+    def test_protein_food_missing_condition_returns_400(self):
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 3})
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(
+            SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food).exists()
+        )
+
+    def test_protein_food_invalid_condition_returns_400(self):
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(
+            self.url,
+            {"food_item_id": self.food.pk, "acceptance": 3, "condition": SpeciesFoodRating.FRESH},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_protein_food_valid_condition_accepted(self):
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(
+            self.url,
+            {"food_item_id": self.food.pk, "acceptance": 3, "condition": SpeciesFoodRating.FROZEN},
+        )
+        self.assertEqual(response.status_code, 200)
+        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
+        self.assertEqual(rating.condition, SpeciesFoodRating.FROZEN)
+
+    def test_plant_food_missing_condition_returns_400(self):
+        leaf = _make_food(name="Bramble leaf", category=FoodItem.PLANT)
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(self.url, {"food_item_id": leaf.pk, "acceptance": 3})
+        self.assertEqual(response.status_code, 400)
+
+    def test_plant_food_invalid_condition_returns_400(self):
+        leaf = _make_food(name="Bramble leaf", category=FoodItem.PLANT)
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(
+            self.url,
+            {"food_item_id": leaf.pk, "acceptance": 3, "condition": SpeciesFoodRating.SCALDED},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_plant_food_valid_condition_accepted(self):
+        leaf = _make_food(name="Bramble leaf", category=FoodItem.PLANT)
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(
+            self.url,
+            {"food_item_id": leaf.pk, "acceptance": 3, "condition": SpeciesFoodRating.FRESH},
+        )
+        self.assertEqual(response.status_code, 200)
+        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=leaf, user=self.user)
+        self.assertEqual(rating.condition, SpeciesFoodRating.FRESH)
+
+    def test_seeds_food_condition_not_required(self):
+        seeds = _make_food(name="Sunflower seeds", category=FoodItem.SEEDS)
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(self.url, {"food_item_id": seeds.pk, "acceptance": 3})
+        self.assertEqual(response.status_code, 200)
+
+    def test_seeds_food_stray_condition_is_ignored(self):
+        seeds = _make_food(name="Sunflower seeds", category=FoodItem.SEEDS)
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(
+            self.url,
+            {"food_item_id": seeds.pk, "acceptance": 3, "condition": SpeciesFoodRating.ALIVE},
+        )
+        self.assertEqual(response.status_code, 200)
+        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=seeds, user=self.user)
+        self.assertIsNone(rating.condition)
+
+    def test_other_food_condition_not_required(self):
+        other = _make_food(name="Sausage", category=FoodItem.OTHER)
+        self.client.login(username="tester", password="pass")
+        response = self.client.post(self.url, {"food_item_id": other.pk, "acceptance": 3})
+        self.assertEqual(response.status_code, 200)
+
+
+class SubmitFoodRatingFromOverviewViewTest(TestCase):
+    def setUp(self):
+        self.species = _make_species()
+        self.food = _make_food()
+        self.url = reverse("food_overview_rate")
+        self.user = User.objects.create_user(username="tester", password="pass")
+        self.client.login(username="tester", password="pass")
+
+    def test_protein_food_missing_condition_returns_400(self):
+        response = self.client.post(
+            self.url,
+            {"species_id": self.species.pk, "food_item_id": self.food.pk, "acceptance": 3},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_protein_food_invalid_condition_returns_400(self):
+        response = self.client.post(
+            self.url,
+            {
+                "species_id": self.species.pk,
+                "food_item_id": self.food.pk,
+                "acceptance": 3,
+                "condition": SpeciesFoodRating.FRESH,
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_protein_food_valid_condition_accepted(self):
+        response = self.client.post(
+            self.url,
+            {
+                "species_id": self.species.pk,
+                "food_item_id": self.food.pk,
+                "acceptance": 3,
+                "condition": SpeciesFoodRating.FROZEN,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
+        self.assertEqual(rating.condition, SpeciesFoodRating.FROZEN)
+
+    def test_plant_food_missing_condition_returns_400(self):
+        leaf = _make_food(name="Bramble leaf", category=FoodItem.PLANT)
+        response = self.client.post(
+            self.url,
+            {"species_id": self.species.pk, "food_item_id": leaf.pk, "acceptance": 3},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_plant_food_valid_condition_accepted(self):
+        leaf = _make_food(name="Bramble leaf", category=FoodItem.PLANT)
+        response = self.client.post(
+            self.url,
+            {
+                "species_id": self.species.pk,
+                "food_item_id": leaf.pk,
+                "acceptance": 3,
+                "condition": SpeciesFoodRating.FRESH,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=leaf, user=self.user)
+        self.assertEqual(rating.condition, SpeciesFoodRating.FRESH)
+
+    def test_seeds_food_condition_not_required(self):
+        seeds = _make_food(name="Sunflower seeds", category=FoodItem.SEEDS)
+        response = self.client.post(
+            self.url,
+            {"species_id": self.species.pk, "food_item_id": seeds.pk, "acceptance": 3},
+        )
+        self.assertEqual(response.status_code, 200)
+        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=seeds, user=self.user)
+        self.assertIsNone(rating.condition)

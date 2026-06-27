@@ -21,6 +21,9 @@
   <li class="list-group-item">
     <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
       {{ rating.acceptance|star_display }}
+      {% if rating.condition %}
+      <span class="badge bg-light text-dark border">{{ rating.get_condition_display }}</span>
+      {% endif %}
       <span class="text-muted small">
         {% blocktrans with username=rating.user.username %}by {{ username }}{% endblocktrans %}
         &middot; {{ rating.created_at|date:"N j, Y" }}

@@ -877,11 +877,19 @@ class SubmitFoodRatingFromOverviewView(LoginRequiredMixin, View):
         valid_levels = [level for level, _ in SpeciesFoodRating.STAR_CHOICES]
         if acceptance not in valid_levels:
             return HttpResponse(status=400)
+        required_conditions = SpeciesFoodRating.conditions_for_category(food_item.category)
+        condition = request.POST.get("condition", "").strip() or None
+        if required_conditions and condition not in required_conditions:
+            return HttpResponse(status=400)
         image_form = FoodRatingImageForm(request.POST, request.FILES)
         if not image_form.is_valid():
             return HttpResponse(status=400)
         comment = request.POST.get("comment", "").strip()[:500]
-        defaults = {"acceptance": acceptance, "comment": comment}
+        defaults = {
+            "acceptance": acceptance,
+            "condition": condition if required_conditions else None,
+            "comment": comment,
+        }
         image = image_form.cleaned_data.get("image")
         if image is not None:
             defaults["image"] = image
@@ -1134,12 +1142,21 @@ class SubmitFoodRatingView(LoginRequiredMixin, View):
         except FoodItem.DoesNotExist:
             return HttpResponse(status=400)
 
+        required_conditions = SpeciesFoodRating.conditions_for_category(food_item.category)
+        condition = request.POST.get("condition", "").strip() or None
+        if required_conditions and condition not in required_conditions:
+            return HttpResponse(status=400)
+
         image_form = FoodRatingImageForm(request.POST, request.FILES)
         if not image_form.is_valid():
             return HttpResponse(status=400)
 
         comment = request.POST.get("comment", "").strip()
-        defaults = {"acceptance": acceptance, "comment": comment}
+        defaults = {
+            "acceptance": acceptance,
+            "condition": condition if required_conditions else None,
+            "comment": comment,
+        }
         image = image_form.cleaned_data.get("image")
         if image is not None:
             defaults["image"] = image

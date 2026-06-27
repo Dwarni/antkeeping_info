@@ -52,6 +52,29 @@ class FoodItemSpeciesRatingsViewTest(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
+    def test_condition_displayed_when_present(self):
+        rater = User.objects.create_user(username="ant_fan", password="pass")
+        SpeciesFoodRating.objects.create(
+            species=self.species,
+            food_item=self.food_item,
+            user=rater,
+            acceptance=5,
+            condition=SpeciesFoodRating.ALIVE,
+        )
+        response = self.client.get(self.url)
+        self.assertContains(response, "Alive")
+
+    def test_condition_not_shown_when_absent(self):
+        rater = User.objects.create_user(username="ant_fan", password="pass")
+        SpeciesFoodRating.objects.create(
+            species=self.species,
+            food_item=self.food_item,
+            user=rater,
+            acceptance=5,
+        )
+        response = self.client.get(self.url)
+        self.assertNotContains(response, "badge bg-light")
+
     def test_only_ratings_for_this_pair_are_shown(self):
         other_species = _make_species(name="Formica rufa", slug="formica-rufa")
         rater = User.objects.create_user(username="other_rater", password="pass")
