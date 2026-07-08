@@ -948,6 +948,7 @@ def _build_food_overview_list_context(selected_category):
     return {"food_data": food_data}
 
 
+@method_decorator(never_cache, name="dispatch")
 class FoodOverviewView(TemplateView):
     template_name = "ants/food_overview.html"
 
@@ -1055,6 +1056,7 @@ class FoodOverviewCreateItemView(LoginRequiredMixin, View):
         return HttpResponse(list_html)
 
 
+@method_decorator(never_cache, name="dispatch")
 class FoodItemSpeciesRatingsView(TemplateView):
     """Full list of individual ratings (with comment + rater) for one food item / species pair."""
 
@@ -1075,6 +1077,7 @@ class FoodItemSpeciesRatingsView(TemplateView):
         return context
 
 
+@method_decorator(never_cache, name="dispatch")
 class FoodOverviewSuggestSimilarView(LoginRequiredMixin, View):
     """HTMX endpoint: returns existing FoodItems whose name resembles the typed query."""
 
