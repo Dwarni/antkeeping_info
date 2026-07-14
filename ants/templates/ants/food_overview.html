@@ -77,7 +77,17 @@
         hidden.value = speciesId;
         chip.appendChild(hidden);
 
-        chips.appendChild(chip);
+        // Keep chips sorted alphabetically so it's easy to see which species are still missing.
+        var existing = chips.querySelectorAll('[data-species-id]');
+        var nextSibling = null;
+        for (var i = 0; i < existing.length; i++) {
+            var existingName = existing[i].querySelector('em').textContent;
+            if (speciesName.localeCompare(existingName, undefined, { sensitivity: 'base' }) < 0) {
+                nextSibling = existing[i];
+                break;
+            }
+        }
+        chips.insertBefore(chip, nextSibling);
     }
 
     document.addEventListener('click', function (e) {

@@ -47,7 +47,7 @@
         <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
         <div class="mb-2 position-relative">
           <label class="form-label small fw-semibold mb-1" for="species-search-{{ food_item.pk }}">Ant species</label>
-          <div class="d-flex flex-wrap gap-1 mb-1" id="species-chips-{{ food_item.pk }}"></div>
+          <div class="d-flex flex-wrap gap-1 species-chips" id="species-chips-{{ food_item.pk }}"></div>
           <input type="text"
                  class="form-control form-control-sm"
                  id="species-search-{{ food_item.pk }}"
