@@ -20,25 +20,29 @@
   {% for rating in ratings %}
   <li class="list-group-item">
     <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-      {{ rating.acceptance|star_display }}
-      {% if rating.condition %}
-      <span class="badge bg-light text-dark border">{{ rating.get_condition_display }}</span>
+      {{ rating.submission.acceptance|star_display }}
+      {% if rating.submission.condition %}
+      <span class="badge bg-light text-dark border">{{ rating.submission.get_condition_display }}</span>
       {% endif %}
       <span class="text-muted small">
         {% blocktrans with username=rating.user.username %}by {{ username }}{% endblocktrans %}
         &middot; {{ rating.created_at|date:"N j, Y" }}
       </span>
     </div>
-    {% if rating.comment %}
-    <p class="mb-1">{{ rating.comment }}</p>
+    {% if rating.submission.comment %}
+    <p class="mb-1">{{ rating.submission.comment }}</p>
     {% endif %}
-    {% if rating.image %}
-    {% thumbnail rating.image "400x400" as im %}
-    <a href="{{ rating.image.url }}" target="_blank" rel="noopener">
-      <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
-           class="rounded" alt="{% blocktrans with username=rating.user.username %}Photo by {{ username }}{% endblocktrans %}">
-    </a>
-    {% endthumbnail %}
+    {% if rating.submission.photos.all %}
+    <div class="d-flex gap-2 flex-wrap">
+      {% for photo in rating.submission.photos.all %}
+      {% thumbnail photo.image "150x150" crop="center" as im %}
+      <a href="{{ photo.image.url }}" target="_blank" rel="noopener">
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+             class="rounded" alt="{% blocktrans with username=rating.user.username %}Photo by {{ username }}{% endblocktrans %}">
+      </a>
+      {% endthumbnail %}
+      {% endfor %}
+    </div>
     {% endif %}
   </li>
   {% endfor %}

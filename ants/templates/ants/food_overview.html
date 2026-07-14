@@ -51,18 +51,52 @@
 <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
 <script>
 (function () {
+    function addSpeciesChip(id, speciesId, speciesName) {
+        var chips = document.getElementById('species-chips-' + id);
+        if (!chips || chips.querySelector('[data-species-id="' + speciesId + '"]')) return;
+
+        var chip = document.createElement('span');
+        chip.className = 'badge bg-secondary d-inline-flex align-items-center gap-1 fw-normal';
+        chip.setAttribute('data-species-id', speciesId);
+
+        var label = document.createElement('em');
+        label.textContent = speciesName;
+        chip.appendChild(label);
+
+        var removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-close btn-close-white';
+        removeBtn.style.fontSize = '0.5rem';
+        removeBtn.setAttribute('aria-label', 'Remove');
+        removeBtn.setAttribute('data-remove-species', '');
+        chip.appendChild(removeBtn);
+
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'species_id';
+        hidden.value = speciesId;
+        chip.appendChild(hidden);
+
+        chips.appendChild(chip);
+    }
+
     document.addEventListener('click', function (e) {
-        // Suggestion selected: fill visible search + hidden species_id, close dropdown
-        var btn = e.target.closest('[data-species-id]');
-        if (btn) {
-            var box = btn.closest('[id^="species-suggest-"]');
-            if (!box) return;
-            var id = box.id.replace('species-suggest-', '');
+        // Suggestion selected: add a chip, clear + refocus the search box, close dropdown
+        var suggestBox = e.target.closest('[id^="species-suggest-"]');
+        var suggestBtn = e.target.closest('[data-species-id]');
+        if (suggestBox && suggestBtn) {
+            var id = suggestBox.id.replace('species-suggest-', '');
             var search = document.getElementById('species-search-' + id);
-            var hidden = document.getElementById('species-id-' + id);
-            if (search) search.value = btn.dataset.speciesName;
-            if (hidden) hidden.value = btn.dataset.speciesId;
-            box.innerHTML = '';
+            addSpeciesChip(id, suggestBtn.dataset.speciesId, suggestBtn.dataset.speciesName);
+            if (search) { search.value = ''; search.focus(); }
+            suggestBox.innerHTML = '';
+            return;
+        }
+        // Chip removal
+        var removeBtn = e.target.closest('[data-remove-species]');
+        if (removeBtn) {
+            var chip = removeBtn.closest('[data-species-id]');
+            if (chip) chip.remove();
             return;
         }
         // Click outside: close all open suggestion dropdowns
@@ -75,12 +109,18 @@
         });
     });
 
-    // Typing clears stale hidden species_id (forces re-selection from dropdown)
-    document.addEventListener('input', function (e) {
-        if (e.target.id && e.target.id.startsWith('species-search-')) {
-            var id = e.target.id.replace('species-search-', '');
-            var hidden = document.getElementById('species-id-' + id);
-            if (hidden) hidden.value = '';
+    // Require at least one species chip before letting a rating form submit.
+    document.body.addEventListener('htmx:beforeRequest', function (e) {
+        var form = e.detail.elt;
+        if (!form.matches || !form.matches('[data-species-rating-form]')) return;
+        var foodItemId = form.querySelector('input[name="food_item_id"]').value;
+        var chips = document.getElementById('species-chips-' + foodItemId);
+        var hint = document.getElementById('species-required-hint-' + foodItemId);
+        if (!chips || chips.children.length === 0) {
+            e.preventDefault();
+            if (hint) hint.classList.remove('d-none');
+        } else if (hint) {
+            hint.classList.add('d-none');
         }
     });
 })();

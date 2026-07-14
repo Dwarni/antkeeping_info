@@ -41,12 +41,13 @@
     <div class="collapse px-3 pb-3" id="rate-form-{{ food_item.pk }}">
       <form hx-post="{% url 'food_overview_rate' %}" hx-encoding="multipart/form-data"
             hx-target="#food-item-ratings-{{ food_item.pk }}"
-            hx-swap="outerHTML">
+            hx-swap="outerHTML"
+            data-species-rating-form>
         {% csrf_token %}
         <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
-        <input type="hidden" name="species_id" id="species-id-{{ food_item.pk }}">
         <div class="mb-2 position-relative">
           <label class="form-label small fw-semibold mb-1" for="species-search-{{ food_item.pk }}">Ant species</label>
+          <div class="d-flex flex-wrap gap-1 mb-1" id="species-chips-{{ food_item.pk }}"></div>
           <input type="text"
                  class="form-control form-control-sm"
                  id="species-search-{{ food_item.pk }}"
@@ -59,6 +60,9 @@
                  hx-swap="innerHTML"
                  hx-include="this">
           <div id="species-suggest-{{ food_item.pk }}" class="position-absolute w-100 species-suggest-dropdown"></div>
+          <div class="form-text text-danger d-none" id="species-required-hint-{{ food_item.pk }}">
+            Select at least one species.
+          </div>
         </div>
         <div class="mb-2">
           <label class="form-label small fw-semibold mb-1">Acceptance</label>
@@ -119,9 +123,9 @@
                     maxlength="500" placeholder="Optional comment…"></textarea>
         </div>
         <div class="mb-2">
-          <label class="form-label small fw-semibold mb-1" for="food-ov-image-{{ food_item.pk }}">Photo (optional)</label>
+          <label class="form-label small fw-semibold mb-1" for="food-ov-image-{{ food_item.pk }}">Photos (optional)</label>
           <input type="file" class="form-control form-control-sm" id="food-ov-image-{{ food_item.pk }}"
-                 name="image" accept="image/*">
+                 name="images" accept="image/*" multiple>
           {% include "ants/_image_rights_notice.html" %}
         </div>
         <button type="submit" class="btn btn-sm btn-primary">Save rating</button>

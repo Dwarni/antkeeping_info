@@ -765,8 +765,11 @@ class FoodItem(models.Model):
         return self.name
 
 
-class SpeciesFoodRating(models.Model):
-    """Community rating of how well an ant species accepts a specific food item."""
+class FoodRatingSubmission(models.Model):
+    """One rating action: shared acceptance/condition/comment/photos applied to
+    one or more ant species for one food item, by one user. `SpeciesFoodRating`
+    rows link individual species to whichever submission currently represents
+    their rating."""
 
     ONE_STAR = 1
     TWO_STARS = 2
@@ -802,11 +805,67 @@ class SpeciesFoodRating(models.Model):
         FoodItem.PLANT: [FRESH, FROZEN, DRIED],
     }
 
+    food_item = models.ForeignKey(
+        FoodItem, on_delete=models.CASCADE, related_name="rating_submissions"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="food_rating_submissions",
+    )
+    acceptance = models.PositiveSmallIntegerField(choices=STAR_CHOICES)
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, null=True, blank=True)
+    comment = models.TextField(blank=True, max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("Food rating submission")
+        verbose_name_plural = _("Food rating submissions")
+
+    def __str__(self):
+        return f"{self.user} → {self.food_item} ({self.get_acceptance_display()})"
+
+    @classmethod
+    def conditions_for_category(cls, category):
+        """Valid condition codes for a FoodItem category, or [] if not applicable."""
+        return cls.CONDITIONS_BY_CATEGORY.get(category, [])
+
+
+class RatingPhoto(models.Model):
+    """A photo attached to a FoodRatingSubmission. A submission may have several."""
+
     MAX_IMAGE_DIMENSION = 1920
+
+    submission = models.ForeignKey(
+        FoodRatingSubmission, on_delete=models.CASCADE, related_name="photos"
+    )
+    image = ImageField("Image file", upload_to="food_ratings")
+    ordering = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["ordering", "created_at"]
+        verbose_name = _("Rating photo")
+        verbose_name_plural = _("Rating photos")
+
+    def save(self, *args, **kwargs):
+        if self.image and isinstance(self.image.file, UploadedFile):
+            downscale_to_max_dimension(self.image, self.MAX_IMAGE_DIMENSION)
+        super().save(*args, **kwargs)
+
+
+class SpeciesFoodRating(models.Model):
+    """Links one ant species to the FoodRatingSubmission that currently
+    represents this (species, food_item, user) rating."""
 
     species = models.ForeignKey(
         AntSpecies, on_delete=models.CASCADE, related_name="food_ratings"
     )
+    # Kept redundantly alongside `submission.food_item` (not just derived via
+    # the FK) because unique_together can only reference literal columns on
+    # this model, not fields reached through a relation.
     food_item = models.ForeignKey(
         FoodItem, on_delete=models.CASCADE, related_name="species_ratings"
     )
@@ -815,10 +874,9 @@ class SpeciesFoodRating(models.Model):
         on_delete=models.CASCADE,
         related_name="food_ratings",
     )
-    acceptance = models.PositiveSmallIntegerField(choices=STAR_CHOICES)
-    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, null=True, blank=True)
-    comment = models.TextField(blank=True, max_length=500)
-    image = ImageField("Image file", upload_to="food_ratings", null=True, blank=True)
+    submission = models.ForeignKey(
+        FoodRatingSubmission, on_delete=models.CASCADE, related_name="species_food_ratings"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -826,13 +884,3 @@ class SpeciesFoodRating(models.Model):
         unique_together = ("species", "food_item", "user")
         verbose_name = _("Species food rating")
         verbose_name_plural = _("Species food ratings")
-
-    def save(self, *args, **kwargs):
-        if self.image and isinstance(self.image.file, UploadedFile):
-            downscale_to_max_dimension(self.image, self.MAX_IMAGE_DIMENSION)
-        super().save(*args, **kwargs)
-
-    @classmethod
-    def conditions_for_category(cls, category):
-        """Valid condition codes for a FoodItem category, or [] if not applicable."""
-        return cls.CONDITIONS_BY_CATEGORY.get(category, [])

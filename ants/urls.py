@@ -75,11 +75,6 @@ urlpatterns = [
         name="size_comparison_results",
     ),
     path(
-        "<islug:slug>/rate-food/",
-        views.SubmitFoodRatingView.as_view(),
-        name="rate_food",
-    ),
-    path(
         "<islug:slug>/rate-difficulty/",
         views.SubmitDifficultyRatingView.as_view(),
         name="rate_difficulty",

@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 from flights.models import Flight
 
 from .forms import FoodItemCreateForm, FoodRatingImageForm, NuptialFlightReportForm
-from .models import AntRegion, AntSize, AntSpecies, FoodItem, Genus, SpeciesDifficultyRating, SpeciesFoodRating, SubFamily, Tribe
+from .models import AntRegion, AntSize, AntSpecies, FoodItem, FoodRatingSubmission, Genus, RatingPhoto, SpeciesDifficultyRating, SpeciesFoodRating, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
 
 _MONTH_NAMES_SHORT = [
@@ -801,7 +801,7 @@ def _build_difficulty_context(ratings):
 def _build_food_context(species, user):
     """Return food acceptance rating data grouped by category for template context."""
     food_items = list(FoodItem.objects.all())
-    ratings_qs = species.food_ratings.select_related("food_item").all()
+    ratings_qs = species.food_ratings.select_related("food_item", "submission").all()
 
     ratings_by_food = {}
     user_rating_by_food = {}
@@ -815,7 +815,7 @@ def _build_food_context(species, user):
     for food_item in food_items:
         item_ratings = ratings_by_food.get(food_item.pk, [])
         total = len(item_ratings)
-        avg = round(sum(r.acceptance for r in item_ratings) / total, 1) if total > 0 else None
+        avg = round(sum(r.submission.acceptance for r in item_ratings) / total, 1) if total > 0 else None
 
         cat = food_item.category
         if cat not in categories:
@@ -844,11 +844,11 @@ def _build_food_overview_item_context(food_item):
         SpeciesFoodRating.objects
         .filter(food_item=food_item)
         .values("species_id", "species__name", "species__slug")
-        .annotate(species_avg=Avg("acceptance"), rating_count=Count("id"))
+        .annotate(species_avg=Avg("submission__acceptance"), rating_count=Count("id"))
         .order_by("-species_avg", "-rating_count")
     )
     all_species = list(ratings_qs)
-    agg = food_item.species_ratings.aggregate(avg=Avg("acceptance"), total=Count("id"))
+    agg = food_item.species_ratings.aggregate(avg=Avg("submission__acceptance"), total=Count("id"))
     overall_avg = round(float(agg["avg"]), 1) if agg["avg"] is not None else None
     return {
         "food_item": food_item,
@@ -861,44 +861,87 @@ def _build_food_overview_item_context(food_item):
 
 
 class SubmitFoodRatingFromOverviewView(LoginRequiredMixin, View):
+    MAX_SPECIES_PER_SUBMISSION = 25
+    MAX_PHOTOS_PER_SUBMISSION = 6
+
     def post(self, request):
-        try:
-            species = AntSpecies.objects.get(pk=int(request.POST.get("species_id", "")))
-        except (ValueError, TypeError, AntSpecies.DoesNotExist):
-            return HttpResponse(status=400)
         try:
             food_item = FoodItem.objects.get(pk=int(request.POST.get("food_item_id", "")))
         except (ValueError, TypeError, FoodItem.DoesNotExist):
             return HttpResponse(status=400)
+
+        raw_species_ids = request.POST.getlist("species_id")
+        if not raw_species_ids:
+            return HttpResponse(status=400)
+        try:
+            species_ids = {int(v) for v in raw_species_ids}
+        except (ValueError, TypeError):
+            return HttpResponse(status=400)
+        if len(species_ids) > self.MAX_SPECIES_PER_SUBMISSION:
+            return HttpResponse(status=400)
+        species_list = list(AntSpecies.objects.filter(pk__in=species_ids))
+        if len(species_list) != len(species_ids):
+            return HttpResponse(status=400)
+
         try:
             acceptance = int(request.POST.get("acceptance", ""))
         except (ValueError, TypeError):
             return HttpResponse(status=400)
-        valid_levels = [level for level, _ in SpeciesFoodRating.STAR_CHOICES]
+        valid_levels = [level for level, _ in FoodRatingSubmission.STAR_CHOICES]
         if acceptance not in valid_levels:
             return HttpResponse(status=400)
-        required_conditions = SpeciesFoodRating.conditions_for_category(food_item.category)
+        required_conditions = FoodRatingSubmission.conditions_for_category(food_item.category)
         condition = request.POST.get("condition", "").strip() or None
         if required_conditions and condition not in required_conditions:
             return HttpResponse(status=400)
-        image_form = FoodRatingImageForm(request.POST, request.FILES)
-        if not image_form.is_valid():
+        condition = condition if required_conditions else None
+
+        uploads = request.FILES.getlist("images")
+        if len(uploads) > self.MAX_PHOTOS_PER_SUBMISSION:
             return HttpResponse(status=400)
+        cleaned_images = []
+        for upload in uploads:
+            image_form = FoodRatingImageForm(files={"image": upload})
+            if not image_form.is_valid():
+                return HttpResponse(status=400)
+            cleaned_images.append(image_form.cleaned_data["image"])
+
         comment = request.POST.get("comment", "").strip()[:500]
-        defaults = {
-            "acceptance": acceptance,
-            "condition": condition if required_conditions else None,
-            "comment": comment,
-        }
-        image = image_form.cleaned_data.get("image")
-        if image is not None:
-            defaults["image"] = image
-        SpeciesFoodRating.objects.update_or_create(
-            species=species,
-            food_item=food_item,
-            user=request.user,
-            defaults=defaults,
-        )
+
+        with transaction.atomic():
+            submission = FoodRatingSubmission.objects.create(
+                food_item=food_item,
+                user=request.user,
+                acceptance=acceptance,
+                condition=condition,
+                comment=comment,
+            )
+            for idx, image in enumerate(cleaned_images):
+                RatingPhoto.objects.create(submission=submission, image=image, ordering=idx)
+
+            orphan_candidates = set()
+            for species in species_list:
+                link, created = SpeciesFoodRating.objects.get_or_create(
+                    species=species,
+                    food_item=food_item,
+                    user=request.user,
+                    defaults={"submission": submission},
+                )
+                if not created:
+                    orphan_candidates.add(link.submission_id)
+                    link.submission = submission
+                    link.save(update_fields=["submission", "updated_at"])
+
+            if orphan_candidates:
+                still_referenced = set(
+                    SpeciesFoodRating.objects
+                    .filter(submission_id__in=orphan_candidates)
+                    .values_list("submission_id", flat=True)
+                )
+                FoodRatingSubmission.objects.filter(
+                    pk__in=orphan_candidates - still_referenced
+                ).delete()
+
         return render(
             request,
             "ants/food_overview_species_list.html",
@@ -915,7 +958,7 @@ def _build_food_overview_list_context(selected_category):
         SpeciesFoodRating.objects
         .filter(food_item__category=selected_category)
         .values("food_item_id", "species_id", "species__name", "species__slug")
-        .annotate(species_avg=Avg("acceptance"), rating_count=Count("id"))
+        .annotate(species_avg=Avg("submission__acceptance"), rating_count=Count("id"))
         .order_by("food_item_id", "-species_avg")
     )
     # Per food_item: overall avg and total count
@@ -923,7 +966,7 @@ def _build_food_overview_list_context(selected_category):
         SpeciesFoodRating.objects
         .filter(food_item__category=selected_category)
         .values("food_item_id")
-        .annotate(overall_avg=Avg("acceptance"), total_ratings=Count("id"))
+        .annotate(overall_avg=Avg("submission__acceptance"), total_ratings=Count("id"))
     )
     overall_by_food = {r["food_item_id"]: r for r in overall_qs}
 
@@ -1071,7 +1114,8 @@ class FoodItemSpeciesRatingsView(TemplateView):
         context["ratings"] = (
             SpeciesFoodRating.objects
             .filter(food_item=food_item, species=species)
-            .select_related("user")
+            .select_related("user", "submission")
+            .prefetch_related("submission__photos")
             .order_by("-created_at")
         )
         return context
@@ -1121,60 +1165,6 @@ class SubmitDifficultyRatingView(LoginRequiredMixin, View):
         return render(
             request,
             "ants/antspecies_detail/antspecies_detail_difficulty_rating.html",
-            context,
-        )
-
-
-class SubmitFoodRatingView(LoginRequiredMixin, View):
-    """Accept a food acceptance rating POST for one food item and return the updated food section."""
-
-    def post(self, request, slug):
-        species = AntSpecies.objects.get(slug=slug)
-        try:
-            food_item_id = int(request.POST.get("food_item_id", ""))
-            acceptance = int(request.POST.get("acceptance", ""))
-        except (ValueError, TypeError):
-            return HttpResponse(status=400)
-
-        valid_levels = [level for level, _ in SpeciesFoodRating.STAR_CHOICES]
-        if acceptance not in valid_levels:
-            return HttpResponse(status=400)
-
-        try:
-            food_item = FoodItem.objects.get(pk=food_item_id)
-        except FoodItem.DoesNotExist:
-            return HttpResponse(status=400)
-
-        required_conditions = SpeciesFoodRating.conditions_for_category(food_item.category)
-        condition = request.POST.get("condition", "").strip() or None
-        if required_conditions and condition not in required_conditions:
-            return HttpResponse(status=400)
-
-        image_form = FoodRatingImageForm(request.POST, request.FILES)
-        if not image_form.is_valid():
-            return HttpResponse(status=400)
-
-        comment = request.POST.get("comment", "").strip()
-        defaults = {
-            "acceptance": acceptance,
-            "condition": condition if required_conditions else None,
-            "comment": comment,
-        }
-        image = image_form.cleaned_data.get("image")
-        if image is not None:
-            defaults["image"] = image
-        SpeciesFoodRating.objects.update_or_create(
-            species=species,
-            food_item=food_item,
-            user=request.user,
-            defaults=defaults,
-        )
-
-        context = _build_food_context(species, request.user)
-        context["object"] = species
-        return render(
-            request,
-            "ants/antspecies_detail/antspecies_detail_food_ratings.html",
             context,
         )
 
