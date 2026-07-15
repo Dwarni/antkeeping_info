@@ -1,0 +1,34 @@
+{% load i18n %}
+{# Success toast — shown after a food rating is edited #}
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="foodRatingEditSuccessToast"
+         class="toast align-items-center text-bg-success border-0"
+         role="alert" aria-live="assertive" aria-atomic="true"
+         data-bs-delay="4000">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle-fill me-2"></i>{% trans 'Your rating has been updated.' %}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="{% trans 'Close' %}"></button>
+        </div>
+    </div>
+</div>
+
+{# Edit food rating modal #}
+<div class="modal fade" id="foodRatingEditModal" tabindex="-1"
+     aria-labelledby="foodRatingEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="foodRatingEditModalLabel">
+                    <i class="bi bi-pencil me-2"></i>{% trans 'Edit your rating' %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+            </div>
+            <div class="modal-body">
+                <div id="food-rating-edit-form-container"></div>
+            </div>
+        </div>
+    </div>
+</div>

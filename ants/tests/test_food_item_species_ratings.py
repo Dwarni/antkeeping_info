@@ -128,3 +128,46 @@ class FoodItemSpeciesRatingsPhotoDisplayTest(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Photo by no_photos")
+
+
+class FoodItemSpeciesRatingsEditButtonTest(TestCase):
+    def setUp(self):
+        self.species = _make_species()
+        self.food_item = _make_food()
+        self.owner = User.objects.create_user(username="owner", password="pass")
+        self.rating = _make_rating(self.species, self.food_item, self.owner, acceptance=4)
+        self.url = reverse("food_item_species_ratings", args=[self.food_item.pk, self.species.slug])
+        self.edit_url = reverse("food_rating_edit", args=[self.rating.submission_id])
+
+    def test_edit_button_shown_to_owner(self):
+        self.client.login(username="owner", password="pass")
+        response = self.client.get(self.url)
+        self.assertContains(response, self.edit_url)
+
+    def test_edit_button_hidden_for_other_user(self):
+        User.objects.create_user(username="other", password="pass")
+        self.client.login(username="other", password="pass")
+        response = self.client.get(self.url)
+        self.assertNotContains(response, self.edit_url)
+
+    def test_edit_button_hidden_for_anonymous(self):
+        response = self.client.get(self.url)
+        self.assertNotContains(response, self.edit_url)
+
+
+class FoodItemSpeciesRatingsListViewTest(TestCase):
+    def test_returns_200_and_correct_content(self):
+        species = _make_species()
+        food_item = _make_food()
+        rater = User.objects.create_user(username="ant_fan", password="pass")
+        _make_rating(species, food_item, rater, acceptance=5, comment="Devoured immediately.")
+        url = reverse("food_item_species_ratings_list", args=[food_item.pk, species.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Devoured immediately.")
+
+    def test_unknown_food_item_404(self):
+        species = _make_species()
+        url = reverse("food_item_species_ratings_list", args=[999999, species.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)

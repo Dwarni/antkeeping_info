@@ -1,0 +1,100 @@
+{% load i18n thumbnail %}
+<form hx-post="{% url 'food_rating_edit' submission.pk %}" hx-encoding="multipart/form-data"
+      hx-swap="none"
+      data-species-rating-form data-species-suffix="edit">
+  {% csrf_token %}
+  <div class="mb-2 position-relative">
+    <label class="form-label small fw-semibold mb-1" for="species-search-edit">{% trans 'Ant species' %}</label>
+    <div class="d-flex flex-wrap gap-1 species-chips" id="species-chips-edit">
+      {% for species in current_species %}
+      <span class="badge bg-secondary d-inline-flex align-items-center gap-1 fw-normal" data-species-id="{{ species.pk }}">
+        <em>{{ species.name }}</em>
+        <button type="button" class="btn-close btn-close-white" style="font-size: 0.5rem;"
+                aria-label="{% trans 'Remove' %}" data-remove-species></button>
+        <input type="hidden" name="species_id" value="{{ species.pk }}">
+      </span>
+      {% endfor %}
+    </div>
+    <input type="text"
+           class="form-control form-control-sm"
+           id="species-search-edit"
+           name="q"
+           placeholder="{% trans 'Type species name (min. 4 characters)…' %}"
+           autocomplete="off"
+           hx-get="{% url 'nuptial_flight_species_suggest' %}"
+           hx-trigger="input changed delay:300ms"
+           hx-target="next div"
+           hx-swap="innerHTML"
+           hx-include="this">
+    <div id="species-suggest-edit" class="position-absolute w-100 species-suggest-dropdown"></div>
+    <div class="form-text text-danger d-none" id="species-required-hint-edit">
+      {% trans 'Select at least one species.' %}
+    </div>
+  </div>
+  <div class="mb-2">
+    <label class="form-label small fw-semibold mb-1">{% trans 'Acceptance' %}</label>
+    <div class="star-selector" id="star-ov-edit">
+      <div class="d-flex gap-0 align-items-center">
+        {% for level in "12345" %}
+        <input class="star-radio visually-hidden" type="radio" name="acceptance"
+               id="food-edit-{{ level }}" value="{{ level }}" autocomplete="off"
+               {% if submission.acceptance|stringformat:"s" == level %}checked{% endif %}>
+        <label class="star-select-label" for="food-edit-{{ level }}">
+          <i class="bi bi-star text-secondary"></i>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="star-hint text-muted small mt-1"></div>
+    </div>
+  </div>
+  {% if required_conditions %}
+  <div class="mb-2">
+    <label class="form-label small fw-semibold mb-1" for="food-edit-condition">
+      {% trans 'Condition offered' %} <span class="text-danger" title="{% trans 'Required' %}">*</span>
+    </label>
+    <select class="form-select form-select-sm" id="food-edit-condition" name="condition" required>
+      <option value="" disabled {% if not submission.condition %}selected{% endif %}>{% trans 'Select…' %}</option>
+      {% if food_item.category == "PROTEIN" %}
+      <option value="ALIVE" {% if submission.condition == "ALIVE" %}selected{% endif %}>{% trans 'Alive' %}</option>
+      <option value="FRESHLY_KILLED" {% if submission.condition == "FRESHLY_KILLED" %}selected{% endif %}>{% trans 'Freshly killed' %}</option>
+      <option value="SCALDED" {% if submission.condition == "SCALDED" %}selected{% endif %}>{% trans 'Scalded' %}</option>
+      <option value="FROZEN" {% if submission.condition == "FROZEN" %}selected{% endif %}>{% trans 'Frozen (thawed)' %}</option>
+      <option value="DRIED" {% if submission.condition == "DRIED" %}selected{% endif %}>{% trans 'Dried' %}</option>
+      {% else %}
+      <option value="FRESH" {% if submission.condition == "FRESH" %}selected{% endif %}>{% trans 'Fresh' %}</option>
+      <option value="FROZEN" {% if submission.condition == "FROZEN" %}selected{% endif %}>{% trans 'Frozen (thawed)' %}</option>
+      <option value="DRIED" {% if submission.condition == "DRIED" %}selected{% endif %}>{% trans 'Dried' %}</option>
+      {% endif %}
+    </select>
+  </div>
+  {% endif %}
+  <div class="mb-2">
+    <textarea name="comment" class="form-control form-control-sm" rows="2"
+              maxlength="500" placeholder="{% trans 'Optional comment…' %}">{{ submission.comment }}</textarea>
+  </div>
+  {% if existing_photos %}
+  <div class="mb-2">
+    <label class="form-label small fw-semibold mb-1">{% trans 'Existing photos' %}</label>
+    <div class="d-flex gap-3 flex-wrap">
+      {% for photo in existing_photos %}
+      <div class="text-center">
+        {% thumbnail photo.image "100x100" crop="center" as im %}
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" class="rounded d-block mb-1">
+        {% endthumbnail %}
+        <label class="form-check-label small text-danger">
+          <input type="checkbox" class="form-check-input" name="remove_photo_id" value="{{ photo.pk }}">
+          {% trans 'Remove' %}
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  <div class="mb-2">
+    <label class="form-label small fw-semibold mb-1" for="food-edit-image">{% trans 'Add photos (optional)' %}</label>
+    <input type="file" class="form-control form-control-sm" id="food-edit-image"
+           name="images" accept="image/*" multiple>
+    {% include "ants/_image_rights_notice.html" %}
+  </div>
+  <button type="submit" class="btn btn-sm btn-primary">{% trans 'Save changes' %}</button>
+</form>

@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% load i18n ants thumbnail %}
+{% load i18n ants thumbnail static %}
 {% block title %}{{ food_item.name }} — {{ species.name }} | Antkeeping.info{% endblock %}
 {% block og_title %}{{ food_item.name }} ratings for {{ species.name }} — Antkeeping.info{% endblock %}
 {% block og_description %}Community ratings of how well {{ species.name }} accepts {{ food_item.name }}.{% endblock %}
@@ -13,40 +13,21 @@
   {% blocktrans with food=food_item.name name=species.name %}All community ratings for how well {{ name }} accepts {{ food }}.{% endblocktrans %}
 </p>
 
-{% if not ratings %}
-<p class="text-muted">{% trans 'No ratings yet.' %}</p>
-{% else %}
-<ul class="list-group">
-  {% for rating in ratings %}
-  <li class="list-group-item">
-    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-      {{ rating.submission.acceptance|star_display }}
-      {% if rating.submission.condition %}
-      <span class="badge bg-light text-dark border">{{ rating.submission.get_condition_display }}</span>
-      {% endif %}
-      <span class="text-muted small">
-        {% blocktrans with username=rating.user.username %}by {{ username }}{% endblocktrans %}
-        &middot; {{ rating.created_at|date:"N j, Y" }}
-      </span>
-    </div>
-    {% if rating.submission.comment %}
-    <p class="mb-1">{{ rating.submission.comment }}</p>
-    {% endif %}
-    {% if rating.submission.photos.all %}
-    <div class="d-flex gap-2 flex-wrap">
-      {% for photo in rating.submission.photos.all %}
-      {% thumbnail photo.image "150x150" crop="center" as im %}
-      <a href="{{ photo.image.url }}" target="_blank" rel="noopener">
-        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
-             class="rounded" alt="{% blocktrans with username=rating.user.username %}Photo by {{ username }}{% endblocktrans %}">
-      </a>
-      {% endthumbnail %}
-      {% endfor %}
-    </div>
-    {% endif %}
-  </li>
-  {% endfor %}
-</ul>
-{% endif %}
+<div id="food-item-ratings-list"
+     hx-get="{% url 'food_item_species_ratings_list' food_item.pk species.slug %}"
+     hx-trigger="foodRatingEditSuccess from:body"
+     hx-target="this" hx-swap="outerHTML">
+  {% include "ants/food_item_species_ratings_list.html" %}
+</div>
 
+{% include "ants/food_rating_edit_modal.html" %}
+
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/food_overview.css' %}">
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script src="{% static 'ants/js/species_rating_chips.js' %}"></script>
+<script src="{% static 'ants/js/food_rating_edit_modal.js' %}"></script>
 {% endblock %}

@@ -18,6 +18,16 @@ SOCIAL_PROVIDERS = [
 ]
 
 
+def _build_profile_food_ratings_context(user):
+    return {
+        "food_rating_submissions": (
+            user.food_rating_submissions
+            .prefetch_related("species_food_ratings__species", "photos")
+            .order_by("-updated_at")
+        ),
+    }
+
+
 @method_decorator(never_cache, name="dispatch")
 class UserProfileView(LoginRequiredMixin, TemplateView):
     """User profile view."""
@@ -44,6 +54,22 @@ class UserProfileView(LoginRequiredMixin, TemplateView):
         ]
         context["social_providers"] = providers
         context["can_disconnect"] = self.request.user.has_usable_password
+        context["difficulty_ratings"] = (
+            self.request.user.difficulty_ratings.select_related("species").order_by("-updated_at")
+        )
+        context.update(_build_profile_food_ratings_context(self.request.user))
+        return context
+
+
+@method_decorator(never_cache, name="dispatch")
+class UserProfileFoodRatingsView(LoginRequiredMixin, TemplateView):
+    """HTMX fragment: just the 'Your food ratings' list, refreshed after an edit."""
+
+    template_name = "users/profile_food_ratings_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(_build_profile_food_ratings_context(self.request.user))
         return context
 
 

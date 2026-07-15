@@ -42,7 +42,7 @@
       <form hx-post="{% url 'food_overview_rate' %}" hx-encoding="multipart/form-data"
             hx-target="#food-item-ratings-{{ food_item.pk }}"
             hx-swap="outerHTML"
-            data-species-rating-form>
+            data-species-rating-form data-species-suffix="{{ food_item.pk }}">
         {% csrf_token %}
         <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
         <div class="mb-2 position-relative">
@@ -138,60 +138,3 @@
   </div>
   {% endif %}
 </div>
-<script>
-(function () {
-    var STAR_LABELS = {
-        "1": "Ignored",
-        "2": "Hardly interested",
-        "3": "Moderately interested",
-        "4": "Above average interest",
-        "5": "Extremely interested (strong recruitment)"
-    };
-
-    function initStarSelector(sel) {
-        var labels = sel.querySelectorAll("label.star-select-label");
-        var inputs = sel.querySelectorAll("input.star-radio");
-        var hint = sel.querySelector(".star-hint");
-
-        function paint(upTo) {
-            labels.forEach(function (lbl, idx) {
-                var icon = lbl.querySelector("i");
-                if (idx < upTo) {
-                    icon.className = "bi bi-star-fill text-warning";
-                } else {
-                    icon.className = "bi bi-star text-secondary";
-                }
-            });
-        }
-
-        function currentVal() {
-            for (var i = 0; i < inputs.length; i++) {
-                if (inputs[i].checked) return parseInt(inputs[i].value, 10);
-            }
-            return 0;
-        }
-
-        labels.forEach(function (lbl, idx) {
-            lbl.addEventListener("mouseenter", function () {
-                paint(idx + 1);
-                if (hint) hint.textContent = STAR_LABELS[String(idx + 1)];
-            });
-            lbl.addEventListener("mouseleave", function () {
-                var val = currentVal();
-                paint(val);
-                if (hint) hint.textContent = val ? STAR_LABELS[String(val)] : "";
-            });
-        });
-
-        inputs.forEach(function (inp) {
-            inp.addEventListener("change", function () {
-                var val = parseInt(this.value, 10);
-                paint(val);
-                if (hint) hint.textContent = STAR_LABELS[String(val)];
-            });
-        });
-    }
-
-    document.querySelectorAll(".star-selector").forEach(initStarSelector);
-})();
-</script>

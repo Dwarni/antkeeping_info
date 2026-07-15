@@ -25,6 +25,11 @@ urlpatterns = [
         name="food_overview_rate",
     ),
     path(
+        "food-overview/rate/<int:pk>/edit/",
+        views.FoodRatingSubmissionEditView.as_view(),
+        name="food_rating_edit",
+    ),
+    path(
         "food-overview/new-item-form/",
         views.FoodOverviewNewItemFormView.as_view(),
         name="food_overview_new_item_form",
@@ -43,6 +48,11 @@ urlpatterns = [
         "food-overview/<int:food_item_id>/<slug:species_slug>/ratings/",
         views.FoodItemSpeciesRatingsView.as_view(),
         name="food_item_species_ratings",
+    ),
+    path(
+        "food-overview/<int:food_item_id>/<slug:species_slug>/ratings/list/",
+        views.FoodItemSpeciesRatingsListView.as_view(),
+        name="food_item_species_ratings_list",
     ),
     path(
         "top-countries-by-number-of-ant-species",

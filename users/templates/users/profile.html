@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
-{% load i18n socialaccount %}
+{% load i18n socialaccount static %}
 {% block title %}Profile — Antkeeping.info{% endblock %}
 {% block content %}
 <div class="row justify-content-center mt-4">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <h2 class="mb-4">{% trans "Profile" %}</h2>
         <h5 class="mb-3">{% trans "Social accounts" %}</h5>
         <ul class="list-group mb-2">
@@ -46,6 +46,40 @@
             {% trans "for your account." %}
         </p>
         {% endif %}
+
+        <h5 class="mb-3">{% trans "Your difficulty ratings" %}</h5>
+        {% if not difficulty_ratings %}
+        <p class="text-muted small">{% trans "You haven't rated any species' keeping difficulty yet." %}</p>
+        {% else %}
+        <ul class="list-group mb-4">
+            {% for r in difficulty_ratings %}
+            <li class="list-group-item">
+                <a href="{% url 'ant_detail' r.species.slug %}#difficulty-rating-section"><em>{{ r.species.name }}</em></a>
+                &mdash; <span class="fw-semibold">{{ r.get_difficulty_display }}</span>
+                {% if r.comment %}<p class="mb-0 small text-muted">{{ r.comment }}</p>{% endif %}
+                <span class="text-muted small">{{ r.updated_at|date:"N j, Y" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <h5 class="mb-3">{% trans "Your food ratings" %}</h5>
+        <div id="my-food-ratings-list"
+             hx-get="{% url 'user_profile_food_ratings' %}"
+             hx-trigger="foodRatingEditSuccess from:body"
+             hx-target="this" hx-swap="outerHTML">
+          {% include "users/profile_food_ratings_list.html" %}
+        </div>
     </div>
 </div>
+
+{% include "ants/food_rating_edit_modal.html" %}
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/food_overview.css' %}">
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script src="{% static 'ants/js/species_rating_chips.js' %}"></script>
+<script src="{% static 'ants/js/food_rating_edit_modal.js' %}"></script>
 {% endblock %}

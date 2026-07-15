@@ -1,0 +1,27 @@
+{% load i18n ants %}
+{% if not food_rating_submissions %}
+<p class="text-muted small">{% trans "You haven't rated any foods yet." %}</p>
+{% else %}
+<ul class="list-group mb-4">
+  {% for submission in food_rating_submissions %}
+  <li class="list-group-item">
+    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+      <span class="fw-semibold">{{ submission.food_item.name }}</span>
+      {{ submission.acceptance|star_display }}
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-auto"
+              data-bs-toggle="modal" data-bs-target="#foodRatingEditModal"
+              hx-get="{% url 'food_rating_edit' submission.pk %}"
+              hx-target="#food-rating-edit-form-container" hx-swap="innerHTML">
+        <i class="bi bi-pencil"></i> {% trans 'Edit' %}
+      </button>
+    </div>
+    <p class="mb-1 small">
+      {% for link in submission.species_food_ratings.all %}
+      <a href="{% url 'ant_detail' link.species.slug %}"><em>{{ link.species.name }}</em></a>{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+    <span class="text-muted small">{{ submission.updated_at|date:"N j, Y" }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}

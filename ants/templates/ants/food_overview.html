@@ -49,92 +49,9 @@
 {% endblock %}
 {% block script %}
 <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script src="{% static 'ants/js/species_rating_chips.js' %}"></script>
+
 <script>
-(function () {
-    function addSpeciesChip(id, speciesId, speciesName) {
-        var chips = document.getElementById('species-chips-' + id);
-        if (!chips || chips.querySelector('[data-species-id="' + speciesId + '"]')) return;
-
-        var chip = document.createElement('span');
-        chip.className = 'badge bg-secondary d-inline-flex align-items-center gap-1 fw-normal';
-        chip.setAttribute('data-species-id', speciesId);
-
-        var label = document.createElement('em');
-        label.textContent = speciesName;
-        chip.appendChild(label);
-
-        var removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'btn-close btn-close-white';
-        removeBtn.style.fontSize = '0.5rem';
-        removeBtn.setAttribute('aria-label', 'Remove');
-        removeBtn.setAttribute('data-remove-species', '');
-        chip.appendChild(removeBtn);
-
-        var hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = 'species_id';
-        hidden.value = speciesId;
-        chip.appendChild(hidden);
-
-        // Keep chips sorted alphabetically so it's easy to see which species are still missing.
-        var existing = chips.querySelectorAll('[data-species-id]');
-        var nextSibling = null;
-        for (var i = 0; i < existing.length; i++) {
-            var existingName = existing[i].querySelector('em').textContent;
-            if (speciesName.localeCompare(existingName, undefined, { sensitivity: 'base' }) < 0) {
-                nextSibling = existing[i];
-                break;
-            }
-        }
-        chips.insertBefore(chip, nextSibling);
-    }
-
-    document.addEventListener('click', function (e) {
-        // Suggestion selected: add a chip, clear + refocus the search box, close dropdown
-        var suggestBox = e.target.closest('[id^="species-suggest-"]');
-        var suggestBtn = e.target.closest('[data-species-id]');
-        if (suggestBox && suggestBtn) {
-            var id = suggestBox.id.replace('species-suggest-', '');
-            var search = document.getElementById('species-search-' + id);
-            addSpeciesChip(id, suggestBtn.dataset.speciesId, suggestBtn.dataset.speciesName);
-            if (search) { search.value = ''; search.focus(); }
-            suggestBox.innerHTML = '';
-            return;
-        }
-        // Chip removal
-        var removeBtn = e.target.closest('[data-remove-species]');
-        if (removeBtn) {
-            var chip = removeBtn.closest('[data-species-id]');
-            if (chip) chip.remove();
-            return;
-        }
-        // Click outside: close all open suggestion dropdowns
-        document.querySelectorAll('[id^="species-suggest-"]').forEach(function (box) {
-            if (box.innerHTML && !box.contains(e.target)) {
-                var id = box.id.replace('species-suggest-', '');
-                var search = document.getElementById('species-search-' + id);
-                if (e.target !== search) box.innerHTML = '';
-            }
-        });
-    });
-
-    // Require at least one species chip before letting a rating form submit.
-    document.body.addEventListener('htmx:beforeRequest', function (e) {
-        var form = e.detail.elt;
-        if (!form.matches || !form.matches('[data-species-rating-form]')) return;
-        var foodItemId = form.querySelector('input[name="food_item_id"]').value;
-        var chips = document.getElementById('species-chips-' + foodItemId);
-        var hint = document.getElementById('species-required-hint-' + foodItemId);
-        if (!chips || chips.children.length === 0) {
-            e.preventDefault();
-            if (hint) hint.classList.remove('d-none');
-        } else if (hint) {
-            hint.classList.add('d-none');
-        }
-    });
-})();
-
 // Client-side filter: hide food cards whose name doesn't match the typed text.
 (function () {
     var input = document.getElementById('food-filter-input');
