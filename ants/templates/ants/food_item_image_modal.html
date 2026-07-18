@@ -1,0 +1,21 @@
+{% load i18n %}
+{# Enlarged view of a food item image, opened by clicking its thumbnail #}
+<div class="modal fade" id="food-item-image-modal" tabindex="-1"
+     aria-labelledby="food-item-image-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="food-item-image-modal-label"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="food-item-image-modal-img" src="" class="img-fluid rounded" alt="">
+                <div id="food-item-image-modal-attribution" class="text-muted small mt-2 d-none">
+                    <span id="food-item-image-modal-photo-label">{% trans 'Photo:' %}</span>
+                    <span id="food-item-image-modal-author"></span>
+                    <a id="food-item-image-modal-license" href="#" target="_blank" rel="noopener license" class="d-none"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

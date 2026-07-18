@@ -1,5 +1,14 @@
 .food-item-thumb-wrap {
+    width: 96px;
+}
+
+.food-item-thumb-button {
+    display: block;
     width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
 }
 
 .food-item-thumb {
@@ -22,10 +31,5 @@
 @media (min-width: 576px) {
     .food-item-thumb-wrap {
         width: 192px;
-    }
-
-    .food-item-thumb {
-        width: 192px;
-        height: 192px;
     }
 }

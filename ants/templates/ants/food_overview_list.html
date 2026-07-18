@@ -9,8 +9,16 @@
       <div class="food-item-thumb-wrap flex-shrink-0">
         {% if entry.food_item.image %}
         {% thumbnail entry.food_item.image "768x768" crop="center" as im %}
-        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
-             class="rounded food-item-thumb" alt="{{ entry.food_item.name }}">
+        {% thumbnail entry.food_item.image "1600x1600" as im_full %}
+        <button type="button" class="food-item-thumb-button" data-bs-toggle="modal" data-bs-target="#food-item-image-modal"
+                data-full-src="{{ im_full.url }}" data-name="{{ entry.food_item.name }}"
+                data-author="{{ entry.food_item.image_author }}"
+                data-license-label="{{ entry.food_item.get_image_license_display }}"
+                data-license-href="{% if entry.food_item.image_source_url %}{{ entry.food_item.image_source_url }}{% else %}{{ entry.food_item.image_license_url }}{% endif %}">
+          <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+               class="rounded food-item-thumb" alt="{{ entry.food_item.name }}">
+        </button>
+        {% endthumbnail %}
         {% endthumbnail %}
         {% if entry.food_item.image_author or entry.food_item.image_license %}
         <div class="food-item-attribution text-muted" style="font-size: 0.7rem;">
