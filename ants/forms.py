@@ -67,8 +67,20 @@ class FoodItemCreateForm(forms.ModelForm):
 
     class Meta:
         model = FoodItem
-        fields = ["name", "category", "description", "image"]
+        fields = [
+            "name", "category", "description", "image",
+            "image_author", "image_license", "image_source_url",
+        ]
         widgets = {"category": forms.HiddenInput()}
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("image_license") and not cleaned_data.get("image_author"):
+            self.add_error(
+                "image_author",
+                "Please name the author for attribution when specifying a Creative Commons license.",
+            )
+        return cleaned_data
 
 
 class FoodRatingImageForm(forms.Form):

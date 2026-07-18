@@ -12,6 +12,18 @@
         <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
              class="rounded food-item-thumb" alt="{{ entry.food_item.name }}">
         {% endthumbnail %}
+        {% if entry.food_item.image_author or entry.food_item.image_license %}
+        <div class="food-item-attribution text-muted" style="font-size: 0.7rem;">
+          {% if entry.food_item.image_author %}{% trans 'Photo:' %} {{ entry.food_item.image_author }}{% endif %}
+          {% if entry.food_item.image_license %}
+          {% if entry.food_item.image_source_url %}
+          <a href="{{ entry.food_item.image_source_url }}" target="_blank" rel="noopener license">{{ entry.food_item.get_image_license_display }}</a>
+          {% else %}
+          <a href="{{ entry.food_item.image_license_url }}" target="_blank" rel="noopener license">{{ entry.food_item.get_image_license_display }}</a>
+          {% endif %}
+          {% endif %}
+        </div>
+        {% endif %}
         {% else %}
         <span class="rounded bg-light text-muted d-flex flex-column align-items-center justify-content-center food-item-thumb">
           <i class="bi bi-bug-fill"></i>

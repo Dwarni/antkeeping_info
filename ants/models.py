@@ -733,10 +733,47 @@ class FoodItem(models.Model):
 
     MAX_IMAGE_DIMENSION = 1920
 
+    # Common Creative Commons licenses, as used on Wikimedia Commons and similar
+    # sources. Maps the stored code to the URL of the license deed.
+    CC_LICENSE_URLS = {
+        "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "CC-BY-2.0": "https://creativecommons.org/licenses/by/2.0/",
+        "CC-BY-3.0": "https://creativecommons.org/licenses/by/3.0/",
+        "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/",
+        "CC-BY-SA-2.0": "https://creativecommons.org/licenses/by-sa/2.0/",
+        "CC-BY-SA-3.0": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "CC-BY-SA-4.0": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "CC-BY-NC-2.0": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "CC-BY-NC-SA-2.0": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+    }
+    CC_LICENSE_CHOICES = [
+        ("CC0-1.0", "CC0 1.0 (Public Domain)"),
+        ("CC-BY-2.0", "CC BY 2.0"),
+        ("CC-BY-3.0", "CC BY 3.0"),
+        ("CC-BY-4.0", "CC BY 4.0"),
+        ("CC-BY-SA-2.0", "CC BY-SA 2.0"),
+        ("CC-BY-SA-3.0", "CC BY-SA 3.0"),
+        ("CC-BY-SA-4.0", "CC BY-SA 4.0"),
+        ("CC-BY-NC-2.0", "CC BY-NC 2.0"),
+        ("CC-BY-NC-SA-2.0", "CC BY-NC-SA 2.0"),
+    ]
+
     name = models.CharField(max_length=200, unique=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     description = models.TextField(blank=True, max_length=500)
     image = ImageField("Image file", upload_to="food_items", null=True, blank=True)
+    image_author = models.CharField(
+        "Image author", max_length=200, blank=True,
+        help_text="Name of the photographer/creator, for Creative Commons attribution.",
+    )
+    image_license = models.CharField(
+        "Image license", max_length=20, choices=CC_LICENSE_CHOICES, blank=True,
+        help_text="Only needed if the image is Creative Commons licensed rather than your own work.",
+    )
+    image_source_url = models.URLField(
+        "Image source URL", blank=True,
+        help_text="Link to the original image or its source page.",
+    )
     ordering = models.PositiveSmallIntegerField(default=0, db_index=True)
     # NULL means staff/original entry -- intentionally never stamped by the
     # admin, since FoodItemAdmin's origin filter relies on this distinction.
@@ -763,6 +800,10 @@ class FoodItem(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def image_license_url(self):
+        return self.CC_LICENSE_URLS.get(self.image_license, "")
 
 
 class FoodRatingSubmission(models.Model):

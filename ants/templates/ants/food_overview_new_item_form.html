@@ -38,6 +38,44 @@
         {% endif %}
         {% include "ants/_image_rights_notice.html" %}
       </div>
+      <div class="mb-2 form-check">
+        <input type="checkbox" class="form-check-input" id="new-food-image-cc-toggle"
+               {% if form.image_license.value %}checked{% endif %}>
+        <label class="form-check-label small" for="new-food-image-cc-toggle">
+          {% trans 'This image is Creative Commons licensed (not my own work)' %}
+        </label>
+      </div>
+      <div id="new-food-image-cc-fields" class="mb-2 ps-3 border-start{% if not form.image_license.value %} d-none{% endif %}">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1" for="new-food-image-author">{% trans 'Author' %}</label>
+          <input type="text" class="form-control form-control-sm{% if form.image_author.errors %} is-invalid{% endif %}"
+                 id="new-food-image-author" name="image_author" value="{{ form.image_author.value|default:'' }}"
+                 placeholder="{% trans 'e.g. Jane Doe' %}">
+          {% if form.image_author.errors %}
+          <div class="invalid-feedback d-block small">{{ form.image_author.errors|join:" " }}</div>
+          {% endif %}
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1" for="new-food-image-license">{% trans 'License' %}</label>
+          <select class="form-select form-select-sm" id="new-food-image-license" name="image_license">
+            <option value=""{% if not form.image_license.value %} selected{% endif %}>{% trans '---------' %}</option>
+            {% for value, label in form.fields.image_license.choices %}
+            {% if value %}
+            <option value="{{ value }}"{% if form.image_license.value == value %} selected{% endif %}>{{ label }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1" for="new-food-image-source-url">{% trans 'Source URL' %}</label>
+          <input type="url" class="form-control form-control-sm{% if form.image_source_url.errors %} is-invalid{% endif %}"
+                 id="new-food-image-source-url" name="image_source_url" value="{{ form.image_source_url.value|default:'' }}"
+                 placeholder="https://commons.wikimedia.org/...">
+          {% if form.image_source_url.errors %}
+          <div class="invalid-feedback d-block small">{{ form.image_source_url.errors|join:" " }}</div>
+          {% endif %}
+        </div>
+      </div>
       <button type="submit" class="btn btn-sm btn-primary">{% trans 'Add food item' %}</button>
       <button type="button" class="btn btn-sm btn-link"
               onclick="document.getElementById('new-food-item-panel').innerHTML='';">
@@ -46,3 +84,14 @@
     </form>
   </div>
 </div>
+<script>
+(function () {
+  const toggle = document.getElementById('new-food-image-cc-toggle');
+  const fields = document.getElementById('new-food-image-cc-fields');
+  if (toggle && fields) {
+    toggle.addEventListener('change', function () {
+      fields.classList.toggle('d-none', !toggle.checked);
+    });
+  }
+})();
+</script>
