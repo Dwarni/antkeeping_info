@@ -964,6 +964,16 @@ class SubmitFoodRatingFromOverviewView(LoginRequiredMixin, View):
         if error:
             return error
 
+        duplicate_ratings = list(
+            SpeciesFoodRating.objects
+            .filter(species__in=species_list, food_item=food_item, user=request.user)
+            .select_related("species")
+        )
+        if duplicate_ratings:
+            context = _build_food_overview_item_context(food_item)
+            context["duplicate_ratings"] = duplicate_ratings
+            return render(request, "ants/food_overview_species_list.html", context)
+
         acceptance, condition, error = _parse_acceptance_and_condition(request, food_item)
         if error:
             return error

@@ -234,6 +234,7 @@ class SubmitFoodRatingFromOverviewViewTest(TestCase):
     def setUp(self):
         self.species = _make_species()
         self.species2 = _make_species(name="Formica rufa", slug="formica-rufa")
+        self.species3 = _make_species(name="Myrmica rubra", slug="myrmica-rubra")
         self.food = _make_food()
         self.url = reverse("food_overview_rate")
         self.user = User.objects.create_user(username="tester", password="pass")
@@ -373,7 +374,10 @@ class SubmitFoodRatingFromOverviewViewTest(TestCase):
             SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food, user=self.user).count(), 1,
         )
 
-    def test_resubmit_species_alone_orphans_and_deletes_old_submission(self):
+    def test_resubmitting_same_species_is_rejected_as_duplicate(self):
+        # Re-rating a species you've already rated via the "add rating" form used to
+        # silently overwrite the old submission; it's now rejected so the user is
+        # pointed at the explicit edit flow instead.
         self.client.post(
             self.url,
             {
@@ -385,7 +389,7 @@ class SubmitFoodRatingFromOverviewViewTest(TestCase):
             species=self.species, food_item=self.food, user=self.user
         ).submission_id
 
-        self.client.post(
+        response = self.client.post(
             self.url,
             {
                 "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 5,
@@ -393,11 +397,13 @@ class SubmitFoodRatingFromOverviewViewTest(TestCase):
             },
         )
 
-        self.assertFalse(FoodRatingSubmission.objects.filter(pk=old_submission_id).exists())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(FoodRatingSubmission.objects.count(), 1)
         rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-        self.assertEqual(rating.submission.acceptance, 5)
+        self.assertEqual(rating.submission_id, old_submission_id)
+        self.assertEqual(rating.submission.acceptance, 2)
 
-    def test_resubmit_one_of_several_species_keeps_old_submission_for_the_rest(self):
+    def test_resubmit_one_of_several_species_rejects_whole_batch(self):
         self.client.post(
             self.url,
             {
@@ -411,49 +417,46 @@ class SubmitFoodRatingFromOverviewViewTest(TestCase):
             species=self.species, food_item=self.food, user=self.user
         ).submission_id
 
-        self.client.post(
+        response = self.client.post(
             self.url,
             {
-                "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 5,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-
-        self.assertTrue(FoodRatingSubmission.objects.filter(pk=old_submission_id).exists())
-        sibling = SpeciesFoodRating.objects.get(species=self.species2, food_item=self.food, user=self.user)
-        self.assertEqual(sibling.submission_id, old_submission_id)
-        self.assertEqual(sibling.submission.acceptance, 2)
-
-        moved = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-        self.assertNotEqual(moved.submission_id, old_submission_id)
-        self.assertEqual(moved.submission.acceptance, 5)
-
-    def test_resubmit_all_species_of_old_submission_deletes_it(self):
-        self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk, self.species2.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 2,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-        old_submission_id = SpeciesFoodRating.objects.get(
-            species=self.species, food_item=self.food, user=self.user
-        ).submission_id
-
-        self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk, self.species2.pk],
+                "species_id": [self.species.pk, self.species3.pk],
                 "food_item_id": self.food.pk,
                 "acceptance": 5,
                 "condition": FoodRatingSubmission.ALIVE,
             },
         )
 
-        self.assertFalse(FoodRatingSubmission.objects.filter(pk=old_submission_id).exists())
-        self.assertEqual(FoodRatingSubmission.objects.count(), 1)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            SpeciesFoodRating.objects.filter(species=self.species3, food_item=self.food, user=self.user).exists()
+        )
+        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
+        self.assertEqual(rating.submission_id, old_submission_id)
+        self.assertEqual(rating.submission.acceptance, 2)
+
+    def test_duplicate_rating_response_lists_existing_submission_for_editing(self):
+        self.client.post(
+            self.url,
+            {
+                "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 2,
+                "condition": FoodRatingSubmission.ALIVE,
+            },
+        )
+        existing = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
+
+        response = self.client.post(
+            self.url,
+            {
+                "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 5,
+                "condition": FoodRatingSubmission.ALIVE,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        duplicates = response.context["duplicate_ratings"]
+        self.assertEqual([d.pk for d in duplicates], [existing.pk])
+        self.assertContains(response, reverse("food_rating_edit", args=[existing.submission_id]))
 
     def test_exceeds_max_species_returns_400(self):
         from ants.views import SubmitFoodRatingFromOverviewView
@@ -579,20 +582,23 @@ class FoodOverviewAggregationTest(TestCase):
         self.assertEqual(food_data["total_ratings"], 2)
 
     def test_deleted_orphaned_submission_does_not_leak_into_average(self):
+        # user1 rates `species` at 1 star (submission A) and `species2` at 5 stars
+        # (submission B) separately.
+        rating_a = _make_rating(self.species, self.food, self.user1, acceptance=1, condition=FoodRatingSubmission.ALIVE)
+        rating_b = _make_rating(self.species2, self.food, self.user1, acceptance=5, condition=FoodRatingSubmission.ALIVE)
+
+        # Editing submission B to also cover `species` reassigns that species away
+        # from submission A, which then has no species left and is deleted -- its
+        # stale 1-star value must not linger in the aggregate.
         self.client.login(username="user1", password="pass")
-        url = reverse("food_overview_rate")
-        self.client.post(url, {
-            "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 1,
+        self.client.post(reverse("food_rating_edit", args=[rating_b.submission_id]), {
+            "species_id": [self.species.pk, self.species2.pk],
+            "acceptance": 5,
             "condition": FoodRatingSubmission.ALIVE,
         })
-        # Re-rate with a much higher score -- the old (1-star) submission is
-        # orphaned and deleted, so it must not drag the average down.
-        self.client.post(url, {
-            "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 5,
-            "condition": FoodRatingSubmission.ALIVE,
-        })
+        self.assertFalse(FoodRatingSubmission.objects.filter(pk=rating_a.submission_id).exists())
 
         response = self.client.get(reverse("food_overview"), {"category": self.food.category})
         food_data = response.context["food_data"][0]
         self.assertEqual(food_data["overall_avg"], 5.0)
-        self.assertEqual(food_data["total_ratings"], 1)
+        self.assertEqual(food_data["total_ratings"], 2)

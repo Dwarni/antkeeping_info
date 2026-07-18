@@ -38,7 +38,21 @@
             data-bs-target="#rate-form-{{ food_item.pk }}">
       <i class="bi bi-plus-circle"></i> Add rating
     </button>
-    <div class="collapse px-3 pb-3" id="rate-form-{{ food_item.pk }}">
+    <div class="collapse{% if duplicate_ratings %} show{% endif %} px-3 pb-3" id="rate-form-{{ food_item.pk }}">
+      {% if duplicate_ratings %}
+      <div class="alert alert-warning py-2 small">
+        You've already rated this food for
+        {% for rating in duplicate_ratings %}<em>{{ rating.species.name }}</em>{% if not forloop.last %}, {% endif %}{% endfor %}.
+        {% for rating in duplicate_ratings %}
+        <button type="button" class="btn btn-link btn-sm p-0 align-baseline"
+                data-bs-toggle="modal" data-bs-target="#foodRatingEditModal"
+                hx-get="{% url 'food_rating_edit' rating.submission_id %}"
+                hx-target="#food-rating-edit-form-container" hx-swap="innerHTML">
+          Edit your existing rating{% if duplicate_ratings|length > 1 %} for <em>{{ rating.species.name }}</em>{% endif %}
+        </button>{% if not forloop.last %}<br>{% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
       <form hx-post="{% url 'food_overview_rate' %}" hx-encoding="multipart/form-data"
             hx-target="#food-item-ratings-{{ food_item.pk }}"
             hx-swap="outerHTML"
@@ -47,7 +61,7 @@
         <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
         <div class="mb-2 position-relative">
           <label class="form-label small fw-semibold mb-1" for="species-search-{{ food_item.pk }}">Ant species</label>
-          <div class="d-flex flex-wrap gap-1 species-chips" id="species-chips-{{ food_item.pk }}"></div>
+          <input type="hidden" name="species_id" id="species-id-{{ food_item.pk }}">
           <input type="text"
                  class="form-control form-control-sm"
                  id="species-search-{{ food_item.pk }}"
@@ -61,7 +75,7 @@
                  hx-include="this">
           <div id="species-suggest-{{ food_item.pk }}" class="position-absolute w-100 species-suggest-dropdown"></div>
           <div class="form-text text-danger d-none" id="species-required-hint-{{ food_item.pk }}">
-            Select at least one species.
+            Select a species.
           </div>
         </div>
         <div class="mb-2">

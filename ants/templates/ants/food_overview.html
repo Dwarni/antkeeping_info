@@ -46,10 +46,13 @@
 
 {% include "ants/food_overview_list.html" %}
 
+{% include "ants/food_rating_edit_modal.html" %}
+
 {% endblock %}
 {% block script %}
 <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
 <script src="{% static 'ants/js/species_rating_chips.js' %}"></script>
+<script src="{% static 'ants/js/food_rating_edit_modal.js' %}"></script>
 
 <script>
 // Client-side filter: hide food cards whose name doesn't match the typed text.

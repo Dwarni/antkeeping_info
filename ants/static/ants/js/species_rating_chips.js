@@ -3,6 +3,10 @@
         var chips = document.getElementById('species-chips-' + suffix);
         if (!chips || chips.querySelector('[data-species-id="' + speciesId + '"]')) return;
 
+        // Only one species is allowed per rating for now, even though the backend
+        // still supports several — picking a new species replaces the current one.
+        chips.innerHTML = '';
+
         var chip = document.createElement('span');
         chip.className = 'badge bg-secondary d-inline-flex align-items-center gap-1 fw-normal';
         chip.setAttribute('data-species-id', speciesId);
@@ -38,19 +42,38 @@
         chips.insertBefore(chip, nextSibling);
     }
 
+    // Two species-picker layouts share this file:
+    // - the "add rating" form has a single hidden `species-id-{suffix}` field, filled
+    //   in-place in the visible search box (the pre-multi-species behavior, restored
+    //   2026-07-15 now that only one species is allowed per rating going forward).
+    // - the "edit rating" form still uses a removable chip list, so a submission that
+    //   already links several species (from before the restriction) can be viewed and
+    //   trimmed safely instead of silently losing species on save.
+    function selectSpecies(suffix, speciesId, speciesName) {
+        var chips = document.getElementById('species-chips-' + suffix);
+        if (chips) {
+            addSpeciesChip(suffix, speciesId, speciesName);
+            var search = document.getElementById('species-search-' + suffix);
+            if (search) { search.value = ''; search.focus(); }
+            return;
+        }
+        var hidden = document.getElementById('species-id-' + suffix);
+        var search = document.getElementById('species-search-' + suffix);
+        if (hidden) hidden.value = speciesId;
+        if (search) search.value = speciesName;
+    }
+
     document.addEventListener('click', function (e) {
-        // Suggestion selected: add a chip, clear + refocus the search box, close dropdown
+        // Suggestion selected: apply it, close the dropdown
         var suggestBox = e.target.closest('[id^="species-suggest-"]');
         var suggestBtn = e.target.closest('[data-species-id]');
         if (suggestBox && suggestBtn) {
             var suffix = suggestBox.id.replace('species-suggest-', '');
-            var search = document.getElementById('species-search-' + suffix);
-            addSpeciesChip(suffix, suggestBtn.dataset.speciesId, suggestBtn.dataset.speciesName);
-            if (search) { search.value = ''; search.focus(); }
+            selectSpecies(suffix, suggestBtn.dataset.speciesId, suggestBtn.dataset.speciesName);
             suggestBox.innerHTML = '';
             return;
         }
-        // Chip removal
+        // Chip removal (edit form only)
         var removeBtn = e.target.closest('[data-remove-species]');
         if (removeBtn) {
             var chip = removeBtn.closest('[data-species-id]');
@@ -67,14 +90,30 @@
         });
     });
 
-    // Require at least one species chip before letting a rating form submit.
+    // Typing in the single-species search box invalidates the previously picked
+    // species, forcing re-selection from the dropdown before the form can submit.
+    document.addEventListener('input', function (e) {
+        if (!e.target.id || e.target.id.indexOf('species-search-') !== 0) return;
+        var suffix = e.target.id.replace('species-search-', '');
+        var hidden = document.getElementById('species-id-' + suffix);
+        if (hidden) hidden.value = '';
+    });
+
+    // Require a species to be picked before letting a rating form submit.
     document.body.addEventListener('htmx:beforeRequest', function (e) {
         var form = e.detail.elt;
         if (!form.matches || !form.matches('[data-species-rating-form]')) return;
         var suffix = form.dataset.speciesSuffix;
-        var chips = document.getElementById('species-chips-' + suffix);
         var hint = document.getElementById('species-required-hint-' + suffix);
-        if (!chips || chips.children.length === 0) {
+        var chips = document.getElementById('species-chips-' + suffix);
+        var hasSpecies;
+        if (chips) {
+            hasSpecies = chips.children.length > 0;
+        } else {
+            var hidden = document.getElementById('species-id-' + suffix);
+            hasSpecies = !!(hidden && hidden.value);
+        }
+        if (!hasSpecies) {
             e.preventDefault();
             if (hint) hint.classList.remove('d-none');
         } else if (hint) {
