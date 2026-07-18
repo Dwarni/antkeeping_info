@@ -42,7 +42,7 @@
         <input type="checkbox" class="form-check-input" id="new-food-image-cc-toggle"
                {% if form.image_license.value %}checked{% endif %}>
         <label class="form-check-label small" for="new-food-image-cc-toggle">
-          {% trans 'This image is Creative Commons licensed (not my own work)' %}
+          {% trans 'This image is licensed (Creative Commons, GFDL, ...) rather than my own work' %}
         </label>
       </div>
       <div id="new-food-image-cc-fields" class="mb-2 ps-3 border-start{% if not form.image_license.value %} d-none{% endif %}">

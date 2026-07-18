@@ -78,7 +78,7 @@ class FoodItemCreateForm(forms.ModelForm):
         if cleaned_data.get("image_license") and not cleaned_data.get("image_author"):
             self.add_error(
                 "image_author",
-                "Please name the author for attribution when specifying a Creative Commons license.",
+                "Please name the author for attribution when specifying an image license.",
             )
         return cleaned_data
 

@@ -733,9 +733,9 @@ class FoodItem(models.Model):
 
     MAX_IMAGE_DIMENSION = 1920
 
-    # Common Creative Commons licenses, as used on Wikimedia Commons and similar
-    # sources. Maps the stored code to the URL of the license deed.
-    CC_LICENSE_URLS = {
+    # Open licenses commonly used for images on Wikimedia Commons and similar
+    # sources. Maps the stored code to the URL of the license text/deed.
+    IMAGE_LICENSE_URLS = {
         "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
         "CC-BY-2.0": "https://creativecommons.org/licenses/by/2.0/",
         "CC-BY-3.0": "https://creativecommons.org/licenses/by/3.0/",
@@ -745,8 +745,9 @@ class FoodItem(models.Model):
         "CC-BY-SA-4.0": "https://creativecommons.org/licenses/by-sa/4.0/",
         "CC-BY-NC-2.0": "https://creativecommons.org/licenses/by-nc/2.0/",
         "CC-BY-NC-SA-2.0": "https://creativecommons.org/licenses/by-nc-sa/2.0/",
+        "GFDL": "https://www.gnu.org/licenses/fdl-1.3.html",
     }
-    CC_LICENSE_CHOICES = [
+    IMAGE_LICENSE_CHOICES = [
         ("CC0-1.0", "CC0 1.0 (Public Domain)"),
         ("CC-BY-2.0", "CC BY 2.0"),
         ("CC-BY-3.0", "CC BY 3.0"),
@@ -756,6 +757,7 @@ class FoodItem(models.Model):
         ("CC-BY-SA-4.0", "CC BY-SA 4.0"),
         ("CC-BY-NC-2.0", "CC BY-NC 2.0"),
         ("CC-BY-NC-SA-2.0", "CC BY-NC-SA 2.0"),
+        ("GFDL", "GNU Free Documentation License"),
     ]
 
     name = models.CharField(max_length=200, unique=True)
@@ -764,11 +766,11 @@ class FoodItem(models.Model):
     image = ImageField("Image file", upload_to="food_items", null=True, blank=True)
     image_author = models.CharField(
         "Image author", max_length=200, blank=True,
-        help_text="Name of the photographer/creator, for Creative Commons attribution.",
+        help_text="Name of the photographer/creator, for image attribution.",
     )
     image_license = models.CharField(
-        "Image license", max_length=20, choices=CC_LICENSE_CHOICES, blank=True,
-        help_text="Only needed if the image is Creative Commons licensed rather than your own work.",
+        "Image license", max_length=20, choices=IMAGE_LICENSE_CHOICES, blank=True,
+        help_text="Only needed if the image is licensed (e.g. Creative Commons, GFDL) rather than your own work.",
     )
     image_source_url = models.URLField(
         "Image source URL", blank=True,
@@ -803,7 +805,7 @@ class FoodItem(models.Model):
 
     @property
     def image_license_url(self):
-        return self.CC_LICENSE_URLS.get(self.image_license, "")
+        return self.IMAGE_LICENSE_URLS.get(self.image_license, "")
 
 
 class FoodRatingSubmission(models.Model):
