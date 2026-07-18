@@ -148,7 +148,7 @@
   </div>
   {% else %}
   <div class="border-top px-3 py-2 text-muted small">
-    <a href="{% url 'account_login' %}">Log in</a> to add a rating.
+    <a href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}">Log in</a> to add a rating.
   </div>
   {% endif %}
 </div>

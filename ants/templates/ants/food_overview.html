@@ -34,9 +34,9 @@
   </button>
   {% else %}
   <span class="text-muted small">
-    <a href="{% url 'account_login' %}">{% trans 'Log in' %}</a>
+    <a href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}">{% trans 'Log in' %}</a>
     {% trans 'or' %}
-    <a href="{% url 'account_signup' %}">{% trans 'create a free account' %}</a>
+    <a href="{% url 'account_signup' %}?next={{ request.get_full_path|urlencode }}">{% trans 'create a free account' %}</a>
     {% trans 'to add a new food item.' %}
   </span>
   {% endif %}
