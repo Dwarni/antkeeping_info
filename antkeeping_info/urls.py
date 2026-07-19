@@ -17,7 +17,12 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 from django.views.generic import TemplateView
 
-from antkeeping_info.sitemaps import AntSpeciesSitemap
+from antkeeping_info.sitemaps import (
+    AntSpeciesSitemap,
+    FoodItemSpeciesRatingSitemap,
+    StaticViewSitemap,
+    TaxonomicRanksByRegionSitemap,
+)
 from ants import views as ants_views
 from home import views
 from search import views as search_views
@@ -26,6 +31,7 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("ants/", include("ants.urls")),
     path("antdb/", include("ants.antdb_urls")),
+    path("fooddb/", include("ants.fooddb_urls")),
     path(
         "ants-by-country/<str:country>/",
         ants_views.ants_by_country,
@@ -53,7 +59,14 @@ urlpatterns = [
     path(
         "sitemap.xml",
         sitemap,
-        {"sitemaps": {"species": AntSpeciesSitemap}},
+        {
+            "sitemaps": {
+                "species": AntSpeciesSitemap,
+                "static": StaticViewSitemap,
+                "regions": TaxonomicRanksByRegionSitemap,
+                "food-ratings": FoodItemSpeciesRatingSitemap,
+            }
+        },
         name="django.contrib.sitemaps.views.sitemap",
     ),
 ]

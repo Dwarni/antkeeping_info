@@ -16,43 +16,8 @@ urlpatterns = [
     ),
     path(
         "food-overview",
-        views.FoodOverviewView.as_view(),
-        name="food_overview",
-    ),
-    path(
-        "food-overview/rate/",
-        views.SubmitFoodRatingFromOverviewView.as_view(),
-        name="food_overview_rate",
-    ),
-    path(
-        "food-overview/rate/<int:pk>/edit/",
-        views.FoodRatingSubmissionEditView.as_view(),
-        name="food_rating_edit",
-    ),
-    path(
-        "food-overview/new-item-form/",
-        views.FoodOverviewNewItemFormView.as_view(),
-        name="food_overview_new_item_form",
-    ),
-    path(
-        "food-overview/new-item/",
-        views.FoodOverviewCreateItemView.as_view(),
-        name="food_overview_new_item",
-    ),
-    path(
-        "food-overview/suggest-similar/",
-        views.FoodOverviewSuggestSimilarView.as_view(),
-        name="food_overview_suggest_similar",
-    ),
-    path(
-        "food-overview/<int:food_item_id>/<slug:species_slug>/ratings/",
-        views.FoodItemSpeciesRatingsView.as_view(),
-        name="food_item_species_ratings",
-    ),
-    path(
-        "food-overview/<int:food_item_id>/<slug:species_slug>/ratings/list/",
-        views.FoodItemSpeciesRatingsListView.as_view(),
-        name="food_item_species_ratings_list",
+        RedirectView.as_view(url="/fooddb/", permanent=True),
+        name="food_overview_old_redirect",
     ),
     path(
         "top-countries-by-number-of-ant-species",

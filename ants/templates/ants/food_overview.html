@@ -2,15 +2,18 @@
 {% load i18n %}
 {% load static %}
 {% load bootstraptags %}
-{% block title %}Food Ratings | Antkeeping.info{% endblock %}
-{% block og_title %}Food Ratings — Antkeeping.info{% endblock %}
-{% block og_description %}Find out which ant species like a specific food item. Community-rated acceptance for protein, sugar, seeds, nuts, leaves, and more.{% endblock %}
+{% block title %}Ant Food Database — What Do Ants Eat? | Antkeeping.info{% endblock %}
+{% block og_title %}Ant Food Database — Antkeeping.info{% endblock %}
+{% block og_description %}Discover what ants eat. Browse community-rated food items — protein, sugar, seeds, nuts, fruit and more — ranked by which ant species accept them best.{% endblock %}
+{% block meta %}
+<meta name="description" content="Discover what ants eat. Browse community-rated food items — protein, sugar, seeds, nuts, fruit and more — ranked by which ant species accept them best.">
+{% endblock %}
 {% block css %}
 <link rel="stylesheet" href="{% static 'ants/css/food_overview.css' %}">
 {% endblock %}
 {% block content %}
 
-<h1 class="h2 mb-1">Food Ratings</h1>
+<h1 class="h2 mb-1">Ant Food Database</h1>
 <p class="text-muted mb-4">Which ant species accept a given food? Ranked by community ratings — most liked first.</p>
 
 <ul class="nav nav-pills mb-4 flex-wrap">
