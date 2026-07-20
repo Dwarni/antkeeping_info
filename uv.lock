@@ -14,6 +14,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "crispy-bootstrap5" },
+    { name = "disposable-email-domains" },
     { name = "django" },
     { name = "django-allauth", extra = ["socialaccount"] },
     { name = "django-autocomplete-light" },
@@ -48,6 +49,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "crispy-bootstrap5", specifier = ">=2024.10" },
+    { name = "disposable-email-domains", specifier = ">=0.0.227" },
     { name = "django", specifier = "~=5.2.0" },
     { name = "django-allauth", extras = ["socialaccount"], specifier = ">=65.0.0" },
     { name = "django-autocomplete-light", specifier = ">=3.12.1" },
@@ -365,6 +367,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8f/b2/ed2890f0862fea7b79bb5224e22b2393376fdcd8f4b4e24dbbf1e9256d23/cssbeautifier-2.0.3.tar.gz", hash = "sha256:2c2fd129342561029de86b1744efa231c9fafe26023dbc988a1deb0ca0f5c845", size = 25338, upload-time = "2026-06-30T15:41:12.917Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b5/a5/36ebf05de5ae042cc10923f8d78189364076ed5c3f58f0dfe1e639d3ef10/cssbeautifier-2.0.3-py3-none-any.whl", hash = "sha256:14650d9c8a47adcb80a7697a866a3921fe0332ef74a92e1039d09086aa0c5001", size = 122645, upload-time = "2026-06-30T15:41:10.519Z" },
+]
+
+[[package]]
+name = "disposable-email-domains"
+version = "0.0.227"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8d/6b/55627fcf0ec0c86b6f8e2c2b02bf878c0125d9d8b9586f3a327552f71a96/disposable_email_domains-0.0.227.tar.gz", hash = "sha256:324ed553623e6e72d806b34d0c6f3ae7b6b8ffd89a7ba8e7e0630e1d7ed801c6", size = 98506, upload-time = "2026-07-20T12:45:48.85Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/08/c6a98f2c9634fe075b5d430ff1c73af0002fdd2aff7d2f3a40353405fb61/disposable_email_domains-0.0.227-py3-none-any.whl", hash = "sha256:d97a0cd784aa65be4e6c568917af75da5970cbab4092429d4b29ec2e1514484f", size = 50672, upload-time = "2026-07-20T12:45:47.522Z" },
 ]
 
 [[package]]

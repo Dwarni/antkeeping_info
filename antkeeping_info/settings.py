@@ -112,6 +112,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "antkeeping_info.context_processors.discord_url",
+                "antkeeping_info.context_processors.turnstile_site_key",
             ],
         },
     },
@@ -199,6 +200,18 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_LOGIN_METHODS = {"username", "email"}
 ACCOUNT_LOGOUT_ON_GET = True
+ACCOUNT_FORMS = {"signup": "users.forms.CustomSignupForm"}
+# Honeypot field, invisible to real users; allauth silently fakes a successful
+# signup response for bots that fill it in, instead of showing a form error.
+ACCOUNT_SIGNUP_FORM_HONEYPOT_FIELD = "website"
+
+# Cloudflare Turnstile (bot protection on signup).
+# Defaults are Cloudflare's public test keys, which always pass — fine for local
+# dev, but MUST be overridden with real keys (via env vars) in production.
+TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY", default="1x00000000000000000000AA")
+TURNSTILE_SECRET_KEY = env(
+    "TURNSTILE_SECRET_KEY", default="1x0000000000000000000000000000000AA"
+)
 
 # django-allauth social account settings
 SOCIALACCOUNT_AUTO_SIGNUP = True
