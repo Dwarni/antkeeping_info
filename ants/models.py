@@ -808,107 +808,19 @@ class FoodItem(models.Model):
         return self.IMAGE_LICENSE_URLS.get(self.image_license, "")
 
 
-class FoodRatingSubmission(models.Model):
-    """One rating action: shared acceptance/condition/comment/photos applied to
-    one or more ant species for one food item, by one user. `SpeciesFoodRating`
-    rows link individual species to whichever submission currently represents
-    their rating."""
-
-    ONE_STAR = 1
-    TWO_STARS = 2
-    THREE_STARS = 3
-    FOUR_STARS = 4
-    FIVE_STARS = 5
-    STAR_CHOICES = [
-        (ONE_STAR, "Ignored"),
-        (TWO_STARS, "Hardly interested"),
-        (THREE_STARS, "Moderately interested"),
-        (FOUR_STARS, "Above average interest"),
-        (FIVE_STARS, "Extremely interested (strong recruitment)"),
-    ]
-
-    ALIVE = "ALIVE"
-    FRESHLY_KILLED = "FRESHLY_KILLED"
-    FRESH = "FRESH"
-    SCALDED = "SCALDED"
-    FROZEN = "FROZEN"
-    DRIED = "DRIED"
-    CONDITION_CHOICES = [
-        (ALIVE, "Alive"),
-        (FRESHLY_KILLED, "Freshly killed"),
-        (FRESH, "Fresh"),
-        (SCALDED, "Scalded"),
-        (FROZEN, "Frozen (thawed)"),
-        (DRIED, "Dried"),
-    ]
-    # Which condition codes are valid/required for a given FoodItem category;
-    # categories absent here don't use the condition field at all.
-    CONDITIONS_BY_CATEGORY = {
-        FoodItem.PROTEIN: [ALIVE, FRESHLY_KILLED, SCALDED, FROZEN, DRIED],
-        FoodItem.PLANT: [FRESH, FROZEN, DRIED],
-    }
-
-    food_item = models.ForeignKey(
-        FoodItem, on_delete=models.CASCADE, related_name="rating_submissions"
-    )
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="food_rating_submissions",
-    )
-    acceptance = models.PositiveSmallIntegerField(choices=STAR_CHOICES)
-    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, null=True, blank=True)
-    comment = models.TextField(blank=True, max_length=500)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-        verbose_name = _("Food rating submission")
-        verbose_name_plural = _("Food rating submissions")
-
-    def __str__(self):
-        return f"{self.user} → {self.food_item} ({self.get_acceptance_display()})"
-
-    @classmethod
-    def conditions_for_category(cls, category):
-        """Valid condition codes for a FoodItem category, or [] if not applicable."""
-        return cls.CONDITIONS_BY_CATEGORY.get(category, [])
-
-
-class RatingPhoto(models.Model):
-    """A photo attached to a FoodRatingSubmission. A submission may have several."""
-
-    MAX_IMAGE_DIMENSION = 1920
-
-    submission = models.ForeignKey(
-        FoodRatingSubmission, on_delete=models.CASCADE, related_name="photos"
-    )
-    image = ImageField("Image file", upload_to="food_ratings")
-    ordering = models.PositiveSmallIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["ordering", "created_at"]
-        verbose_name = _("Rating photo")
-        verbose_name_plural = _("Rating photos")
-
-    def save(self, *args, **kwargs):
-        if self.image and isinstance(self.image.file, UploadedFile):
-            downscale_to_max_dimension(self.image, self.MAX_IMAGE_DIMENSION)
-        super().save(*args, **kwargs)
-
-
 class SpeciesFoodRating(models.Model):
-    """Links one ant species to the FoodRatingSubmission that currently
-    represents this (species, food_item, user) rating."""
+    """A single user's up/down vote on whether a species accepts a food item."""
+
+    UP = 1
+    DOWN = -1
+    VOTE_CHOICES = [
+        (UP, "Accepts it"),
+        (DOWN, "Doesn't accept it"),
+    ]
 
     species = models.ForeignKey(
         AntSpecies, on_delete=models.CASCADE, related_name="food_ratings"
     )
-    # Kept redundantly alongside `submission.food_item` (not just derived via
-    # the FK) because unique_together can only reference literal columns on
-    # this model, not fields reached through a relation.
     food_item = models.ForeignKey(
         FoodItem, on_delete=models.CASCADE, related_name="species_ratings"
     )
@@ -917,9 +829,7 @@ class SpeciesFoodRating(models.Model):
         on_delete=models.CASCADE,
         related_name="food_ratings",
     )
-    submission = models.ForeignKey(
-        FoodRatingSubmission, on_delete=models.CASCADE, related_name="species_food_ratings"
-    )
+    vote = models.SmallIntegerField(choices=VOTE_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -927,3 +837,6 @@ class SpeciesFoodRating(models.Model):
         unique_together = ("species", "food_item", "user")
         verbose_name = _("Species food rating")
         verbose_name_plural = _("Species food ratings")
+
+    def __str__(self):
+        return f"{self.user} → {self.species} / {self.food_item} ({self.get_vote_display()})"

@@ -79,5 +79,10 @@ urlpatterns = [
         views.SubmitDifficultyRatingView.as_view(),
         name="rate_difficulty",
     ),
+    path(
+        "<islug:slug>/vote-food/<int:food_item_id>/",
+        views.SubmitSpeciesFoodVoteView.as_view(),
+        name="vote_food",
+    ),
     path("<islug:slug>/", views.AntSpeciesDetail.as_view(), name="ant_detail"),
 ]

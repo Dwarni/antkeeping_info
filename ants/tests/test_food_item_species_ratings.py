@@ -1,11 +1,8 @@
-import shutil
-import tempfile
-
 from django.contrib.auth.models import User
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 
-from ants.models import AntSpecies, FoodItem, FoodRatingSubmission, Genus, RatingPhoto, SpeciesFoodRating
+from ants.models import AntSpecies, FoodItem, Genus, SpeciesFoodRating
 
 
 def _make_species(name="Lasius niger", slug="lasius-niger"):
@@ -17,13 +14,8 @@ def _make_food(name="Mealworms", category=FoodItem.PROTEIN):
     return FoodItem.objects.create(name=name, category=category)
 
 
-def _make_rating(species, food_item, user, acceptance=5, condition=None, comment=""):
-    submission = FoodRatingSubmission.objects.create(
-        food_item=food_item, user=user, acceptance=acceptance, condition=condition, comment=comment,
-    )
-    return SpeciesFoodRating.objects.create(
-        species=species, food_item=food_item, user=user, submission=submission,
-    )
+def _make_vote(species, food_item, user, vote=SpeciesFoodRating.UP):
+    return SpeciesFoodRating.objects.create(species=species, food_item=food_item, user=user, vote=vote)
 
 
 class FoodItemSpeciesRatingsViewTest(TestCase):
@@ -35,18 +27,24 @@ class FoodItemSpeciesRatingsViewTest(TestCase):
             args=[self.food_item.pk, self.species.slug],
         )
 
-    def test_no_ratings_yet(self):
+    def test_no_votes_yet(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No ratings yet")
+        self.assertContains(response, "No votes yet")
 
-    def test_lists_rater_and_comment(self):
-        rater = User.objects.create_user(username="ant_fan", password="pass")
-        _make_rating(self.species, self.food_item, rater, acceptance=5, comment="Devoured immediately.")
+    def test_lists_voter_and_direction(self):
+        voter = User.objects.create_user(username="ant_fan", password="pass")
+        _make_vote(self.species, self.food_item, voter, vote=SpeciesFoodRating.UP)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "ant_fan")
-        self.assertContains(response, "Devoured immediately.")
+        self.assertContains(response, "Accepts it")
+
+    def test_downvote_shown(self):
+        voter = User.objects.create_user(username="ant_fan", password="pass")
+        _make_vote(self.species, self.food_item, voter, vote=SpeciesFoodRating.DOWN)
+        response = self.client.get(self.url)
+        self.assertContains(response, "Doesn&#x27;t accept it")
 
     def test_unknown_food_item_404(self):
         url = reverse("food_item_species_ratings", args=[999999, self.species.slug])
@@ -58,25 +56,20 @@ class FoodItemSpeciesRatingsViewTest(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-    def test_condition_displayed_when_present(self):
-        rater = User.objects.create_user(username="ant_fan", password="pass")
-        _make_rating(self.species, self.food_item, rater, acceptance=5, condition=FoodRatingSubmission.ALIVE)
-        response = self.client.get(self.url)
-        self.assertContains(response, "Alive")
-
-    def test_condition_not_shown_when_absent(self):
-        rater = User.objects.create_user(username="ant_fan", password="pass")
-        _make_rating(self.species, self.food_item, rater, acceptance=5)
-        response = self.client.get(self.url)
-        self.assertNotContains(response, "badge bg-light")
-
-    def test_only_ratings_for_this_pair_are_shown(self):
+    def test_only_votes_for_this_pair_are_shown(self):
         other_species = _make_species(name="Formica rufa", slug="formica-rufa")
-        rater = User.objects.create_user(username="other_rater", password="pass")
-        _make_rating(other_species, self.food_item, rater, acceptance=3, comment="Different species comment.")
+        voter = User.objects.create_user(username="other_rater", password="pass")
+        _make_vote(other_species, self.food_item, voter)
         response = self.client.get(self.url)
-        self.assertContains(response, "No ratings yet")
-        self.assertNotContains(response, "Different species comment.")
+        self.assertContains(response, "No votes yet")
+        self.assertNotContains(response, "other_rater")
+
+    def test_no_edit_button_for_owner(self):
+        owner = User.objects.create_user(username="owner", password="pass")
+        _make_vote(self.species, self.food_item, owner)
+        self.client.login(username="owner", password="pass")
+        response = self.client.get(self.url)
+        self.assertNotContains(response, "Edit")
 
 
 class FoodOverviewLinksToRatingsViewTest(TestCase):
@@ -84,7 +77,7 @@ class FoodOverviewLinksToRatingsViewTest(TestCase):
         species = _make_species()
         food_item = _make_food()
         rater = User.objects.create_user(username="linker", password="pass")
-        _make_rating(species, food_item, rater, acceptance=4)
+        _make_vote(species, food_item, rater)
 
         response = self.client.get(
             reverse("food_overview"), {"category": food_item.category}
@@ -95,76 +88,16 @@ class FoodOverviewLinksToRatingsViewTest(TestCase):
         self.assertContains(response, ratings_url)
 
 
-@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
-class FoodItemSpeciesRatingsPhotoDisplayTest(TestCase):
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        from django.conf import settings
-        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
-
-    def test_photos_rendered_on_ratings_list_page(self):
-        from ants.tests.test_species_food_rating import _make_upload
-
-        species = _make_species()
-        food = _make_food()
-        user = User.objects.create_user(username="shutterbug", password="pass")
-        rating = _make_rating(species, food, user, acceptance=5)
-        RatingPhoto.objects.create(submission=rating.submission, image=_make_upload(), ordering=0)
-        RatingPhoto.objects.create(submission=rating.submission, image=_make_upload(name="b.jpg"), ordering=1)
-
-        url = reverse("food_item_species_ratings", args=[food.pk, species.slug])
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Photo by shutterbug", count=2)
-
-    def test_no_photos_renders_nothing_extra(self):
-        species = _make_species()
-        food = _make_food()
-        user = User.objects.create_user(username="no_photos", password="pass")
-        _make_rating(species, food, user, acceptance=5)
-
-        url = reverse("food_item_species_ratings", args=[food.pk, species.slug])
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "Photo by no_photos")
-
-
-class FoodItemSpeciesRatingsEditButtonTest(TestCase):
-    def setUp(self):
-        self.species = _make_species()
-        self.food_item = _make_food()
-        self.owner = User.objects.create_user(username="owner", password="pass")
-        self.rating = _make_rating(self.species, self.food_item, self.owner, acceptance=4)
-        self.url = reverse("food_item_species_ratings", args=[self.food_item.pk, self.species.slug])
-        self.edit_url = reverse("food_rating_edit", args=[self.rating.submission_id])
-
-    def test_edit_button_shown_to_owner(self):
-        self.client.login(username="owner", password="pass")
-        response = self.client.get(self.url)
-        self.assertContains(response, self.edit_url)
-
-    def test_edit_button_hidden_for_other_user(self):
-        User.objects.create_user(username="other", password="pass")
-        self.client.login(username="other", password="pass")
-        response = self.client.get(self.url)
-        self.assertNotContains(response, self.edit_url)
-
-    def test_edit_button_hidden_for_anonymous(self):
-        response = self.client.get(self.url)
-        self.assertNotContains(response, self.edit_url)
-
-
 class FoodItemSpeciesRatingsListViewTest(TestCase):
     def test_returns_200_and_correct_content(self):
         species = _make_species()
         food_item = _make_food()
         rater = User.objects.create_user(username="ant_fan", password="pass")
-        _make_rating(species, food_item, rater, acceptance=5, comment="Devoured immediately.")
+        _make_vote(species, food_item, rater, vote=SpeciesFoodRating.UP)
         url = reverse("food_item_species_ratings_list", args=[food_item.pk, species.slug])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Devoured immediately.")
+        self.assertContains(response, "ant_fan")
 
     def test_unknown_food_item_404(self):
         species = _make_species()

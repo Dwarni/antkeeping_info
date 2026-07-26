@@ -1,15 +1,9 @@
-import io
-import shutil
-import tempfile
-
 from django.contrib.auth.models import User
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import NoReverseMatch, reverse
-from PIL import Image as PILImage
 
-from ants.models import AntSpecies, FoodItem, FoodRatingSubmission, Genus, RatingPhoto, SpeciesFoodRating
+from ants.models import AntSpecies, FoodItem, Genus, SpeciesFoodRating
 
 
 def _make_species(name="Lasius niger", slug="lasius-niger"):
@@ -21,112 +15,48 @@ def _make_food(name="Mealworms", category=FoodItem.PROTEIN):
     return FoodItem.objects.create(name=name, category=category)
 
 
-def _make_rating(species, food_item, user, acceptance=3, condition=None, comment=""):
-    """Create a FoodRatingSubmission + its SpeciesFoodRating link for one species."""
-    submission = FoodRatingSubmission.objects.create(
-        food_item=food_item, user=user, acceptance=acceptance, condition=condition, comment=comment,
-    )
-    return SpeciesFoodRating.objects.create(
-        species=species, food_item=food_item, user=user, submission=submission,
-    )
+def _make_vote(species, food_item, user, vote=SpeciesFoodRating.UP):
+    return SpeciesFoodRating.objects.create(species=species, food_item=food_item, user=user, vote=vote)
 
 
-def _make_upload(width=3000, height=1500, name="photo.jpg"):
-    buffer = io.BytesIO()
-    PILImage.new("RGB", (width, height), color="blue").save(buffer, format="JPEG")
-    return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/jpeg")
-
-
-class FoodRatingSubmissionModelTest(TestCase):
+class SpeciesFoodRatingModelTest(TestCase):
     def setUp(self):
         self.species = _make_species()
         self.food = _make_food()
         self.user = User.objects.create_user(username="tester", password="pass")
 
-    def test_create_rating(self):
-        rating = _make_rating(self.species, self.food, self.user, acceptance=FoodRatingSubmission.THREE_STARS)
-        self.assertEqual(rating.submission.acceptance, FoodRatingSubmission.THREE_STARS)
-        self.assertEqual(rating.submission.comment, "")
+    def test_create_upvote(self):
+        rating = _make_vote(self.species, self.food, self.user, vote=SpeciesFoodRating.UP)
+        self.assertEqual(rating.vote, SpeciesFoodRating.UP)
 
-    def test_create_rating_with_comment(self):
-        rating = _make_rating(
-            self.species, self.food, self.user,
-            acceptance=FoodRatingSubmission.TWO_STARS, comment="Ate it slowly.",
-        )
-        self.assertEqual(rating.submission.comment, "Ate it slowly.")
+    def test_create_downvote(self):
+        rating = _make_vote(self.species, self.food, self.user, vote=SpeciesFoodRating.DOWN)
+        self.assertEqual(rating.vote, SpeciesFoodRating.DOWN)
 
     def test_unique_constraint_per_user_species_food_item(self):
-        _make_rating(self.species, self.food, self.user, acceptance=FoodRatingSubmission.THREE_STARS)
-        other_submission = FoodRatingSubmission.objects.create(
-            food_item=self.food, user=self.user, acceptance=FoodRatingSubmission.ONE_STAR,
-        )
+        _make_vote(self.species, self.food, self.user)
         with self.assertRaises(IntegrityError):
             SpeciesFoodRating.objects.create(
-                species=self.species, food_item=self.food, user=self.user, submission=other_submission,
+                species=self.species, food_item=self.food, user=self.user, vote=SpeciesFoodRating.DOWN,
             )
 
-    def test_different_users_can_rate_same_species_and_food(self):
+    def test_different_users_can_vote_same_species_and_food(self):
         other = User.objects.create_user(username="other", password="pass")
-        _make_rating(self.species, self.food, self.user, acceptance=FoodRatingSubmission.THREE_STARS)
-        _make_rating(self.species, self.food, other, acceptance=FoodRatingSubmission.ONE_STAR)
+        _make_vote(self.species, self.food, self.user)
+        _make_vote(self.species, self.food, other)
         self.assertEqual(self.species.food_ratings.count(), 2)
 
-    def test_same_user_can_rate_different_food_items(self):
+    def test_same_user_can_vote_different_food_items(self):
         honey = _make_food(name="Flower honey", category=FoodItem.SUGAR)
-        _make_rating(self.species, self.food, self.user, acceptance=FoodRatingSubmission.THREE_STARS)
-        _make_rating(self.species, honey, self.user, acceptance=FoodRatingSubmission.THREE_STARS)
+        _make_vote(self.species, self.food, self.user)
+        _make_vote(self.species, honey, self.user)
         self.assertEqual(SpeciesFoodRating.objects.filter(user=self.user).count(), 2)
 
-    def test_same_user_can_rate_same_food_on_different_species(self):
+    def test_same_user_can_vote_same_food_on_different_species(self):
         other_species = _make_species(name="Formica rufa", slug="formica-rufa")
-        _make_rating(self.species, self.food, self.user, acceptance=FoodRatingSubmission.THREE_STARS)
-        _make_rating(other_species, self.food, self.user, acceptance=FoodRatingSubmission.ONE_STAR)
+        _make_vote(self.species, self.food, self.user)
+        _make_vote(other_species, self.food, self.user)
         self.assertEqual(SpeciesFoodRating.objects.filter(user=self.user).count(), 2)
-
-    def test_create_rating_with_condition(self):
-        rating = _make_rating(
-            self.species, self.food, self.user,
-            acceptance=FoodRatingSubmission.THREE_STARS, condition=FoodRatingSubmission.ALIVE,
-        )
-        self.assertEqual(rating.submission.condition, FoodRatingSubmission.ALIVE)
-
-    def test_condition_optional_at_model_level(self):
-        rating = _make_rating(self.species, self.food, self.user, acceptance=FoodRatingSubmission.THREE_STARS)
-        self.assertIsNone(rating.submission.condition)
-
-    def test_conditions_for_category_protein(self):
-        self.assertEqual(
-            FoodRatingSubmission.conditions_for_category(FoodItem.PROTEIN),
-            [
-                FoodRatingSubmission.ALIVE,
-                FoodRatingSubmission.FRESHLY_KILLED,
-                FoodRatingSubmission.SCALDED,
-                FoodRatingSubmission.FROZEN,
-                FoodRatingSubmission.DRIED,
-            ],
-        )
-
-    def test_conditions_for_category_plant(self):
-        self.assertEqual(
-            FoodRatingSubmission.conditions_for_category(FoodItem.PLANT),
-            [FoodRatingSubmission.FRESH, FoodRatingSubmission.FROZEN, FoodRatingSubmission.DRIED],
-        )
-
-    def test_conditions_for_category_not_applicable(self):
-        for category in (FoodItem.SEEDS, FoodItem.SUGAR, FoodItem.OTHER):
-            self.assertEqual(FoodRatingSubmission.conditions_for_category(category), [])
-
-    def test_multiple_submissions_allowed_per_food_item_and_user(self):
-        # No uniqueness constraint on FoodRatingSubmission itself -- a user can
-        # have several submissions for the same food item over time (e.g. one
-        # still owning species that weren't part of a later re-rating batch).
-        FoodRatingSubmission.objects.create(
-            food_item=self.food, user=self.user, acceptance=FoodRatingSubmission.THREE_STARS,
-        )
-        FoodRatingSubmission.objects.create(
-            food_item=self.food, user=self.user, acceptance=FoodRatingSubmission.FOUR_STARS,
-        )
-        self.assertEqual(FoodRatingSubmission.objects.filter(food_item=self.food, user=self.user).count(), 2)
 
 
 class AntSpeciesDetailFoodContextTest(TestCase):
@@ -141,57 +71,57 @@ class AntSpeciesDetailFoodContextTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["food_by_category"], [])
 
-    def test_context_food_item_no_ratings(self):
+    def test_context_food_item_no_votes(self):
         _make_food()
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         cats = response.context["food_by_category"]
         self.assertEqual(len(cats), 1)
         item_data = cats[0]["items"][0]
-        self.assertEqual(item_data["total"], 0)
-        self.assertIsNone(item_data["avg"])
-        self.assertIsNone(item_data["user_rating"])
+        self.assertEqual(item_data["up_count"], 0)
+        self.assertEqual(item_data["down_count"], 0)
+        self.assertIsNone(item_data["user_vote"])
 
-    def test_context_with_ratings(self):
+    def test_context_with_votes(self):
         food = _make_food()
-        _make_rating(self.species, food, self.user1, acceptance=FoodRatingSubmission.THREE_STARS)
-        _make_rating(self.species, food, self.user2, acceptance=FoodRatingSubmission.THREE_STARS)
+        _make_vote(self.species, food, self.user1, vote=SpeciesFoodRating.UP)
+        _make_vote(self.species, food, self.user2, vote=SpeciesFoodRating.UP)
         response = self.client.get(self.url)
         item_data = response.context["food_by_category"][0]["items"][0]
-        self.assertEqual(item_data["total"], 2)
-        self.assertEqual(item_data["avg"], 3.0)
+        self.assertEqual(item_data["up_count"], 2)
+        self.assertEqual(item_data["down_count"], 0)
 
-    def test_context_avg_mixed_ratings(self):
+    def test_context_mixed_votes(self):
         food = _make_food()
-        _make_rating(self.species, food, self.user1, acceptance=FoodRatingSubmission.ONE_STAR)
-        _make_rating(self.species, food, self.user2, acceptance=FoodRatingSubmission.FIVE_STARS)
+        _make_vote(self.species, food, self.user1, vote=SpeciesFoodRating.UP)
+        _make_vote(self.species, food, self.user2, vote=SpeciesFoodRating.DOWN)
         response = self.client.get(self.url)
         item_data = response.context["food_by_category"][0]["items"][0]
-        self.assertEqual(item_data["total"], 2)
-        self.assertEqual(item_data["avg"], 3.0)
+        self.assertEqual(item_data["up_count"], 1)
+        self.assertEqual(item_data["down_count"], 1)
 
-    def test_context_user_rating_anonymous(self):
+    def test_context_user_vote_anonymous(self):
         food = _make_food()
-        _make_rating(self.species, food, self.user1, acceptance=FoodRatingSubmission.THREE_STARS)
+        _make_vote(self.species, food, self.user1)
         response = self.client.get(self.url)
         item_data = response.context["food_by_category"][0]["items"][0]
-        self.assertIsNone(item_data["user_rating"])
+        self.assertIsNone(item_data["user_vote"])
 
-    def test_context_user_rating_logged_in(self):
+    def test_context_user_vote_logged_in(self):
         food = _make_food()
-        rating = _make_rating(self.species, food, self.user1, acceptance=FoodRatingSubmission.TWO_STARS)
+        rating = _make_vote(self.species, food, self.user1, vote=SpeciesFoodRating.DOWN)
         self.client.login(username="user1", password="pass")
         response = self.client.get(self.url)
         item_data = response.context["food_by_category"][0]["items"][0]
-        self.assertEqual(item_data["user_rating"], rating)
+        self.assertEqual(item_data["user_vote"], rating)
 
-    def test_context_user_rating_logged_in_no_own_rating(self):
+    def test_context_user_vote_logged_in_no_own_vote(self):
         food = _make_food()
-        _make_rating(self.species, food, self.user2, acceptance=FoodRatingSubmission.THREE_STARS)
+        _make_vote(self.species, food, self.user2)
         self.client.login(username="user1", password="pass")
         response = self.client.get(self.url)
         item_data = response.context["food_by_category"][0]["items"][0]
-        self.assertIsNone(item_data["user_rating"])
+        self.assertIsNone(item_data["user_vote"])
 
     def test_category_grouping(self):
         _make_food(name="Mealworms", category=FoodItem.PROTEIN)
@@ -215,352 +145,116 @@ class AntSpeciesDetailFoodContextTest(TestCase):
         with self.assertRaises(NoReverseMatch):
             reverse("rate_food", args=[self.species.slug])
 
-    def test_no_rating_form_rendered(self):
+    def test_vote_buttons_rendered_for_logged_in_user(self):
         _make_food()
         self.client.login(username="user1", password="pass")
         response = self.client.get(self.url)
-        self.assertNotContains(response, 'name="acceptance"')
-        self.assertContains(response, reverse("food_overview"))
-
-    def test_own_rating_indicator_shown_when_logged_in(self):
-        food = _make_food()
-        _make_rating(self.species, food, self.user1, acceptance=FoodRatingSubmission.FOUR_STARS)
-        self.client.login(username="user1", password="pass")
-        response = self.client.get(self.url)
-        self.assertContains(response, "You rated this")
+        self.assertContains(response, reverse("vote_food", args=[self.species.slug, FoodItem.objects.get().pk]))
 
 
-class SubmitFoodRatingFromOverviewViewTest(TestCase):
+class SubmitFoodOverviewVoteViewTest(TestCase):
     def setUp(self):
         self.species = _make_species()
-        self.species2 = _make_species(name="Formica rufa", slug="formica-rufa")
-        self.species3 = _make_species(name="Myrmica rubra", slug="myrmica-rubra")
         self.food = _make_food()
-        self.url = reverse("food_overview_rate")
+        self.url = reverse("food_overview_vote")
         self.user = User.objects.create_user(username="tester", password="pass")
         self.client.login(username="tester", password="pass")
 
-    def test_protein_food_missing_condition_returns_400(self):
-        response = self.client.post(
-            self.url,
-            {"species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 3},
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_protein_food_invalid_condition_returns_400(self):
-        response = self.client.post(
+    def _post(self, vote, species=None, food_item=None):
+        return self.client.post(
             self.url,
             {
-                "species_id": [self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 3,
-                "condition": FoodRatingSubmission.FRESH,
+                "food_item_id": (food_item or self.food).pk,
+                "species_id": (species or self.species).pk,
+                "vote": vote,
             },
         )
-        self.assertEqual(response.status_code, 400)
 
-    def test_protein_food_valid_condition_accepted(self):
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 3,
-                "condition": FoodRatingSubmission.FROZEN,
-            },
-        )
+    def test_login_required(self):
+        self.client.logout()
+        response = self._post(SpeciesFoodRating.UP)
+        self.assertEqual(response.status_code, 302)
+
+    def test_upvote_creates_rating(self):
+        response = self._post(SpeciesFoodRating.UP)
         self.assertEqual(response.status_code, 200)
         rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-        self.assertEqual(rating.submission.condition, FoodRatingSubmission.FROZEN)
+        self.assertEqual(rating.vote, SpeciesFoodRating.UP)
 
-    def test_plant_food_missing_condition_returns_400(self):
-        leaf = _make_food(name="Bramble leaf", category=FoodItem.PLANT)
-        response = self.client.post(
-            self.url,
-            {"species_id": [self.species.pk], "food_item_id": leaf.pk, "acceptance": 3},
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_plant_food_valid_condition_accepted(self):
-        leaf = _make_food(name="Bramble leaf", category=FoodItem.PLANT)
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk],
-                "food_item_id": leaf.pk,
-                "acceptance": 3,
-                "condition": FoodRatingSubmission.FRESH,
-            },
-        )
+    def test_downvote_creates_rating(self):
+        response = self._post(SpeciesFoodRating.DOWN)
         self.assertEqual(response.status_code, 200)
-        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=leaf, user=self.user)
-        self.assertEqual(rating.submission.condition, FoodRatingSubmission.FRESH)
-
-    def test_seeds_food_condition_not_required(self):
-        seeds = _make_food(name="Sunflower seeds", category=FoodItem.SEEDS)
-        response = self.client.post(
-            self.url,
-            {"species_id": [self.species.pk], "food_item_id": seeds.pk, "acceptance": 3},
-        )
-        self.assertEqual(response.status_code, 200)
-        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=seeds, user=self.user)
-        self.assertIsNone(rating.submission.condition)
-
-    def test_single_species_creates_submission_and_link(self):
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 4,
-                "condition": FoodRatingSubmission.ALIVE,
-                "comment": "yum",
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(FoodRatingSubmission.objects.count(), 1)
         rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-        self.assertEqual(rating.submission.acceptance, 4)
-        self.assertEqual(rating.submission.comment, "yum")
+        self.assertEqual(rating.vote, SpeciesFoodRating.DOWN)
 
-    def test_multi_species_batch_creates_one_submission_and_n_links(self):
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk, self.species2.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 4,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(FoodRatingSubmission.objects.count(), 1)
-        submission = FoodRatingSubmission.objects.get()
-        links = SpeciesFoodRating.objects.filter(food_item=self.food, user=self.user)
-        self.assertEqual(links.count(), 2)
-        self.assertTrue(all(link.submission_id == submission.pk for link in links))
-
-    def test_empty_species_list_returns_400(self):
-        response = self.client.post(self.url, {"food_item_id": self.food.pk, "acceptance": 3})
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(FoodRatingSubmission.objects.count(), 0)
-
-    def test_one_invalid_species_id_rejects_whole_batch(self):
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk, 999999],
-                "food_item_id": self.food.pk,
-                "acceptance": 3,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(FoodRatingSubmission.objects.count(), 0)
-        self.assertFalse(SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food).exists())
-
-    def test_duplicate_species_id_deduped(self):
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk, self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 3,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food, user=self.user).count(), 1,
-        )
-
-    def test_resubmitting_same_species_is_rejected_as_duplicate(self):
-        # Re-rating a species you've already rated via the "add rating" form used to
-        # silently overwrite the old submission; it's now rejected so the user is
-        # pointed at the explicit edit flow instead.
-        self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 2,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-        old_submission_id = SpeciesFoodRating.objects.get(
-            species=self.species, food_item=self.food, user=self.user
-        ).submission_id
-
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 5,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(FoodRatingSubmission.objects.count(), 1)
-        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-        self.assertEqual(rating.submission_id, old_submission_id)
-        self.assertEqual(rating.submission.acceptance, 2)
-
-    def test_resubmit_one_of_several_species_rejects_whole_batch(self):
-        self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk, self.species2.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 2,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-        old_submission_id = SpeciesFoodRating.objects.get(
-            species=self.species, food_item=self.food, user=self.user
-        ).submission_id
-
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk, self.species3.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 5,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-
+    def test_clicking_same_direction_again_removes_vote(self):
+        self._post(SpeciesFoodRating.UP)
+        response = self._post(SpeciesFoodRating.UP)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(
-            SpeciesFoodRating.objects.filter(species=self.species3, food_item=self.food, user=self.user).exists()
-        )
-        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-        self.assertEqual(rating.submission_id, old_submission_id)
-        self.assertEqual(rating.submission.acceptance, 2)
-
-    def test_duplicate_rating_response_lists_existing_submission_for_editing(self):
-        self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 2,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
-        )
-        existing = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk], "food_item_id": self.food.pk, "acceptance": 5,
-                "condition": FoodRatingSubmission.ALIVE,
-            },
+            SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food, user=self.user).exists()
         )
 
+    def test_clicking_opposite_direction_switches_vote(self):
+        self._post(SpeciesFoodRating.UP)
+        response = self._post(SpeciesFoodRating.DOWN)
         self.assertEqual(response.status_code, 200)
-        duplicates = response.context["duplicate_ratings"]
-        self.assertEqual([d.pk for d in duplicates], [existing.pk])
-        self.assertContains(response, reverse("food_rating_edit", args=[existing.submission_id]))
+        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
+        self.assertEqual(rating.vote, SpeciesFoodRating.DOWN)
 
-    def test_exceeds_max_species_returns_400(self):
-        from ants.views import SubmitFoodRatingFromOverviewView
-
-        extra_species = [
-            _make_species(name=f"Genus{i} species", slug=f"species-{i}")
-            for i in range(SubmitFoodRatingFromOverviewView.MAX_SPECIES_PER_SUBMISSION)
-        ]
+    def test_invalid_vote_value_returns_400(self):
         response = self.client.post(
-            self.url,
-            {
-                "species_id": [s.pk for s in extra_species] + [self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 3,
-            },
+            self.url, {"food_item_id": self.food.pk, "species_id": self.species.pk, "vote": 3},
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(FoodRatingSubmission.objects.count(), 0)
+
+    def test_missing_species_id_returns_400(self):
+        response = self.client.post(self.url, {"food_item_id": self.food.pk, "vote": 1})
+        self.assertEqual(response.status_code, 400)
+
+    def test_unknown_species_id_returns_400(self):
+        response = self.client.post(
+            self.url, {"food_item_id": self.food.pk, "species_id": 999999, "vote": 1},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_unknown_food_item_id_returns_400(self):
+        response = self.client.post(
+            self.url, {"food_item_id": 999999, "species_id": self.species.pk, "vote": 1},
+        )
+        self.assertEqual(response.status_code, 400)
 
 
-@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
-class SubmitFoodRatingFromOverviewImageUploadTest(TestCase):
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        from django.conf import settings
-        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
-
+class SubmitSpeciesFoodVoteViewTest(TestCase):
     def setUp(self):
         self.species = _make_species()
         self.food = _make_food()
-        self.url = reverse("food_overview_rate")
+        self.url = reverse("vote_food", args=[self.species.slug, self.food.pk])
         self.user = User.objects.create_user(username="tester", password="pass")
         self.client.login(username="tester", password="pass")
 
-    def test_multiple_images_create_multiple_ordered_photos(self):
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 5,
-                "condition": FoodRatingSubmission.ALIVE,
-                "images": [_make_upload(name="a.jpg"), _make_upload(name="b.jpg")],
-            },
-        )
+    def test_login_required(self):
+        self.client.logout()
+        response = self.client.post(self.url, {"vote": 1})
+        self.assertEqual(response.status_code, 302)
+
+    def test_upvote_creates_rating(self):
+        response = self.client.post(self.url, {"vote": SpeciesFoodRating.UP})
         self.assertEqual(response.status_code, 200)
         rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-        photos = list(rating.submission.photos.all())
-        self.assertEqual(len(photos), 2)
-        self.assertEqual([p.ordering for p in photos], [0, 1])
+        self.assertEqual(rating.vote, SpeciesFoodRating.UP)
 
-    def test_image_gets_downscaled(self):
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 4,
-                "condition": FoodRatingSubmission.ALIVE,
-                "images": [_make_upload()],
-            },
-        )
+    def test_toggle_removes_vote(self):
+        self.client.post(self.url, {"vote": SpeciesFoodRating.UP})
+        response = self.client.post(self.url, {"vote": SpeciesFoodRating.UP})
         self.assertEqual(response.status_code, 200)
-        rating = SpeciesFoodRating.objects.get(species=self.species, food_item=self.food, user=self.user)
-        photo = rating.submission.photos.get()
-        with PILImage.open(photo.image.path) as saved:
-            self.assertEqual(max(saved.size), RatingPhoto.MAX_IMAGE_DIMENSION)
-
-    def test_non_image_file_rejected_and_nothing_persisted(self):
-        bogus = SimpleUploadedFile("notes.txt", b"not an image", content_type="text/plain")
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 4,
-                "condition": FoodRatingSubmission.ALIVE,
-                "images": [bogus],
-            },
+        self.assertFalse(
+            SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food, user=self.user).exists()
         )
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(SpeciesFoodRating.objects.filter(species=self.species, food_item=self.food).exists())
-        self.assertEqual(FoodRatingSubmission.objects.count(), 0)
 
-    def test_exceeds_max_photos_returns_400(self):
-        from ants.views import SubmitFoodRatingFromOverviewView
-
-        uploads = [
-            _make_upload(name=f"{i}.jpg")
-            for i in range(SubmitFoodRatingFromOverviewView.MAX_PHOTOS_PER_SUBMISSION + 1)
-        ]
-        response = self.client.post(
-            self.url,
-            {
-                "species_id": [self.species.pk],
-                "food_item_id": self.food.pk,
-                "acceptance": 4,
-                "condition": FoodRatingSubmission.ALIVE,
-                "images": uploads,
-            },
-        )
+    def test_invalid_vote_value_returns_400(self):
+        response = self.client.post(self.url, {"vote": 99})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(FoodRatingSubmission.objects.count(), 0)
 
 
 class FoodOverviewAggregationTest(TestCase):
@@ -571,34 +265,21 @@ class FoodOverviewAggregationTest(TestCase):
         self.user1 = User.objects.create_user(username="user1", password="pass")
         self.user2 = User.objects.create_user(username="user2", password="pass")
 
-    def test_species_average_across_submissions(self):
-        _make_rating(self.species, self.food, self.user1, acceptance=2)
-        _make_rating(self.species, self.food, self.user2, acceptance=4)
+    def test_net_score_across_votes(self):
+        _make_vote(self.species, self.food, self.user1, vote=SpeciesFoodRating.UP)
+        _make_vote(self.species, self.food, self.user2, vote=SpeciesFoodRating.DOWN)
         response = self.client.get(reverse("food_overview"), {"category": self.food.category})
         food_data = response.context["food_data"][0]
         top_species = {row["species_id"]: row for row in food_data["top_species"]}
-        self.assertEqual(top_species[self.species.pk]["species_avg"], 3.0)
-        self.assertEqual(food_data["overall_avg"], 3.0)
+        self.assertEqual(top_species[self.species.pk]["net_score"], 0)
+        self.assertEqual(top_species[self.species.pk]["up_count"], 1)
+        self.assertEqual(top_species[self.species.pk]["down_count"], 1)
+        self.assertEqual(food_data["overall_net_score"], 0)
         self.assertEqual(food_data["total_ratings"], 2)
 
-    def test_deleted_orphaned_submission_does_not_leak_into_average(self):
-        # user1 rates `species` at 1 star (submission A) and `species2` at 5 stars
-        # (submission B) separately.
-        rating_a = _make_rating(self.species, self.food, self.user1, acceptance=1, condition=FoodRatingSubmission.ALIVE)
-        rating_b = _make_rating(self.species2, self.food, self.user1, acceptance=5, condition=FoodRatingSubmission.ALIVE)
-
-        # Editing submission B to also cover `species` reassigns that species away
-        # from submission A, which then has no species left and is deleted -- its
-        # stale 1-star value must not linger in the aggregate.
-        self.client.login(username="user1", password="pass")
-        self.client.post(reverse("food_rating_edit", args=[rating_b.submission_id]), {
-            "species_id": [self.species.pk, self.species2.pk],
-            "acceptance": 5,
-            "condition": FoodRatingSubmission.ALIVE,
-        })
-        self.assertFalse(FoodRatingSubmission.objects.filter(pk=rating_a.submission_id).exists())
-
+    def test_ranking_by_net_score(self):
+        _make_vote(self.species, self.food, self.user1, vote=SpeciesFoodRating.DOWN)
+        _make_vote(self.species2, self.food, self.user1, vote=SpeciesFoodRating.UP)
         response = self.client.get(reverse("food_overview"), {"category": self.food.category})
         food_data = response.context["food_data"][0]
-        self.assertEqual(food_data["overall_avg"], 5.0)
-        self.assertEqual(food_data["total_ratings"], 2)
+        self.assertEqual(food_data["top_species"][0]["species_id"], self.species2.pk)

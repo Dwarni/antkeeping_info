@@ -81,9 +81,3 @@ class FoodItemCreateForm(forms.ModelForm):
                 "Please name the author for attribution when specifying an image license.",
             )
         return cleaned_data
-
-
-class FoodRatingImageForm(forms.Form):
-    """Validates an optional photo attached to a species food rating."""
-
-    image = forms.ImageField(required=False)

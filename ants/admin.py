@@ -13,10 +13,8 @@ from ants.models import (
     Distribution,
     Family,
     FoodItem,
-    FoodRatingSubmission,
     Genus,
     InvalidName,
-    RatingPhoto,
     SpeciesDifficultyRating,
     SpeciesFoodRating,
     SpeciesDescription,
@@ -215,43 +213,27 @@ class FoodItemAdmin(AdminImageMixin, admin.ModelAdmin):
         loser_ids = [item.pk for item in losers]
 
         with transaction.atomic():
-            # Operate per loser *submission* (not per link row), since one
-            # submission can cover several species and only some of them may
-            # collide with an existing survivor-side rating -- a collision
-            # "splits" the submission rather than moving it wholesale.
-            for loser_sub in list(FoodRatingSubmission.objects.filter(food_item_id__in=loser_ids)):
-                keep_species_ids = []
-                for link in list(loser_sub.species_food_ratings.select_related("species")):
-                    existing = (
-                        SpeciesFoodRating.objects
-                        .filter(species=link.species, food_item=survivor, user_id=loser_sub.user_id)
-                        .select_related("submission")
-                        .first()
-                    )
-                    if existing is None:
-                        keep_species_ids.append(link.species_id)
-                        continue
+            # For each loser vote, try to reassign it to the survivor. On a
+            # unique_together collision (survivor already has a vote from
+            # that user for that species), keep whichever vote was updated
+            # more recently and discard the other.
+            for loser_vote in list(SpeciesFoodRating.objects.filter(food_item_id__in=loser_ids)):
+                existing = SpeciesFoodRating.objects.filter(
+                    species_id=loser_vote.species_id,
+                    food_item=survivor,
+                    user_id=loser_vote.user_id,
+                ).first()
+                if existing is None:
+                    loser_vote.food_item = survivor
+                    loser_vote.save(update_fields=["food_item"])
+                    continue
 
-                    # Collision: keep the higher acceptance, tie-break on most recent update.
-                    loser_wins = loser_sub.acceptance > existing.submission.acceptance or (
-                        loser_sub.acceptance == existing.submission.acceptance
-                        and loser_sub.updated_at >= existing.submission.updated_at
-                    )
-                    if loser_wins:
-                        old_survivor_sub = existing.submission
-                        existing.delete()
-                        if not old_survivor_sub.species_food_ratings.exists():
-                            old_survivor_sub.delete()
-                        keep_species_ids.append(link.species_id)
-                    else:
-                        link.delete()
-
-                if keep_species_ids:
-                    loser_sub.food_item = survivor
-                    loser_sub.save(update_fields=["food_item"])
-                    loser_sub.species_food_ratings.update(food_item=survivor)
+                if loser_vote.updated_at >= existing.updated_at:
+                    existing.delete()
+                    loser_vote.food_item = survivor
+                    loser_vote.save(update_fields=["food_item"])
                 else:
-                    loser_sub.delete()
+                    loser_vote.delete()
 
             FoodItem.objects.filter(pk__in=loser_ids).delete()
 
@@ -266,26 +248,7 @@ class FoodItemAdmin(AdminImageMixin, admin.ModelAdmin):
 
 @admin.register(SpeciesFoodRating)
 class SpeciesFoodRatingAdmin(admin.ModelAdmin):
-    list_display = ("species", "food_item", "user", "submission_acceptance", "created_at")
-    list_filter = ("submission__acceptance", "food_item__category")
+    list_display = ("species", "food_item", "user", "vote", "updated_at")
+    list_filter = ("vote", "food_item__category")
     search_fields = ("species__name", "food_item__name", "user__username")
     readonly_fields = ("created_at", "updated_at")
-    list_select_related = ("submission",)
-
-    @admin.display(description=_("Acceptance"))
-    def submission_acceptance(self, obj):
-        return obj.submission.get_acceptance_display()
-
-
-class RatingPhotoInline(AdminImageMixin, admin.TabularInline):
-    model = RatingPhoto
-    extra = 0
-
-
-@admin.register(FoodRatingSubmission)
-class FoodRatingSubmissionAdmin(admin.ModelAdmin):
-    list_display = ("food_item", "user", "acceptance", "condition", "created_at")
-    list_filter = ("acceptance", "condition", "food_item__category")
-    search_fields = ("food_item__name", "user__username")
-    readonly_fields = ("created_at", "updated_at")
-    inlines = [RatingPhotoInline]

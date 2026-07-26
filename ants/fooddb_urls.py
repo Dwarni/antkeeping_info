@@ -5,14 +5,9 @@ from . import views
 urlpatterns = [
     path("", views.FoodOverviewView.as_view(), name="food_overview"),
     path(
-        "rate/",
-        views.SubmitFoodRatingFromOverviewView.as_view(),
-        name="food_overview_rate",
-    ),
-    path(
-        "rate/<int:pk>/edit/",
-        views.FoodRatingSubmissionEditView.as_view(),
-        name="food_rating_edit",
+        "vote/",
+        views.SubmitFoodOverviewVoteView.as_view(),
+        name="food_overview_vote",
     ),
     path(
         "new-item-form/",

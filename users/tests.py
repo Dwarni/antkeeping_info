@@ -2,8 +2,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from ants.models import FoodItem, Genus, AntSpecies, SpeciesDifficultyRating
-from ants.tests.test_species_food_rating import _make_rating
+from ants.models import FoodItem, Genus, AntSpecies, SpeciesDifficultyRating, SpeciesFoodRating
+from ants.tests.test_species_food_rating import _make_vote
 
 
 def _make_species(name="Lasius niger", slug="lasius-niger"):
@@ -40,15 +40,15 @@ class UserProfileViewRatingsTest(TestCase):
         self.assertEqual(len(ratings), 1)
         self.assertEqual(ratings[0].user, self.user)
 
-    def test_food_rating_submissions_scoped_to_user(self):
+    def test_food_ratings_scoped_to_user(self):
         species = _make_species()
         food = _make_food()
-        _make_rating(species, food, self.user, acceptance=4)
-        _make_rating(species, food, self.other_user, acceptance=2)
+        _make_vote(species, food, self.user, vote=SpeciesFoodRating.UP)
+        _make_vote(species, food, self.other_user, vote=SpeciesFoodRating.DOWN)
         response = self.client.get(self.url)
-        submissions = list(response.context["food_rating_submissions"])
-        self.assertEqual(len(submissions), 1)
-        self.assertEqual(submissions[0].user, self.user)
+        ratings = list(response.context["food_ratings"])
+        self.assertEqual(len(ratings), 1)
+        self.assertEqual(ratings[0].user, self.user)
 
 
 class UserProfileFoodRatingsViewTest(TestCase):

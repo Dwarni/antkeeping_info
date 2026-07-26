@@ -1,4 +1,4 @@
-{% load i18n ants thumbnail %}
+{% load i18n %}
 <div id="food-ratings-section">
     <h3>{% trans 'Food Acceptance' %}</h3>
 
@@ -8,62 +8,19 @@
 
     {% if not user.is_authenticated %}
     <div class="alert alert-info d-inline-block py-2 px-3 mb-3 small" role="alert">
-        <i class="bi bi-star-half"></i>
+        <i class="bi bi-hand-thumbs-up"></i>
         <a href="{% url 'account_login' %}">{% trans 'Log in' %}</a>
         {% trans 'or' %}
         <a href="{% url 'account_signup' %}">{% trans 'create a free account' %}</a>
-        {% trans 'to rate how well this species accepts food items.' %}
+        {% trans 'to vote on how well this species accepts food items.' %}
     </div>
-    {% else %}
-    <p class="text-muted small mb-3">
-        {% trans 'Rate this species on the' %}
-        <a href="{% url 'food_overview' %}">{% trans 'Ant Food Database' %}</a>
-        {% trans 'page.' %}
-    </p>
     {% endif %}
 
     {% for category in food_by_category %}
     <h4 class="h6 mt-3 mb-2 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em;">{{ category.category_label }}</h4>
 
     {% for item in category.items %}
-    <div class="food-item mb-3">
-        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-            {% if item.food_item.image %}
-            {% thumbnail item.food_item.image "32x32" crop="center" as im %}
-            <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
-                 class="rounded flex-shrink-0" alt="{{ item.food_item.name }}">
-            {% endthumbnail %}
-            {% else %}
-            <span class="rounded bg-light text-muted d-inline-flex align-items-center justify-content-center flex-shrink-0"
-                  style="width: 32px; height: 32px; font-size: 0.875rem;">
-              <i class="bi bi-bug-fill"></i>
-            </span>
-            {% endif %}
-            <span class="food-item-name">{{ item.food_item.name }}</span>
-            {% if item.total > 0 %}
-            {{ item.avg|star_display }}
-            <a href="{% url 'food_item_species_ratings' item.food_item.pk object.slug %}"
-               class="text-muted small text-decoration-none">
-                {{ item.avg|floatformat:"-1" }}/5 &mdash;
-                {% blocktrans with count=item.total %}{{ count }} rating{{ count|pluralize }}{% endblocktrans %}
-            </a>
-            {% else %}
-            <span class="text-muted small">{% trans 'No ratings yet' %}</span>
-            {% endif %}
-        </div>
-
-        {% if item.food_item.description %}
-        <p class="text-muted small mb-1">{{ item.food_item.description }}</p>
-        {% endif %}
-
-        {% if item.user_rating %}
-        <p class="text-muted small mb-0">
-            {% trans 'You rated this:' %}
-            {{ item.user_rating.submission.acceptance|star_display }}
-            <a href="{% url 'food_overview' %}" class="text-decoration-none">{% trans 'change' %}</a>
-        </p>
-        {% endif %}
-    </div>
+    {% include "ants/antspecies_detail/antspecies_detail_food_ratings_item.html" with food_item=item.food_item species=item.species up_count=item.up_count down_count=item.down_count user_vote=item.user_vote %}
     {% endfor %}
     {% endfor %}
     {% endif %}

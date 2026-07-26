@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 from flights.models import Flight
 
-from .forms import FoodItemCreateForm, FoodRatingImageForm, NuptialFlightReportForm
-from .models import AntRegion, AntSize, AntSpecies, FoodItem, FoodRatingSubmission, Genus, RatingPhoto, SpeciesDifficultyRating, SpeciesFoodRating, SubFamily, Tribe
+from .forms import FoodItemCreateForm, NuptialFlightReportForm
+from .models import AntRegion, AntSize, AntSpecies, FoodItem, Genus, SpeciesDifficultyRating, SpeciesFoodRating, SubFamily, Tribe
 from .utils.export import export_csv_response, export_json_response
 
 _MONTH_NAMES_SHORT = [
@@ -798,38 +798,36 @@ def _build_difficulty_context(ratings):
     }
 
 
-def _build_food_context(species, user):
-    """Return food acceptance rating data grouped by category for template context."""
-    food_items = list(FoodItem.objects.all())
-    ratings_qs = species.food_ratings.select_related("food_item", "submission").all()
+def _build_food_acceptance_item_context(species, food_item, user):
+    """Vote tallies + this user's own vote for one (species, food_item) pair."""
+    ratings = SpeciesFoodRating.objects.filter(species=species, food_item=food_item)
+    agg = ratings.aggregate(
+        up_count=Count("id", filter=Q(vote=SpeciesFoodRating.UP)),
+        down_count=Count("id", filter=Q(vote=SpeciesFoodRating.DOWN)),
+    )
+    user_vote = ratings.filter(user=user).first() if user.is_authenticated else None
+    return {
+        "food_item": food_item,
+        "species": species,
+        "up_count": agg["up_count"] or 0,
+        "down_count": agg["down_count"] or 0,
+        "user_vote": user_vote,
+    }
 
-    ratings_by_food = {}
-    user_rating_by_food = {}
-    for rating in ratings_qs:
-        fid = rating.food_item_id
-        ratings_by_food.setdefault(fid, []).append(rating)
-        if user.is_authenticated and rating.user_id == user.pk:
-            user_rating_by_food[fid] = rating
+
+def _build_food_context(species, user):
+    """Return food acceptance vote data grouped by category for template context."""
+    food_items = list(FoodItem.objects.all())
 
     categories = {}
     for food_item in food_items:
-        item_ratings = ratings_by_food.get(food_item.pk, [])
-        total = len(item_ratings)
-        avg = round(sum(r.submission.acceptance for r in item_ratings) / total, 1) if total > 0 else None
-
+        item_ctx = _build_food_acceptance_item_context(species, food_item, user)
         cat = food_item.category
-        if cat not in categories:
-            categories[cat] = {
-                "category_key": cat,
-                "category_label": dict(FoodItem.CATEGORY_CHOICES)[cat],
-                "items": [],
-            }
-        categories[cat]["items"].append({
-            "food_item": food_item,
-            "total": total,
-            "avg": avg,
-            "user_rating": user_rating_by_food.get(food_item.pk),
-        })
+        categories.setdefault(cat, {
+            "category_key": cat,
+            "category_label": dict(FoodItem.CATEGORY_CHOICES)[cat],
+            "items": [],
+        })["items"].append(item_ctx)
 
     ordered_keys = [key for key, _ in FoodItem.CATEGORY_CHOICES]
     food_by_category = [categories[k] for k in ordered_keys if k in categories]
@@ -839,318 +837,165 @@ def _build_food_context(species, user):
 _FOOD_OVERVIEW_TOP_N = 10
 
 
-def _build_food_overview_item_context(food_item):
+def _build_food_overview_item_context(food_item, user):
     ratings_qs = (
         SpeciesFoodRating.objects
         .filter(food_item=food_item)
         .values("species_id", "species__name", "species__slug")
-        .annotate(species_avg=Avg("submission__acceptance"), rating_count=Count("id"))
-        .order_by("-species_avg", "-rating_count")
+        .annotate(
+            net_score=Sum("vote"),
+            up_count=Count("id", filter=Q(vote=SpeciesFoodRating.UP)),
+            down_count=Count("id", filter=Q(vote=SpeciesFoodRating.DOWN)),
+        )
+        .order_by("-net_score", "-up_count")
     )
     all_species = list(ratings_qs)
-    agg = food_item.species_ratings.aggregate(avg=Avg("submission__acceptance"), total=Count("id"))
-    overall_avg = round(float(agg["avg"]), 1) if agg["avg"] is not None else None
+
+    user_votes = {}
+    if user.is_authenticated:
+        user_votes = dict(
+            SpeciesFoodRating.objects.filter(food_item=food_item, user=user)
+            .values_list("species_id", "vote")
+        )
+    for row in all_species:
+        row["user_vote"] = user_votes.get(row["species_id"])
+
+    agg = food_item.species_ratings.aggregate(net=Sum("vote"), total=Count("id"))
     return {
         "food_item": food_item,
         "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
         "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
         "total_species": len(all_species),
         "total_ratings": agg["total"],
-        "overall_avg": overall_avg,
+        "overall_net_score": agg["net"] or 0,
     }
 
 
-def _parse_species_list(request, max_species):
-    """Parse and validate the `species_id` list from POST data.
+def _toggle_food_vote(species, food_item, user, vote_value):
+    """Upsert or remove the (species, food_item, user) vote.
 
-    Returns (species_list, error_response). On success error_response is None;
-    on failure species_list is None and error_response is the response to return.
+    Clicking the direction the user already has active removes the vote
+    (un-vote); clicking the other direction switches it; no existing vote
+    creates one.
     """
-    raw_species_ids = request.POST.getlist("species_id")
-    if not raw_species_ids:
-        return None, HttpResponse(status=400)
-    try:
-        species_ids = {int(v) for v in raw_species_ids}
-    except (ValueError, TypeError):
-        return None, HttpResponse(status=400)
-    if len(species_ids) > max_species:
-        return None, HttpResponse(status=400)
-    species_list = list(AntSpecies.objects.filter(pk__in=species_ids))
-    if len(species_list) != len(species_ids):
-        return None, HttpResponse(status=400)
-    return species_list, None
-
-
-def _parse_acceptance_and_condition(request, food_item):
-    """Parse and validate `acceptance`/`condition` from POST data for a food item.
-
-    Returns (acceptance, condition, error_response).
-    """
-    try:
-        acceptance = int(request.POST.get("acceptance", ""))
-    except (ValueError, TypeError):
-        return None, None, HttpResponse(status=400)
-    valid_levels = [level for level, _ in FoodRatingSubmission.STAR_CHOICES]
-    if acceptance not in valid_levels:
-        return None, None, HttpResponse(status=400)
-    required_conditions = FoodRatingSubmission.conditions_for_category(food_item.category)
-    condition = request.POST.get("condition", "").strip() or None
-    if required_conditions and condition not in required_conditions:
-        return None, None, HttpResponse(status=400)
-    condition = condition if required_conditions else None
-    return acceptance, condition, None
-
-
-def _parse_uploaded_images(request, max_count):
-    """Validate uploaded `images` files. Returns (cleaned_images, error_response)."""
-    uploads = request.FILES.getlist("images")
-    if len(uploads) > max_count:
-        return None, HttpResponse(status=400)
-    cleaned_images = []
-    for upload in uploads:
-        image_form = FoodRatingImageForm(files={"image": upload})
-        if not image_form.is_valid():
-            return None, HttpResponse(status=400)
-        cleaned_images.append(image_form.cleaned_data["image"])
-    return cleaned_images, None
-
-
-def _reassign_species_to_submission(species_list, food_item, user, submission):
-    """Ensure each species' SpeciesFoodRating link points at `submission`.
-
-    Returns the set of submission ids that lost a link and may now be orphaned.
-    """
-    orphan_candidates = set()
-    for species in species_list:
-        link, created = SpeciesFoodRating.objects.get_or_create(
-            species=species,
-            food_item=food_item,
-            user=user,
-            defaults={"submission": submission},
+    existing = SpeciesFoodRating.objects.filter(
+        species=species, food_item=food_item, user=user
+    ).first()
+    if existing is None:
+        SpeciesFoodRating.objects.create(
+            species=species, food_item=food_item, user=user, vote=vote_value
         )
-        if not created and link.submission_id != submission.pk:
-            orphan_candidates.add(link.submission_id)
-            link.submission = submission
-            link.save(update_fields=["submission", "updated_at"])
-    return orphan_candidates
+    elif existing.vote == vote_value:
+        existing.delete()
+    else:
+        existing.vote = vote_value
+        existing.save(update_fields=["vote", "updated_at"])
 
 
-def _delete_orphaned_submissions(orphan_candidates):
-    """Delete any FoodRatingSubmissions in `orphan_candidates` no longer referenced
-    by a SpeciesFoodRating (cascades to their RatingPhotos)."""
-    if not orphan_candidates:
-        return
-    still_referenced = set(
-        SpeciesFoodRating.objects
-        .filter(submission_id__in=orphan_candidates)
-        .values_list("submission_id", flat=True)
-    )
-    FoodRatingSubmission.objects.filter(
-        pk__in=orphan_candidates - still_referenced
-    ).delete()
+def _parse_vote(request):
+    """Parse and validate `vote` from POST data. Returns (vote_value, error_response)."""
+    try:
+        vote_value = int(request.POST.get("vote", ""))
+    except (ValueError, TypeError):
+        return None, HttpResponse(status=400)
+    if vote_value not in (SpeciesFoodRating.UP, SpeciesFoodRating.DOWN):
+        return None, HttpResponse(status=400)
+    return vote_value, None
 
 
-class SubmitFoodRatingFromOverviewView(LoginRequiredMixin, View):
-    MAX_SPECIES_PER_SUBMISSION = 25
-    MAX_PHOTOS_PER_SUBMISSION = 6
+class SubmitFoodOverviewVoteView(LoginRequiredMixin, View):
+    """Toggle a vote for one (food_item, species) pair from the food-overview page."""
 
     def post(self, request):
         try:
             food_item = FoodItem.objects.get(pk=int(request.POST.get("food_item_id", "")))
-        except (ValueError, TypeError, FoodItem.DoesNotExist):
+            species = AntSpecies.objects.get(pk=int(request.POST.get("species_id", "")))
+        except (ValueError, TypeError, FoodItem.DoesNotExist, AntSpecies.DoesNotExist):
             return HttpResponse(status=400)
 
-        species_list, error = _parse_species_list(request, self.MAX_SPECIES_PER_SUBMISSION)
+        vote_value, error = _parse_vote(request)
         if error:
             return error
 
-        duplicate_ratings = list(
-            SpeciesFoodRating.objects
-            .filter(species__in=species_list, food_item=food_item, user=request.user)
-            .select_related("species")
-        )
-        if duplicate_ratings:
-            context = _build_food_overview_item_context(food_item)
-            context["duplicate_ratings"] = duplicate_ratings
-            return render(request, "ants/food_overview_species_list.html", context)
-
-        acceptance, condition, error = _parse_acceptance_and_condition(request, food_item)
-        if error:
-            return error
-
-        cleaned_images, error = _parse_uploaded_images(request, self.MAX_PHOTOS_PER_SUBMISSION)
-        if error:
-            return error
-
-        comment = request.POST.get("comment", "").strip()[:500]
-
-        with transaction.atomic():
-            submission = FoodRatingSubmission.objects.create(
-                food_item=food_item,
-                user=request.user,
-                acceptance=acceptance,
-                condition=condition,
-                comment=comment,
-            )
-            for idx, image in enumerate(cleaned_images):
-                RatingPhoto.objects.create(submission=submission, image=image, ordering=idx)
-
-            orphan_candidates = _reassign_species_to_submission(
-                species_list, food_item, request.user, submission
-            )
-            _delete_orphaned_submissions(orphan_candidates)
+        _toggle_food_vote(species, food_item, request.user, vote_value)
 
         return render(
             request,
             "ants/food_overview_species_list.html",
-            _build_food_overview_item_context(food_item),
+            _build_food_overview_item_context(food_item, request.user),
         )
 
 
-def _build_food_rating_edit_context(submission):
-    food_item = submission.food_item
-    return {
-        "submission": submission,
-        "food_item": food_item,
-        "current_species": [
-            link.species for link in
-            submission.species_food_ratings.select_related("species").all()
-        ],
-        "required_conditions": FoodRatingSubmission.conditions_for_category(food_item.category),
-        "existing_photos": submission.photos.all(),
-    }
+class SubmitSpeciesFoodVoteView(LoginRequiredMixin, View):
+    """Toggle a vote for one food item from the species-detail page (species implicit)."""
 
+    def post(self, request, slug, food_item_id):
+        species = get_object_or_404(AntSpecies, slug=slug)
+        food_item = get_object_or_404(FoodItem, pk=food_item_id)
 
-class FoodRatingSubmissionEditView(LoginRequiredMixin, View):
-    """Let the owner of a FoodRatingSubmission edit it in place (species list,
-    acceptance, condition, comment, photos)."""
+        vote_value, error = _parse_vote(request)
+        if error:
+            return error
 
-    MAX_SPECIES_PER_SUBMISSION = SubmitFoodRatingFromOverviewView.MAX_SPECIES_PER_SUBMISSION
-    MAX_PHOTOS_PER_SUBMISSION = SubmitFoodRatingFromOverviewView.MAX_PHOTOS_PER_SUBMISSION
+        _toggle_food_vote(species, food_item, request.user, vote_value)
 
-    def _get_owned_submission_or_none(self, request, pk):
-        submission = get_object_or_404(FoodRatingSubmission, pk=pk)
-        if submission.user_id != request.user.id:
-            return None
-        return submission
-
-    def get(self, request, pk):
-        submission = self._get_owned_submission_or_none(request, pk)
-        if submission is None:
-            return HttpResponseForbidden()
         return render(
             request,
-            "ants/food_rating_edit_form.html",
-            _build_food_rating_edit_context(submission),
+            "ants/antspecies_detail/antspecies_detail_food_ratings_item.html",
+            _build_food_acceptance_item_context(species, food_item, request.user),
         )
 
-    def post(self, request, pk):
-        submission = self._get_owned_submission_or_none(request, pk)
-        if submission is None:
-            return HttpResponseForbidden()
-        food_item = submission.food_item
 
-        species_list, error = _parse_species_list(request, self.MAX_SPECIES_PER_SUBMISSION)
-        if error:
-            return error
-
-        acceptance, condition, error = _parse_acceptance_and_condition(request, food_item)
-        if error:
-            return error
-
-        existing_photo_ids = set(submission.photos.values_list("pk", flat=True))
-        try:
-            remove_ids = {int(v) for v in request.POST.getlist("remove_photo_id")}
-        except (ValueError, TypeError):
-            return HttpResponse(status=400)
-        if not remove_ids.issubset(existing_photo_ids):
-            return HttpResponse(status=400)
-
-        cleaned_images, error = _parse_uploaded_images(request, self.MAX_PHOTOS_PER_SUBMISSION)
-        if error:
-            return error
-
-        remaining_existing = len(existing_photo_ids) - len(remove_ids)
-        if remaining_existing + len(cleaned_images) > self.MAX_PHOTOS_PER_SUBMISSION:
-            return HttpResponse(status=400)
-
-        comment = request.POST.get("comment", "").strip()[:500]
-
-        with transaction.atomic():
-            submission.acceptance = acceptance
-            submission.condition = condition
-            submission.comment = comment
-            submission.save(update_fields=["acceptance", "condition", "comment", "updated_at"])
-
-            if remove_ids:
-                RatingPhoto.objects.filter(submission=submission, pk__in=remove_ids).delete()
-            if cleaned_images:
-                next_ordering = RatingPhoto.objects.filter(submission=submission).aggregate(
-                    Max("ordering")
-                )["ordering__max"]
-                next_ordering = 0 if next_ordering is None else next_ordering + 1
-                for offset, image in enumerate(cleaned_images):
-                    RatingPhoto.objects.create(
-                        submission=submission, image=image, ordering=next_ordering + offset
-                    )
-
-            current_species_ids = set(
-                submission.species_food_ratings.values_list("species_id", flat=True)
-            )
-            new_species_ids = {s.pk for s in species_list}
-            removed_species_ids = current_species_ids - new_species_ids
-            if removed_species_ids:
-                SpeciesFoodRating.objects.filter(
-                    submission=submission, species_id__in=removed_species_ids
-                ).delete()
-
-            orphan_candidates = _reassign_species_to_submission(
-                species_list, food_item, request.user, submission
-            )
-            _delete_orphaned_submissions(orphan_candidates)
-
-        response = HttpResponse("")
-        response["HX-Trigger"] = "foodRatingEditSuccess"
-        return response
-
-
-def _build_food_overview_list_context(selected_category):
+def _build_food_overview_list_context(selected_category, user):
     """Return food_data for one category, grouped by food item, for the overview list partial."""
     food_items = FoodItem.objects.filter(category=selected_category)
 
-    # Per (food_item, species): avg acceptance and rating count
+    # Per (food_item, species): net score and up/down counts
     species_qs = (
         SpeciesFoodRating.objects
         .filter(food_item__category=selected_category)
         .values("food_item_id", "species_id", "species__name", "species__slug")
-        .annotate(species_avg=Avg("submission__acceptance"), rating_count=Count("id"))
-        .order_by("food_item_id", "-species_avg")
+        .annotate(
+            net_score=Sum("vote"),
+            up_count=Count("id", filter=Q(vote=SpeciesFoodRating.UP)),
+            down_count=Count("id", filter=Q(vote=SpeciesFoodRating.DOWN)),
+        )
+        .order_by("food_item_id", "-net_score", "-up_count")
     )
-    # Per food_item: overall avg and total count
+    # Per food_item: overall net score and total count
     overall_qs = (
         SpeciesFoodRating.objects
         .filter(food_item__category=selected_category)
         .values("food_item_id")
-        .annotate(overall_avg=Avg("submission__acceptance"), total_ratings=Count("id"))
+        .annotate(overall_net=Sum("vote"), total_ratings=Count("id"))
     )
     overall_by_food = {r["food_item_id"]: r for r in overall_qs}
 
+    user_votes = {}
+    if user.is_authenticated:
+        user_votes = {
+            (r["food_item_id"], r["species_id"]): r["vote"]
+            for r in SpeciesFoodRating.objects.filter(
+                food_item__category=selected_category, user=user
+            ).values("food_item_id", "species_id", "vote")
+        }
+
     ratings_by_food = {}
     for row in species_qs:
+        row["user_vote"] = user_votes.get((row["food_item_id"], row["species_id"]))
         ratings_by_food.setdefault(row["food_item_id"], []).append(row)
 
     food_data = []
     for food_item in food_items:
         all_species = ratings_by_food.get(food_item.pk, [])
         ov = overall_by_food.get(food_item.pk, {})
-        ov_avg = ov.get("overall_avg")
         food_data.append({
             "food_item": food_item,
             "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
             "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
             "total_species": len(all_species),
             "total_ratings": ov.get("total_ratings", 0),
-            "overall_avg": round(float(ov_avg), 1) if ov_avg is not None else None,
+            "overall_net_score": ov.get("overall_net", 0) or 0,
         })
 
     return {"food_data": food_data}
@@ -1170,7 +1015,7 @@ class FoodOverviewView(TemplateView):
         context["categories"] = FoodItem.CATEGORY_CHOICES
         context["selected_category"] = selected
         context["selected_category_label"] = dict(FoodItem.CATEGORY_CHOICES)[selected]
-        context.update(_build_food_overview_list_context(selected))
+        context.update(_build_food_overview_list_context(selected, self.request.user))
         return context
 
 
@@ -1258,7 +1103,7 @@ class FoodOverviewCreateItemView(LoginRequiredMixin, View):
 
         list_html = render_to_string(
             "ants/food_overview_list.html",
-            _build_food_overview_list_context(category),
+            _build_food_overview_list_context(category, request.user),
             request=request,
         )
         return HttpResponse(list_html)
@@ -1270,8 +1115,7 @@ def _build_food_item_species_ratings_context(food_item_id, species_slug):
     ratings = (
         SpeciesFoodRating.objects
         .filter(food_item=food_item, species=species)
-        .select_related("user", "submission")
-        .prefetch_related("submission__photos")
+        .select_related("user")
         .order_by("-created_at")
     )
     return {"food_item": food_item, "species": species, "ratings": ratings}
@@ -1293,7 +1137,7 @@ class FoodItemSpeciesRatingsView(TemplateView):
 
 @method_decorator(never_cache, name="dispatch")
 class FoodItemSpeciesRatingsListView(TemplateView):
-    """HTMX fragment: just the ratings list, refreshed after a foodRatingEditSuccess event."""
+    """HTMX fragment: just the vote-tally list for one food item / species pair."""
 
     template_name = "ants/food_item_species_ratings_list.html"
 

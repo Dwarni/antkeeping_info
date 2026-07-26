@@ -1,0 +1,48 @@
+{% load i18n thumbnail %}
+<div class="food-item mb-3" id="food-acceptance-item-{{ food_item.pk }}">
+    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+        {% if food_item.image %}
+        {% thumbnail food_item.image "32x32" crop="center" as im %}
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+             class="rounded flex-shrink-0" alt="{{ food_item.name }}">
+        {% endthumbnail %}
+        {% else %}
+        <span class="rounded bg-light text-muted d-inline-flex align-items-center justify-content-center flex-shrink-0"
+              style="width: 32px; height: 32px; font-size: 0.875rem;">
+          <i class="bi bi-bug-fill"></i>
+        </span>
+        {% endif %}
+        <span class="food-item-name">{{ food_item.name }}</span>
+        {% if up_count or down_count %}
+        <a href="{% url 'food_item_species_ratings' food_item.pk species.slug %}"
+           class="text-muted small text-decoration-none">
+            <i class="bi bi-hand-thumbs-up-fill text-success"></i> {{ up_count }}
+            <i class="bi bi-hand-thumbs-down-fill text-danger ms-1"></i> {{ down_count }}
+        </a>
+        {% else %}
+        <span class="text-muted small">{% trans 'No votes yet' %}</span>
+        {% endif %}
+    </div>
+
+    {% if food_item.description %}
+    <p class="text-muted small mb-1">{{ food_item.description }}</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <form hx-post="{% url 'vote_food' species.slug food_item.pk %}"
+          hx-target="#food-acceptance-item-{{ food_item.pk }}" hx-swap="outerHTML"
+          class="d-inline-flex gap-1">
+        {% csrf_token %}
+        <button type="submit" name="vote" value="1"
+                class="btn btn-sm {% if user_vote.vote == 1 %}btn-success{% else %}btn-outline-success{% endif %}"
+                aria-label="{% trans 'Accepts it' %}">
+            <i class="bi bi-hand-thumbs-up{% if user_vote.vote == 1 %}-fill{% endif %}"></i>
+        </button>
+        <button type="submit" name="vote" value="-1"
+                class="btn btn-sm {% if user_vote.vote == -1 %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                aria-label="{% trans "Doesn't accept it" %}">
+            <i class="bi bi-hand-thumbs-down{% if user_vote.vote == -1 %}-fill{% endif %}"></i>
+        </button>
+    </form>
+    {% endif %}
+</div>

@@ -20,10 +20,8 @@ SOCIAL_PROVIDERS = [
 
 def _build_profile_food_ratings_context(user):
     return {
-        "food_rating_submissions": (
-            user.food_rating_submissions
-            .prefetch_related("species_food_ratings__species", "photos")
-            .order_by("-updated_at")
+        "food_ratings": (
+            user.food_ratings.select_related("species", "food_item").order_by("-updated_at")
         ),
     }
 
@@ -63,7 +61,7 @@ class UserProfileView(LoginRequiredMixin, TemplateView):
 
 @method_decorator(never_cache, name="dispatch")
 class UserProfileFoodRatingsView(LoginRequiredMixin, TemplateView):
-    """HTMX fragment: just the 'Your food ratings' list, refreshed after an edit."""
+    """HTMX fragment: just the 'Your food ratings' list."""
 
     template_name = "users/profile_food_ratings_list.html"
 

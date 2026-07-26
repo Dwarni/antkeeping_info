@@ -64,22 +64,11 @@
         {% endif %}
 
         <h5 class="mb-3">{% trans "Your food ratings" %}</h5>
-        <div id="my-food-ratings-list"
-             hx-get="{% url 'user_profile_food_ratings' %}"
-             hx-trigger="foodRatingEditSuccess from:body"
-             hx-target="this" hx-swap="outerHTML">
-          {% include "users/profile_food_ratings_list.html" %}
-        </div>
+        {% include "users/profile_food_ratings_list.html" %}
     </div>
 </div>
 
-{% include "ants/food_rating_edit_modal.html" %}
 {% endblock %}
 {% block css %}
 <link rel="stylesheet" href="{% static 'ants/css/food_overview.css' %}">
-{% endblock %}
-{% block script %}
-<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
-<script src="{% static 'ants/js/species_rating_chips.js' %}"></script>
-<script src="{% static 'ants/js/food_rating_edit_modal.js' %}"></script>
 {% endblock %}
