@@ -1,0 +1,34 @@
+{% load i18n %}
+{# Modal image viewer for journal photo thumbnails. Triggered by clicking any element #}
+{# with class "journal-photo-thumb" (see journal_image_lightbox.js). Include once per page. #}
+<div class="modal fade" id="journal-image-lightbox" tabindex="-1"
+     aria-labelledby="journal-image-lightbox-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-0 py-2">
+                <a id="journal-image-lightbox-original" href="#" target="_blank" rel="noopener"
+                   class="btn btn-sm btn-outline-light" title="{% trans 'Open original image' %}"
+                   aria-label="{% trans 'Open original image' %}">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"
+                        aria-label="{% trans 'Close' %}"></button>
+            </div>
+            <div class="modal-body d-flex align-items-center justify-content-center position-relative p-0">
+                <button type="button" id="journal-image-lightbox-prev"
+                        class="btn btn-light journal-lightbox-nav journal-lightbox-nav-prev"
+                        aria-label="{% trans 'Previous image' %}">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <img id="journal-image-lightbox-img" src="" class="img-fluid" alt="">
+                <button type="button" id="journal-image-lightbox-next"
+                        class="btn btn-light journal-lightbox-nav journal-lightbox-nav-next"
+                        aria-label="{% trans 'Next image' %}">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+            <div class="modal-footer border-0 justify-content-center py-2 text-light-emphasis small"
+                 id="journal-image-lightbox-caption"></div>
+        </div>
+    </div>
+</div>

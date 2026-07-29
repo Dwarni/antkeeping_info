@@ -3,6 +3,9 @@
 {% block title %}Community Journal | Antkeeping.info{% endblock %}
 {% block og_title %}Community Journal — Antkeeping.info{% endblock %}
 {% block og_description %}Browse journal entries from ant colonies kept by the community — filter by species, genus, or keeper.{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/journal_image_lightbox.css' %}">
+{% endblock %}
 {% block content %}
 <h1 class="h3 mb-1">Community Journal</h1>
 <p class="text-muted mb-4">Recent updates from public colonies kept by the community.</p>
@@ -73,9 +76,11 @@
         </div>
     </div>
 </div>
+{% include "ants/snippets/journal_image_lightbox.html" %}
 {% endblock %}
 {% block script %}
 <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script src="{% static 'ants/js/journal_image_lightbox.js' %}"></script>
 <script>
 (function () {
     var form = document.getElementById('filter-form');

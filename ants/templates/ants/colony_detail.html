@@ -3,6 +3,7 @@
 {% block title %}{{ colony.name }} — Antkeeping.info{% endblock %}
 {% block css %}
 <link rel="stylesheet" href="{% static 'ants/css/colony_journal_photos.css' %}">
+<link rel="stylesheet" href="{% static 'ants/css/journal_image_lightbox.css' %}">
 {% endblock %}
 {% block content %}
 <div class="row justify-content-center mt-4">
@@ -148,7 +149,8 @@
                 <div class="d-flex flex-wrap gap-2">
                     {% for img in entry.images.all %}
                     {% thumbnail img.image_file "120x120" crop="center" as im %}
-                    <a href="{{ img.image_file.url }}" target="_blank" rel="noopener">
+                    <a href="#" class="journal-photo-thumb" data-gallery="colony-entry-{{ entry.pk }}"
+                       data-full-src="{{ img.image_file.url }}" data-caption="{{ img.caption }}">
                         <img class="rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
                     </a>
                     {% endthumbnail %}
@@ -225,7 +227,9 @@
 
     </div>
 </div>
+{% include "ants/snippets/journal_image_lightbox.html" %}
 {% endblock %}
 {% block script %}
 <script src="{% static 'ants/js/colony_journal_photos.js' %}"></script>
+<script src="{% static 'ants/js/journal_image_lightbox.js' %}"></script>
 {% endblock %}

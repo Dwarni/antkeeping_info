@@ -24,7 +24,8 @@
         <div class="d-flex flex-wrap gap-2 mt-2">
             {% for img in entry.images.all|slice:":4" %}
             {% thumbnail img.image_file "100x100" crop="center" as im %}
-            <a href="{{ entry.colony.get_absolute_url }}#entry-{{ entry.pk }}">
+            <a href="#" class="journal-photo-thumb" data-gallery="community-entry-{{ entry.pk }}"
+               data-full-src="{{ img.image_file.url }}" data-caption="{{ img.caption }}">
                 <img class="rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
             </a>
             {% endthumbnail %}

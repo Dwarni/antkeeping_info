@@ -1,0 +1,27 @@
+#journal-image-lightbox .modal-body {
+    min-height: 200px;
+}
+
+#journal-image-lightbox-img {
+    max-height: 80vh;
+}
+
+#journal-image-lightbox .journal-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    opacity: 0.85;
+}
+
+#journal-image-lightbox .journal-lightbox-nav-prev {
+    left: 0.5rem;
+}
+
+#journal-image-lightbox .journal-lightbox-nav-next {
+    right: 0.5rem;
+}
+
+.journal-photo-thumb {
+    cursor: pointer;
+}
