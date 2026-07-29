@@ -1,0 +1,231 @@
+{% extends "layout.html" %}
+{% load static thumbnail %}
+{% block title %}{{ colony.name }} — Antkeeping.info{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/colony_journal_photos.css' %}">
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+
+        {% if is_owner and not colony.is_public %}
+        <div class="alert alert-secondary py-2 small">This colony is private — only you can see this page.</div>
+        {% elif is_owner and colony.is_public and not colony.is_visible_publicly %}
+        <div class="alert alert-warning py-2 small">
+            This colony has been hidden from public view by site staff, even though "Public" is still checked below.
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h2 class="mb-1">{{ colony.name }}</h2>
+                <p class="text-muted mb-0">
+                    <a href="{% url 'ant_detail' colony.species.slug %}"><em>{{ colony.species.name }}</em></a>
+                </p>
+            </div>
+            {% if is_owner %}
+            <div class="d-flex gap-2">
+                <a href="{% url 'colony_edit' colony.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                <form method="post" action="{% url 'colony_delete' colony.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Delete this colony? This cannot be undone.')">
+                        Delete
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if colony.title_image %}
+        <figure class="figure mb-3">
+            {% thumbnail colony.title_image.image_file "768x768" crop="center" as im %}
+            <img class="figure-img img-fluid rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ colony.name }}">
+            {% endthumbnail %}
+        </figure>
+        {% endif %}
+
+        <ul class="list-group mb-4">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>Status</span>
+                <span class="badge {% if colony.status == 'ACTIVE' %}text-bg-success{% elif colony.status == 'DEAD' %}text-bg-secondary{% else %}text-bg-info{% endif %}">
+                    {{ colony.get_status_display }}
+                </span>
+            </li>
+            {% if colony.found_location %}
+                {% if colony.share_found_location or is_owner %}
+                <li class="list-group-item">
+                    <span class="fw-semibold">Found location:</span> {{ colony.found_location }}
+                    {% if is_owner and not colony.share_found_location %}
+                    <span class="badge text-bg-secondary ms-1">Not shown publicly</span>
+                    {% endif %}
+                </li>
+                {% endif %}
+            {% endif %}
+            {% if colony.found_date %}
+            <li class="list-group-item"><span class="fw-semibold">Found:</span> {{ colony.found_date_display }}</li>
+            {% endif %}
+            {% if is_owner %}
+                {% if colony.origin_type %}
+                <li class="list-group-item"><span class="fw-semibold">Origin:</span> {{ colony.get_origin_type_display }}</li>
+                {% endif %}
+                {% if colony.purchase_date %}
+                <li class="list-group-item"><span class="fw-semibold">Purchase date:</span> {{ colony.purchase_date_display }}</li>
+                {% endif %}
+                {% if colony.purchase_shop %}
+                <li class="list-group-item"><span class="fw-semibold">Purchased from:</span> {{ colony.purchase_shop }}</li>
+                {% endif %}
+            {% endif %}
+        </ul>
+
+        {% if is_owner %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Owner settings</h2>
+
+                <form method="post" action="{% url 'colony_status_update' colony.pk %}" class="row gy-2 gx-2 align-items-center mb-3">
+                    {% csrf_token %}
+                    <div class="col-auto">
+                        <select name="status" class="form-select form-select-sm" aria-label="Colony status">
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}"{% if value == colony.status %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">Update status</button>
+                    </div>
+                </form>
+
+                <form method="post" action="{% url 'colony_visibility_update' colony.pk %}">
+                    {% csrf_token %}
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="colony-keep-private" name="keep_private"{% if not colony.is_public %} checked{% endif %}>
+                        <label class="form-check-label" for="colony-keep-private">Keep this colony private</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" id="colony-hide-location" name="hide_found_location"{% if not colony.share_found_location %} checked{% endif %}>
+                        <label class="form-check-label" for="colony-hide-location">Hide found location from the public page</label>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Save visibility</button>
+                </form>
+                {% if colony.is_public %}
+                <p class="form-text mb-0 mt-2">
+                    Public page: <a href="{{ colony.get_absolute_url }}">{{ colony.get_absolute_url }}</a>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <h2 class="h5 mb-3">Journal</h2>
+        {% if not journal_entries %}
+        <p class="text-muted small">No journal entries yet.</p>
+        {% endif %}
+        <ul class="list-group mb-4">
+            {% for entry in journal_entries %}
+            <li class="list-group-item" id="entry-{{ entry.pk }}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <span class="fw-semibold">{{ entry.date|date:"N j, Y" }}</span>
+                    {% if is_owner %}
+                    <div class="d-flex gap-2 ms-2">
+                        <button type="button" class="btn btn-sm btn-link p-0"
+                                data-bs-toggle="collapse" data-bs-target="#edit-entry-{{ entry.pk }}">
+                            Edit
+                        </button>
+                        <form method="post" action="{% url 'colony_journal_entry_delete' colony.pk entry.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0"
+                                    onclick="return confirm('Delete this journal entry?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                <p class="mb-2">{{ entry.note|linebreaksbr }}</p>
+                {% if entry.images.all %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% for img in entry.images.all %}
+                    {% thumbnail img.image_file "120x120" crop="center" as im %}
+                    <a href="{{ img.image_file.url }}" target="_blank" rel="noopener">
+                        <img class="rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
+                    </a>
+                    {% endthumbnail %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if is_owner %}
+                <div class="collapse mt-3" id="edit-entry-{{ entry.pk }}">
+                    <div class="card card-body">
+                        <form method="post" action="{% url 'colony_journal_entry_edit' colony.pk entry.pk %}"
+                              enctype="multipart/form-data" class="mb-3">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold" for="edit-date-{{ entry.pk }}">Date</label>
+                                <input type="date" class="form-control form-control-sm" id="edit-date-{{ entry.pk }}"
+                                       name="date" value="{{ entry.date|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold" for="edit-note-{{ entry.pk }}">Note</label>
+                                <textarea class="form-control form-control-sm" id="edit-note-{{ entry.pk }}"
+                                          name="note" rows="3" maxlength="2000" required>{{ entry.note }}</textarea>
+                            </div>
+
+                            {% if entry.images.all %}
+                            <div class="mb-2 journal-existing-photos">
+                                <label class="form-label small fw-semibold">Existing photos</label>
+                                <div class="d-flex flex-wrap gap-2 existing-photos-thumbs">
+                                    {% for img in entry.images.all %}
+                                    {% thumbnail img.image_file "80x80" crop="center" as im %}
+                                    <div class="photo-picker-thumb" draggable="true">
+                                        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
+                                        <button type="button" class="btn-close btn-close-white photo-picker-remove"
+                                                aria-label="Remove photo"></button>
+                                        <input type="hidden" name="existing_image" value="{{ img.pk }}">
+                                    </div>
+                                    {% endthumbnail %}
+                                    {% endfor %}
+                                </div>
+                                <p class="form-text mb-0">Drag to reorder, click × to remove. Applies when you hit Save.</p>
+                            </div>
+                            {% endif %}
+
+                            {% include "ants/snippets/journal_photo_picker.html" with photo_picker_label="Add more photos (optional)" %}
+                            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+
+        {% if is_owner %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Add journal entry</h2>
+                <form method="post" action="{% url 'colony_journal_entry_create' colony.pk %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold" for="journal-date">Date</label>
+                        <input type="date" class="form-control form-control-sm" id="journal-date" name="date" value="{% now 'Y-m-d' %}" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold" for="journal-note">Note</label>
+                        <textarea class="form-control form-control-sm" id="journal-note" name="note" rows="3" maxlength="2000" required></textarea>
+                    </div>
+                    {% include "ants/snippets/journal_photo_picker.html" %}
+                    <button type="submit" class="btn btn-sm btn-primary">Add entry</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script src="{% static 'ants/js/colony_journal_photos.js' %}"></script>
+{% endblock %}

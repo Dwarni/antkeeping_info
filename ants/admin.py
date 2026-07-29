@@ -9,15 +9,17 @@ from ants.models import (
     AntSpecies,
     AntSpeciesDistribution,
     AntSpeciesImage,
+    Colony,
+    ColonyJournalEntry,
     CommonName,
     Distribution,
     Family,
     FoodItem,
     Genus,
     InvalidName,
+    SpeciesDescription,
     SpeciesDifficultyRating,
     SpeciesFoodRating,
-    SpeciesDescription,
     SubFamily,
     Tribe,
 )
@@ -251,4 +253,31 @@ class SpeciesFoodRatingAdmin(admin.ModelAdmin):
     list_display = ("species", "food_item", "user", "vote", "updated_at")
     list_filter = ("vote", "food_item__category")
     search_fields = ("species__name", "food_item__name", "user__username")
+    readonly_fields = ("created_at", "updated_at")
+
+
+class ColonyJournalEntryInline(admin.StackedInline):
+    model = ColonyJournalEntry
+    extra = 0
+
+
+@admin.register(Colony)
+class ColonyAdmin(admin.ModelAdmin):
+    list_display = ("name", "species", "user", "status", "is_public", "force_private_by_staff", "created_at")
+    list_filter = ("status", "is_public", "force_private_by_staff", "origin_type")
+    search_fields = ("name", "species__name", "user__username")
+    readonly_fields = ("slug", "created_at", "updated_at", "status_changed_at")
+    inlines = [ColonyJournalEntryInline]
+    actions = ["force_private"]
+
+    @admin.action(description=_("Force selected colonies private (moderation)"))
+    def force_private(self, request, queryset):
+        updated = queryset.update(force_private_by_staff=True)
+        self.message_user(request, _("%(n)d colony/colonies hidden from public view.") % {"n": updated})
+
+
+@admin.register(ColonyJournalEntry)
+class ColonyJournalEntryAdmin(admin.ModelAdmin):
+    list_display = ("colony", "date", "created_at")
+    search_fields = ("colony__name", "note")
     readonly_fields = ("created_at", "updated_at")

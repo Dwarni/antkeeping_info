@@ -11,6 +11,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import MinValueValidator, RegexValidator, ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from sorl.thumbnail import ImageField
@@ -27,6 +28,7 @@ from ants.managers import (
     TaxonomicRankManager,
 )
 from ants.utils.images import downscale_to_max_dimension
+from ants.utils.partial_date import DATE_PRECISION_CHOICES, format_partial_date
 from regions.models import Region
 
 # Create your models here.
@@ -840,3 +842,187 @@ class SpeciesFoodRating(models.Model):
 
     def __str__(self):
         return f"{self.user} → {self.species} / {self.food_item} ({self.get_vote_display()})"
+
+
+class Colony(models.Model):
+    """An ant colony kept by a user."""
+
+    ACTIVE = "ACTIVE"
+    DEAD = "DEAD"
+    GIVEN_AWAY = "GIVEN_AWAY"
+    STATUS_CHOICES = [
+        (ACTIVE, _("Active")),
+        (DEAD, _("Dead")),
+        (GIVEN_AWAY, _("Given away")),
+    ]
+
+    SELF_COLLECTED = "SELF_COLLECTED"
+    PURCHASED = "PURCHASED"
+    GIFTED = "GIFTED"
+    ORIGIN_CHOICES = [
+        (SELF_COLLECTED, _("Self-collected")),
+        (PURCHASED, _("Purchased")),
+        (GIFTED, _("Gifted")),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="colonies"
+    )
+    # PROTECT (not CASCADE, unlike the rating models above): a colony is a
+    # personal record of what someone has kept, and must not silently
+    # disappear if a species entry is ever removed from the catalog.
+    species = models.ForeignKey(
+        AntSpecies, on_delete=models.PROTECT, related_name="colonies"
+    )
+    name = models.CharField(max_length=150)
+    # Unique per user only (see Meta), so this can't reuse
+    # TaxonomicRank.save()'s globally-unique slug generation.
+    slug = models.SlugField(max_length=170, editable=False)
+
+    origin_type = models.CharField(
+        "Origin", max_length=20, choices=ORIGIN_CHOICES, blank=True
+    )
+    found_location = models.CharField(max_length=255, blank=True)
+    # found_date/purchase_date may be known only to the year or month --
+    # the *_precision fields record how much of the stored date to trust
+    # (format_partial_date() uses this to render just "2023" or "June 2023").
+    found_date = models.DateField(blank=True, null=True)
+    found_date_precision = models.CharField(max_length=5, choices=DATE_PRECISION_CHOICES, blank=True)
+    purchase_date = models.DateField(blank=True, null=True)
+    purchase_date_precision = models.CharField(max_length=5, choices=DATE_PRECISION_CHOICES, blank=True)
+    purchase_shop = models.CharField(
+        "Purchase from", max_length=200, blank=True,
+        help_text="Shop or private keeper you got this colony from.",
+    )
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
+    status_changed_at = models.DateField(blank=True, null=True, editable=False)
+
+    # Colonies default to public, and a shared found_location, per product
+    # decision -- these fields let an owner opt back OUT to private on a
+    # per-colony (and per-found_location) basis, not opt in.
+    is_public = models.BooleanField(default=True, verbose_name=_("Public"))
+    share_found_location = models.BooleanField(
+        default=True, verbose_name=_("Show found location on the public page")
+    )
+    # Staff-only moderation override; never exposed on user-facing forms.
+    force_private_by_staff = models.BooleanField(default=False, editable=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("user", "name"), ("user", "slug")]
+        verbose_name = _("Colony")
+        verbose_name_plural = _("Colonies")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} ({self.species})"
+
+    def _generate_unique_slug(self):
+        base = slugify(self.name) or "colony"
+        slug = base
+        suffix = 2
+        while True:
+            qs = Colony.objects.filter(user_id=self.user_id, slug=slug)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if not qs.exists():
+                return slug
+            slug = f"{base}-{suffix}"
+            suffix += 1
+
+    def save(self, *args, **kwargs):
+        previous = None
+        if self.pk:
+            previous = Colony.objects.filter(pk=self.pk).values("name", "status").first()
+
+        if not self.slug or previous is None or previous["name"] != self.name:
+            self.slug = self._generate_unique_slug()
+
+        if previous is None or previous["status"] != self.status:
+            self.status_changed_at = timezone.now().date()
+
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("colony_detail", args=[self.user.username, self.slug])
+
+    @property
+    def is_visible_publicly(self):
+        return self.is_public and not self.force_private_by_staff
+
+    @property
+    def found_date_display(self):
+        return format_partial_date(self.found_date, self.found_date_precision)
+
+    @property
+    def purchase_date_display(self):
+        return format_partial_date(self.purchase_date, self.purchase_date_precision)
+
+
+class ColonyImage(models.Model):
+    """The title photo for a colony: the owner's own photo, one per colony.
+
+    Deliberately not a subclass of the abstract Image model above — those
+    source_url/source_caption fields exist for attributing third-party
+    media (see AntSpeciesImage), which doesn't apply to a user's own photo
+    of their own colony.
+    """
+
+    MAX_IMAGE_DIMENSION = 1920
+
+    colony = models.OneToOneField(Colony, on_delete=models.CASCADE, related_name="title_image")
+    image_file = ImageField("Image file", upload_to="colony_images")
+    caption = models.CharField(max_length=255, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.image_file and isinstance(self.image_file.file, UploadedFile):
+            downscale_to_max_dimension(self.image_file, self.MAX_IMAGE_DIMENSION)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Title image for {self.colony}"
+
+
+class ColonyJournalEntry(models.Model):
+    """A dated, free-text log entry for a colony."""
+
+    colony = models.ForeignKey(Colony, on_delete=models.CASCADE, related_name="journal_entries")
+    date = models.DateField()
+    note = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Colony journal entry")
+        verbose_name_plural = _("Colony journal entries")
+        ordering = ["-date", "-created_at"]
+
+    def __str__(self):
+        return f"{self.colony} — {self.date}"
+
+
+class ColonyJournalEntryImage(models.Model):
+    """One of possibly several photos attached to a journal entry."""
+
+    MAX_IMAGE_DIMENSION = 1920
+
+    journal_entry = models.ForeignKey(
+        ColonyJournalEntry, on_delete=models.CASCADE, related_name="images"
+    )
+    image_file = ImageField("Image file", upload_to="colony_journal_images")
+    caption = models.CharField(max_length=255, blank=True)
+    ordering = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["ordering", "id"]
+
+    def save(self, *args, **kwargs):
+        if self.image_file and isinstance(self.image_file.file, UploadedFile):
+            downscale_to_max_dimension(self.image_file, self.MAX_IMAGE_DIMENSION)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Image for {self.journal_entry}"

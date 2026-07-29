@@ -2,15 +2,14 @@
 Module for views of users app.
 """
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from allauth.socialaccount.models import SocialApp
+from allauth.socialaccount.views import ConnectionsView
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
-
-from allauth.socialaccount.models import SocialApp
-from allauth.socialaccount.views import ConnectionsView
 
 SOCIAL_PROVIDERS = [
     {"id": "discord", "name": "Discord", "icon": "bi-discord"},
@@ -56,6 +55,9 @@ class UserProfileView(LoginRequiredMixin, TemplateView):
             self.request.user.difficulty_ratings.select_related("species").order_by("-updated_at")
         )
         context.update(_build_profile_food_ratings_context(self.request.user))
+        context["colonies"] = (
+            self.request.user.colonies.select_related("species", "title_image").order_by("-created_at")
+        )
         return context
 
 

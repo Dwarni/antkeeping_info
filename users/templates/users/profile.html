@@ -1,10 +1,41 @@
 {% extends "layout.html" %}
-{% load i18n socialaccount static %}
+{% load i18n socialaccount static thumbnail %}
 {% block title %}Profile — Antkeeping.info{% endblock %}
 {% block content %}
 <div class="row justify-content-center mt-4">
     <div class="col-md-8">
         <h2 class="mb-4">{% trans "Profile" %}</h2>
+
+        <div id="your-colonies" class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">{% trans "Your colonies" %}</h5>
+            <a href="{% url 'colony_create' %}" class="btn btn-sm btn-primary">{% trans "Add a colony" %}</a>
+        </div>
+        {% if not colonies %}
+        <p class="text-muted small">{% trans "You haven't added any colonies yet." %}</p>
+        {% else %}
+        <ul class="list-group mb-4">
+            {% for colony in colonies %}
+            <li class="list-group-item d-flex align-items-center gap-3">
+                {% if colony.title_image %}
+                {% thumbnail colony.title_image.image_file "48x48" crop="center" as im %}
+                <img class="rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ colony.name }}">
+                {% endthumbnail %}
+                {% endif %}
+                <div class="flex-grow-1">
+                    <a href="{{ colony.get_absolute_url }}">{{ colony.name }}</a>
+                    &mdash; <em>{{ colony.species.name }}</em>
+                    <span class="badge {% if colony.status == 'ACTIVE' %}text-bg-success{% elif colony.status == 'DEAD' %}text-bg-secondary{% else %}text-bg-info{% endif %} ms-1">
+                        {{ colony.get_status_display }}
+                    </span>
+                    {% if colony.is_public %}
+                    <span class="badge text-bg-light border ms-1">{% trans "Public" %}</span>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
         <h5 class="mb-3">{% trans "Social accounts" %}</h5>
         <ul class="list-group mb-2">
             {% for provider in social_providers %}{% if provider.configured or provider.account %}

@@ -7,12 +7,26 @@ import json
 import logging
 
 from dal import autocomplete
+from django import forms
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Case, Count, ExpressionWrapper, F, FloatField, IntegerField, Max, Min, Q, Sum, When
-from django.http import HttpResponse, HttpResponseForbidden
+from django.db.models import (
+    Avg,
+    Count,
+    ExpressionWrapper,
+    F,
+    FloatField,
+    Max,
+    Min,
+    Q,
+    Sum,
+)
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -23,14 +37,32 @@ from django.views.decorators.cache import never_cache
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 logger = logging.getLogger(__name__)
 
 from flights.models import Flight
 
-from .forms import FoodItemCreateForm, NuptialFlightReportForm
-from .models import AntRegion, AntSize, AntSpecies, FoodItem, Genus, SpeciesDifficultyRating, SpeciesFoodRating, SubFamily, Tribe
+from .forms import (
+    ColonyForm,
+    ColonyJournalEntryForm,
+    FoodItemCreateForm,
+    NuptialFlightReportForm,
+)
+from .models import (
+    AntRegion,
+    AntSize,
+    AntSpecies,
+    Colony,
+    ColonyImage,
+    ColonyJournalEntry,
+    ColonyJournalEntryImage,
+    FoodItem,
+    Genus,
+    SpeciesDifficultyRating,
+    SpeciesFoodRating,
+    SubFamily,
+    Tribe,
+)
 from .utils.export import export_csv_response, export_json_response
 
 _MONTH_NAMES_SHORT = [
@@ -1423,4 +1455,344 @@ class SizeComparisonResultsView(View):
                 "total": total,
                 "max_results": self.MAX_RESULTS,
             },
+        )
+
+
+def _save_title_image(request, colony):
+    """Validate and attach an uploaded title photo to a colony, replacing any
+    existing one. Returns a ValidationError if the upload wasn't a usable
+    image, or None on success/no-op."""
+    uploaded = request.FILES.get("title_image")
+    if not uploaded:
+        return None
+    try:
+        forms.ImageField(required=False).clean(uploaded)
+    except ValidationError as exc:
+        return exc
+    ColonyImage.objects.update_or_create(colony=colony, defaults={"image_file": uploaded})
+    return None
+
+
+def _build_colony_detail_context(colony, request):
+    is_owner = request.user.is_authenticated and request.user == colony.user
+    context = {
+        "colony": colony,
+        "is_owner": is_owner,
+        "journal_entries": colony.journal_entries.prefetch_related("images"),
+        "status_choices": Colony.STATUS_CHOICES,
+    }
+    if is_owner:
+        context["journal_form"] = ColonyJournalEntryForm()
+    return context
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyCreateView(LoginRequiredMixin, FormView):
+    """Full-page form for creating a new colony."""
+
+    form_class = ColonyForm
+    template_name = "ants/colony_form.html"
+
+    MAX_CREATIONS_PER_WINDOW = 5
+    RATE_LIMIT_WINDOW = datetime.timedelta(hours=1)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_edit"] = False
+        context.setdefault("species_name", "")
+        return context
+
+    def form_invalid(self, form):
+        # Recover the display name so the search input stays populated on re-render
+        species_name = ""
+        raw_id = form.data.get("species")
+        if raw_id:
+            try:
+                species_name = AntSpecies.objects.get(pk=int(raw_id)).name
+            except (AntSpecies.DoesNotExist, ValueError, TypeError):
+                pass
+        return self.render_to_response(self.get_context_data(form=form, species_name=species_name))
+
+    def form_valid(self, form):
+        recent_count = Colony.objects.filter(
+            user=self.request.user,
+            created_at__gte=timezone.now() - self.RATE_LIMIT_WINDOW,
+        ).count()
+        if recent_count >= self.MAX_CREATIONS_PER_WINDOW:
+            form.add_error(
+                None,
+                "You've added several colonies recently. Please wait a bit before adding more.",
+            )
+            return self.form_invalid(form)
+
+        colony = form.save(commit=False)
+        colony.user = self.request.user
+        try:
+            with transaction.atomic():
+                colony.save()
+        except IntegrityError:
+            form.add_error("name", "You already have a colony with this name.")
+            return self.form_invalid(form)
+
+        image_error = _save_title_image(self.request, colony)
+        if image_error:
+            messages.warning(
+                self.request, f"Colony saved, but the photo could not be used: {image_error.messages[0]}"
+            )
+
+        return redirect(colony.get_absolute_url())
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyUpdateView(LoginRequiredMixin, FormView):
+    """Full-page form for editing an existing colony. Species is immutable once set."""
+
+    form_class = ColonyForm
+    template_name = "ants/colony_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.colony = get_object_or_404(Colony, user=request.user, pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["instance"] = self.colony
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_edit"] = True
+        context["colony"] = self.colony
+        context.setdefault("species_name", self.colony.species.name)
+        return context
+
+    def form_valid(self, form):
+        colony = form.save()
+        image_error = _save_title_image(self.request, colony)
+        if image_error:
+            messages.warning(
+                self.request, f"Colony saved, but the photo could not be used: {image_error.messages[0]}"
+            )
+        return redirect(colony.get_absolute_url())
+
+
+class ColonyDeleteView(LoginRequiredMixin, View):
+    """Permanently deletes a colony (with its journal entries and photos)."""
+
+    def post(self, request, pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        name = colony.name
+        colony.delete()
+        messages.success(request, f'"{name}" was deleted.')
+        return redirect("user_profile")
+
+
+class ColonyStatusUpdateView(LoginRequiredMixin, View):
+    """Changes a colony's status (Active / Dead / Given away)."""
+
+    def post(self, request, pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        valid_statuses = [key for key, _ in Colony.STATUS_CHOICES]
+        status = request.POST.get("status")
+        if status not in valid_statuses:
+            return HttpResponse(status=400)
+        colony.status = status
+        colony.save()
+        return redirect(colony.get_absolute_url())
+
+
+class ColonyVisibilityUpdateView(LoginRequiredMixin, View):
+    """Toggles a colony's public visibility and found-location sharing.
+
+    Colonies are public by default, so these checkboxes are an opt-OUT:
+    checking them makes the colony/location private, not public.
+    """
+
+    def post(self, request, pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        colony.is_public = "keep_private" not in request.POST
+        colony.share_found_location = "hide_found_location" not in request.POST
+        colony.save()
+        return redirect(colony.get_absolute_url())
+
+
+class ColonyJournalEntryCreateView(LoginRequiredMixin, View):
+    """Adds a journal entry (with optional photos) to one of the user's colonies."""
+
+    MAX_IMAGES_PER_ENTRY = 6
+
+    def post(self, request, pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        form = ColonyJournalEntryForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, "Please provide both a date and a note for the journal entry.")
+            return redirect(colony.get_absolute_url())
+
+        entry = form.save(commit=False)
+        entry.colony = colony
+        entry.save()
+        _attach_journal_images(request, entry, start_index=0)
+        return redirect(colony.get_absolute_url())
+
+
+class ColonyJournalEntryUpdateView(LoginRequiredMixin, View):
+    """Edits a journal entry's date/note, applies a client-side reorder/removal
+    of its existing photos, and appends any newly uploaded ones.
+
+    The existing-photos reordering happens entirely in the browser (drag to
+    reorder, click to remove) and is only sent here -- as an ordered list of
+    surviving image IDs -- when the whole form is submitted, so nothing is
+    persisted just from rearranging thumbnails.
+    """
+
+    def post(self, request, pk, entry_pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        entry = get_object_or_404(ColonyJournalEntry, pk=entry_pk, colony=colony)
+        form = ColonyJournalEntryForm(request.POST, instance=entry)
+        if not form.is_valid():
+            messages.error(request, "Please provide both a date and a note for the journal entry.")
+            return redirect(colony.get_absolute_url())
+
+        form.save()
+
+        existing_images = {image.pk: image for image in entry.images.all()}
+        kept_ids = []
+        for raw_id in request.POST.getlist("existing_image"):
+            if raw_id.isdigit() and int(raw_id) in existing_images and int(raw_id) not in kept_ids:
+                kept_ids.append(int(raw_id))
+
+        for index, image_id in enumerate(kept_ids):
+            image = existing_images[image_id]
+            if image.ordering != index:
+                image.ordering = index
+                image.save(update_fields=["ordering"])
+
+        for image_id, image in existing_images.items():
+            if image_id not in kept_ids:
+                image.delete()
+
+        _attach_journal_images(request, entry, start_index=len(kept_ids))
+        return redirect(colony.get_absolute_url())
+
+
+
+
+class ColonyJournalEntryDeleteView(LoginRequiredMixin, View):
+    """Deletes a journal entry (and its photos) from one of the user's colonies."""
+
+    def post(self, request, pk, entry_pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        entry = get_object_or_404(ColonyJournalEntry, pk=entry_pk, colony=colony)
+        entry.delete()
+        return redirect(colony.get_absolute_url())
+
+
+def _attach_journal_images(request, entry, start_index):
+    image_field = forms.ImageField(required=False)
+    skipped = 0
+    uploads = request.FILES.getlist("images")[: ColonyJournalEntryCreateView.MAX_IMAGES_PER_ENTRY]
+    for offset, uploaded in enumerate(uploads):
+        try:
+            image_field.clean(uploaded)
+        except ValidationError:
+            skipped += 1
+            continue
+        ColonyJournalEntryImage.objects.create(
+            journal_entry=entry, image_file=uploaded, ordering=start_index + offset
+        )
+    if skipped:
+        messages.warning(request, f"{skipped} photo(s) couldn't be used and were skipped.")
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyDetailView(DetailView):
+    """Colony detail page. Public if the colony is public, owner-only otherwise."""
+
+    model = Colony
+    template_name = "ants/colony_detail.html"
+    context_object_name = "colony"
+
+    def get_object(self, queryset=None):
+        colony = get_object_or_404(
+            Colony.objects.select_related("species", "user", "title_image"),
+            user__username__iexact=self.kwargs["username"],
+            slug=self.kwargs["slug"],
+        )
+        is_owner = self.request.user.is_authenticated and self.request.user == colony.user
+        if not colony.is_visible_publicly and not is_owner:
+            raise Http404
+        return colony
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(_build_colony_detail_context(self.object, self.request))
+        return context
+
+
+def _visible_colonies():
+    return Colony.objects.filter(is_public=True, force_private_by_staff=False)
+
+
+def _community_journal_queryset(request):
+    """Journal entries from public (and not staff-hidden) colonies, newest first."""
+    qs = (
+        ColonyJournalEntry.objects.filter(
+            colony__is_public=True, colony__force_private_by_staff=False
+        )
+        .select_related("colony", "colony__species", "colony__user")
+        .prefetch_related("images")
+        .order_by("-date", "-created_at")
+    )
+
+    genus_slug = request.GET.get("genus", "")
+    if genus_slug:
+        qs = qs.filter(colony__species__genus__slug__iexact=genus_slug)
+
+    species_slug = request.GET.get("species", "")
+    if species_slug:
+        qs = qs.filter(colony__species__slug__iexact=species_slug)
+
+    username = request.GET.get("user", "")
+    if username:
+        qs = qs.filter(colony__user__username__iexact=username)
+
+    return qs
+
+
+@method_decorator(never_cache, name="dispatch")
+class CommunityJournalView(TemplateView):
+    """Public feed of journal entries across all public colonies, with filters."""
+
+    template_name = "ants/community_journal.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        public_species_ids = _visible_colonies().values_list("species_id", flat=True).distinct()
+        context["species_list"] = (
+            AntSpecies.objects.filter(pk__in=public_species_ids).order_by("name")
+        )
+        context["genera"] = (
+            Genus.objects.filter(pk__in=AntSpecies.objects.filter(pk__in=public_species_ids).values_list("genus_id", flat=True))
+            .order_by("name")
+        )
+        context["usernames"] = (
+            _visible_colonies().values_list("user__username", flat=True).distinct().order_by("user__username")
+        )
+        return context
+
+
+@method_decorator(never_cache, name="dispatch")
+class CommunityJournalResultsView(View):
+    """HTMX partial: the filtered, paginated journal entry list."""
+
+    RESULTS_PER_PAGE = 20
+
+    def get(self, request):
+        qs = _community_journal_queryset(request)
+        paginator = Paginator(qs, self.RESULTS_PER_PAGE)
+        page_obj = paginator.get_page(request.GET.get("page", 1))
+        return render(
+            request,
+            "ants/community_journal_results.html",
+            {"page_obj": page_obj, "count": paginator.count},
         )
