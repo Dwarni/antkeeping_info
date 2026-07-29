@@ -348,10 +348,12 @@ TINYMCE_DEFAULT_CONFIG = {
 TAGGIT_CASE_INSENSITIVE = True
 
 # django-debug-toolbar
+# Temporarily disabled (not currently in use) — set to True to re-enable.
+DEBUG_TOOLBAR_ENABLED = False
 
 TESTING = "test" in sys.argv
 
-if not TESTING and DEBUG:
+if not TESTING and DEBUG and DEBUG_TOOLBAR_ENABLED:
     INSTALLED_APPS = [
         *INSTALLED_APPS,
         "debug_toolbar",
