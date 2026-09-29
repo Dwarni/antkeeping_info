@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from django import forms
 from django.contrib.auth.models import User
@@ -385,6 +386,16 @@ class ColonyJournalEntryImageManagementTest(TestCase):
         self.assertFalse(ColonyJournalEntryImage.objects.filter(pk=self.img2.pk).exists())
         ordered = list(self.entry.images.all())
         self.assertEqual([im.pk for im in ordered], [self.img1.pk, self.img3.pk])
+
+    def test_omitting_an_existing_photo_deletes_its_file_from_storage(self):
+        self.client.login(username="owner", password="pass")
+        file_path = self.img2.image_file.path
+        self.assertTrue(os.path.exists(file_path))
+        self.client.post(
+            self.url,
+            {**self.base_data, "existing_image": [self.img1.pk, self.img3.pk]},
+        )
+        self.assertFalse(os.path.exists(file_path))
 
     def test_omitting_existing_image_field_entirely_removes_all_photos(self):
         self.client.login(username="owner", password="pass")
