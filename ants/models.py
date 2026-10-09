@@ -996,6 +996,9 @@ class ColonyJournalEntry(models.Model):
     EVENT_HIBERNATION_START = "HIBERNATION_START"
     EVENT_HIBERNATION_END = "HIBERNATION_END"
     EVENT_FEEDING = "FEEDING"
+    EVENT_ALATES = "ALATES"
+    EVENT_NUPTIAL_FLIGHT = "NUPTIAL_FLIGHT"
+    EVENT_ESCAPE = "ESCAPE"
     EVENT_ISSUE = "ISSUE"
     EVENT_QUEEN_DIED = "QUEEN_DIED"
 
@@ -1007,6 +1010,9 @@ class ColonyJournalEntry(models.Model):
         (EVENT_HIBERNATION_START, _("Hibernation started")),
         (EVENT_HIBERNATION_END, _("Hibernation ended")),
         (EVENT_FEEDING, _("Feeding / Food trial")),
+        (EVENT_ALATES, _("Alates")),
+        (EVENT_NUPTIAL_FLIGHT, _("Nuptial flight")),
+        (EVENT_ESCAPE, _("Escape")),
         (EVENT_ISSUE, _("Issue (mold, mites, die-off)")),
         (EVENT_QUEEN_DIED, _("Queen died")),
     ]

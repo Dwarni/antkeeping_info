@@ -980,6 +980,20 @@ class ColonyCensusAndCareViewsTests(TestCase):
         )
         self.assertEqual(entry.event_type, ColonyJournalEntry.EVENT_FIRST_WORKER)
 
+        for event_type in (
+            ColonyJournalEntry.EVENT_ESCAPE,
+            ColonyJournalEntry.EVENT_ALATES,
+            ColonyJournalEntry.EVENT_NUPTIAL_FLIGHT,
+        ):
+            e = ColonyJournalEntry.objects.create(
+                colony=self.colony,
+                date="2026-04-02",
+                event_type=event_type,
+                note=f"Testing {event_type}",
+            )
+            self.assertEqual(e.event_type, event_type)
+            self.assertTrue(bool(e.get_event_type_display()))
+
 
     def test_census_chart_requires_at_least_two_worker_counts(self):
         # 1 census with workers, 1 census with only eggs -> chart should be None
