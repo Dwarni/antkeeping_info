@@ -2,7 +2,14 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from ants.models import FoodItem, Genus, AntSpecies, SpeciesDifficultyRating, SpeciesFoodRating
+from ants.models import (
+    AntSpecies,
+    Colony,
+    FoodItem,
+    Genus,
+    SpeciesDifficultyRating,
+    SpeciesFoodRating,
+)
 from ants.tests.test_species_food_rating import _make_vote
 
 
@@ -49,6 +56,17 @@ class UserProfileViewRatingsTest(TestCase):
         ratings = list(response.context["food_ratings"])
         self.assertEqual(len(ratings), 1)
         self.assertEqual(ratings[0].user, self.user)
+
+    def test_colonies_scoped_to_user(self):
+        species = _make_species()
+        Colony.objects.create(user=self.user, species=species, name="Mine")
+        Colony.objects.create(user=self.other_user, species=species, name="Not mine")
+        response = self.client.get(self.url)
+        colonies = list(response.context["colonies"])
+        self.assertEqual(len(colonies), 1)
+        self.assertEqual(colonies[0].user, self.user)
+        self.assertContains(response, "Mine")
+        self.assertNotContains(response, "Not mine")
 
 
 class UserProfileFoodRatingsViewTest(TestCase):

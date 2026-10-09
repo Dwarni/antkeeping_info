@@ -84,5 +84,68 @@ urlpatterns = [
         views.SubmitSpeciesFoodVoteView.as_view(),
         name="vote_food",
     ),
+    path("colonies/new/", views.ColonyCreateView.as_view(), name="colony_create"),
+    path(
+        "colonies/community/",
+        views.CommunityJournalView.as_view(),
+        name="community_journal",
+    ),
+    path(
+        "colonies/community/results/",
+        views.CommunityJournalResultsView.as_view(),
+        name="community_journal_results",
+    ),
+    path("colonies/<int:pk>/edit/", views.ColonyUpdateView.as_view(), name="colony_edit"),
+    path("colonies/<int:pk>/delete/", views.ColonyDeleteView.as_view(), name="colony_delete"),
+    path(
+        "colonies/<int:pk>/status/",
+        views.ColonyStatusUpdateView.as_view(),
+        name="colony_status_update",
+    ),
+    path(
+        "colonies/<int:pk>/visibility/",
+        views.ColonyVisibilityUpdateView.as_view(),
+        name="colony_visibility_update",
+    ),
+    path(
+        "colonies/<int:pk>/census/new/",
+        views.ColonyCensusCreateView.as_view(),
+        name="colony_census_create",
+    ),
+    path(
+        "colonies/<int:pk>/census/<int:census_pk>/delete/",
+        views.ColonyCensusDeleteView.as_view(),
+        name="colony_census_delete",
+    ),
+    path(
+        "colonies/<int:pk>/care/new/",
+        views.ColonyCareEventCreateView.as_view(),
+        name="colony_care_event_create",
+    ),
+    path(
+        "colonies/<int:pk>/care/<int:event_pk>/delete/",
+        views.ColonyCareEventDeleteView.as_view(),
+        name="colony_care_event_delete",
+    ),
+    path(
+        "colonies/<int:pk>/journal/new/",
+        views.ColonyJournalEntryCreateView.as_view(),
+        name="colony_journal_entry_create",
+    ),
+    path(
+        "colonies/<int:pk>/journal/<int:entry_pk>/edit/",
+        views.ColonyJournalEntryUpdateView.as_view(),
+        name="colony_journal_entry_edit",
+    ),
+    path(
+        "colonies/<int:pk>/journal/<int:entry_pk>/delete/",
+        views.ColonyJournalEntryDeleteView.as_view(),
+        name="colony_journal_entry_delete",
+    ),
+    path(
+        "colonies/<str:username>/<slug:slug>/",
+        views.ColonyDetailView.as_view(),
+        name="colony_detail",
+    ),
     path("<islug:slug>/", views.AntSpeciesDetail.as_view(), name="ant_detail"),
 ]

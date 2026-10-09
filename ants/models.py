@@ -11,6 +11,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import MinValueValidator, RegexValidator, ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from sorl.thumbnail import ImageField
@@ -27,6 +28,7 @@ from ants.managers import (
     TaxonomicRankManager,
 )
 from ants.utils.images import downscale_to_max_dimension
+from ants.utils.partial_date import DATE_PRECISION_CHOICES, format_partial_date
 from regions.models import Region
 
 # Create your models here.
@@ -840,3 +842,325 @@ class SpeciesFoodRating(models.Model):
 
     def __str__(self):
         return f"{self.user} → {self.species} / {self.food_item} ({self.get_vote_display()})"
+
+
+class Colony(models.Model):
+    """An ant colony kept by a user."""
+
+    ACTIVE = "ACTIVE"
+    DEAD = "DEAD"
+    GIVEN_AWAY = "GIVEN_AWAY"
+    STATUS_CHOICES = [
+        (ACTIVE, _("Active")),
+        (DEAD, _("Dead")),
+        (GIVEN_AWAY, _("Given away")),
+    ]
+
+    SELF_COLLECTED = "SELF_COLLECTED"
+    PURCHASED = "PURCHASED"
+    GIFTED = "GIFTED"
+    ORIGIN_CHOICES = [
+        (SELF_COLLECTED, _("Self-collected")),
+        (PURCHASED, _("Purchased")),
+        (GIFTED, _("Gifted")),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="colonies"
+    )
+    # PROTECT (not CASCADE, unlike the rating models above): a colony is a
+    # personal record of what someone has kept, and must not silently
+    # disappear if a species entry is ever removed from the catalog.
+    species = models.ForeignKey(
+        AntSpecies, on_delete=models.PROTECT, related_name="colonies"
+    )
+    name = models.CharField(max_length=150)
+    # Unique per user only (see Meta), so this can't reuse
+    # TaxonomicRank.save()'s globally-unique slug generation.
+    slug = models.SlugField(max_length=170, editable=False)
+
+    origin_type = models.CharField(
+        "Origin", max_length=20, choices=ORIGIN_CHOICES, blank=True
+    )
+    found_location = models.CharField(max_length=255, blank=True)
+    # found_date/purchase_date may be known only to the year or month --
+    # the *_precision fields record how much of the stored date to trust
+    # (format_partial_date() uses this to render just "2023" or "June 2023").
+    found_date = models.DateField(blank=True, null=True)
+    found_date_precision = models.CharField(max_length=5, choices=DATE_PRECISION_CHOICES, blank=True)
+    purchase_date = models.DateField(blank=True, null=True)
+    purchase_date_precision = models.CharField(max_length=5, choices=DATE_PRECISION_CHOICES, blank=True)
+    purchase_shop = models.CharField(
+        "Purchase from", max_length=200, blank=True,
+        help_text="Shop or private keeper you got this colony from.",
+    )
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ACTIVE)
+    status_changed_at = models.DateField(blank=True, null=True, editable=False)
+
+    # Colonies default to public, and a shared found_location, per product
+    # decision -- these fields let an owner opt back OUT to private on a
+    # per-colony (and per-found_location) basis, not opt in.
+    is_public = models.BooleanField(default=True, verbose_name=_("Public"))
+    share_found_location = models.BooleanField(
+        default=True, verbose_name=_("Show found location on the public page")
+    )
+    # Staff-only moderation override; never exposed on user-facing forms.
+    force_private_by_staff = models.BooleanField(default=False, editable=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("user", "name"), ("user", "slug")]
+        verbose_name = _("Colony")
+        verbose_name_plural = _("Colonies")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} ({self.species})"
+
+    def _generate_unique_slug(self):
+        base = slugify(self.name) or "colony"
+        slug = base
+        suffix = 2
+        while True:
+            qs = Colony.objects.filter(user_id=self.user_id, slug=slug)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if not qs.exists():
+                return slug
+            slug = f"{base}-{suffix}"
+            suffix += 1
+
+    def save(self, *args, **kwargs):
+        previous = None
+        if self.pk:
+            previous = Colony.objects.filter(pk=self.pk).values("name", "status").first()
+
+        if not self.slug or previous is None or previous["name"] != self.name:
+            self.slug = self._generate_unique_slug()
+
+        if previous is None or previous["status"] != self.status:
+            self.status_changed_at = timezone.now().date()
+
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("colony_detail", args=[self.user.username, self.slug])
+
+    @property
+    def is_visible_publicly(self):
+        return self.is_public and not self.force_private_by_staff
+
+    @property
+    def found_date_display(self):
+        return format_partial_date(self.found_date, self.found_date_precision)
+
+    @property
+    def purchase_date_display(self):
+        return format_partial_date(self.purchase_date, self.purchase_date_precision)
+
+
+class ColonyImage(models.Model):
+    """The title photo for a colony: the owner's own photo, one per colony.
+
+    Deliberately not a subclass of the abstract Image model above — those
+    source_url/source_caption fields exist for attributing third-party
+    media (see AntSpeciesImage), which doesn't apply to a user's own photo
+    of their own colony.
+    """
+
+    MAX_IMAGE_DIMENSION = 1920
+
+    colony = models.OneToOneField(Colony, on_delete=models.CASCADE, related_name="title_image")
+    image_file = ImageField("Image file", upload_to="colony_images")
+    caption = models.CharField(max_length=255, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.image_file and isinstance(self.image_file.file, UploadedFile):
+            downscale_to_max_dimension(self.image_file, self.MAX_IMAGE_DIMENSION)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Title image for {self.colony}"
+
+
+class ColonyJournalEntry(models.Model):
+    """A dated, free-text log entry for a colony."""
+
+    EVENT_GENERAL = "GENERAL"
+    EVENT_FOUNDING = "FOUNDING"
+    EVENT_FIRST_WORKER = "FIRST_WORKER"
+    EVENT_NEST_MOVE = "NEST_MOVE"
+    EVENT_HIBERNATION_START = "HIBERNATION_START"
+    EVENT_HIBERNATION_END = "HIBERNATION_END"
+    EVENT_FEEDING = "FEEDING"
+    EVENT_ISSUE = "ISSUE"
+    EVENT_QUEEN_DIED = "QUEEN_DIED"
+
+    EVENT_TYPE_CHOICES = [
+        (EVENT_GENERAL, _("General update")),
+        (EVENT_FOUNDING, _("Founding / First eggs")),
+        (EVENT_FIRST_WORKER, _("First worker (Nanitic)")),
+        (EVENT_NEST_MOVE, _("Nest move / New setup")),
+        (EVENT_HIBERNATION_START, _("Hibernation started")),
+        (EVENT_HIBERNATION_END, _("Hibernation ended")),
+        (EVENT_FEEDING, _("Feeding / Food trial")),
+        (EVENT_ISSUE, _("Issue (mold, mites, die-off)")),
+        (EVENT_QUEEN_DIED, _("Queen died")),
+    ]
+
+    colony = models.ForeignKey(Colony, on_delete=models.CASCADE, related_name="journal_entries")
+    date = models.DateField()
+    event_type = models.CharField(
+        max_length=25, choices=EVENT_TYPE_CHOICES, default=EVENT_GENERAL, blank=True
+    )
+    note = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Colony journal entry")
+        verbose_name_plural = _("Colony journal entries")
+        ordering = ["-date", "-created_at"]
+
+    def __str__(self):
+        return f"{self.colony} — {self.date}"
+
+
+class ColonyJournalEntryImage(models.Model):
+    """One of possibly several photos attached to a journal entry."""
+
+    MAX_IMAGE_DIMENSION = 1920
+
+    journal_entry = models.ForeignKey(
+        ColonyJournalEntry, on_delete=models.CASCADE, related_name="images"
+    )
+    image_file = ImageField("Image file", upload_to="colony_journal_images")
+    caption = models.CharField(max_length=255, blank=True)
+    ordering = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["ordering", "id"]
+
+    def save(self, *args, **kwargs):
+        if self.image_file and isinstance(self.image_file.file, UploadedFile):
+            downscale_to_max_dimension(self.image_file, self.MAX_IMAGE_DIMENSION)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Image for {self.journal_entry}"
+
+
+class ColonyCensus(models.Model):
+    """A count of castes and brood stages in a colony on a given date.
+
+    All count fields are optional so keepers can record just workers, just
+    brood, or an exact full census.
+    """
+
+    UNIT_EGGS = "EGGS"
+    UNIT_CLUTCHES = "CLUTCHES"
+    EGG_UNIT_CHOICES = [
+        (UNIT_EGGS, _("Eggs (single)")),
+        (UNIT_CLUTCHES, _("Egg clutches / clumps")),
+    ]
+
+    colony = models.ForeignKey(Colony, on_delete=models.CASCADE, related_name="censuses")
+    date = models.DateField(default=timezone.now)
+
+    queens = models.PositiveIntegerField("Queens", null=True, blank=True)
+    queens_is_estimated = models.BooleanField("Queens estimated", default=False)
+
+    workers = models.PositiveIntegerField("Workers", null=True, blank=True)
+    workers_is_estimated = models.BooleanField("Workers estimated", default=False)
+
+    eggs = models.PositiveIntegerField("Eggs", null=True, blank=True)
+    eggs_unit = models.CharField(
+        "Egg unit", max_length=10, choices=EGG_UNIT_CHOICES, default=UNIT_EGGS
+    )
+    eggs_is_estimated = models.BooleanField("Eggs estimated", default=False)
+
+    larvae = models.PositiveIntegerField("Larvae", null=True, blank=True)
+    larvae_is_estimated = models.BooleanField("Larvae estimated", default=False)
+
+    pupae = models.PositiveIntegerField("Pupae", null=True, blank=True)
+    pupae_is_estimated = models.BooleanField("Pupae estimated", default=False)
+
+    note = models.CharField("Note", max_length=255, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        verbose_name = _("Colony census")
+        verbose_name_plural = _("Colony censuses")
+
+    def __str__(self):
+        return f"Census for {self.colony} on {self.date}"
+
+    def clean(self):
+        super().clean()
+        if (
+            self.queens is None
+            and self.workers is None
+            and self.eggs is None
+            and self.larvae is None
+            and self.pupae is None
+        ):
+            raise ValidationError(
+                _("Please enter at least one count (queens, workers, eggs, larvae, or pupae).")
+            )
+
+    @property
+    def has_adult_counts(self):
+        return self.queens is not None or self.workers is not None
+
+    @property
+    def has_brood_counts(self):
+        return self.eggs is not None or self.larvae is not None or self.pupae is not None
+
+
+class ColonyCareEvent(models.Model):
+    """A recorded maintenance or care action for a colony (feeding, watering, humidifying, etc.)."""
+
+    FEEDING = "FEEDING"
+    HUMIDIFY = "HUMIDIFY"
+    WATER = "WATER"
+    CLEANING = "CLEANING"
+    MAINTENANCE = "MAINTENANCE"
+    HIBERNATION_START = "HIBERNATION_START"
+    HIBERNATION_END = "HIBERNATION_END"
+
+    CATEGORY_CHOICES = [
+        (FEEDING, _("Feeding")),
+        (HUMIDIFY, _("Humidifying")),
+        (WATER, _("Water refill")),
+        (CLEANING, _("Cleaning")),
+        (MAINTENANCE, _("Maintenance / Nest adjustment")),
+        (HIBERNATION_START, _("Hibernation started")),
+        (HIBERNATION_END, _("Hibernation ended")),
+    ]
+
+    colony = models.ForeignKey(Colony, on_delete=models.CASCADE, related_name="care_events")
+    category = models.CharField(max_length=25, choices=CATEGORY_CHOICES)
+    date = models.DateField(default=timezone.now)
+    time = models.TimeField(null=True, blank=True)
+
+    food_item = models.ForeignKey(
+        FoodItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="colony_care_feedings"
+    )
+    details = models.CharField(max_length=255, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        verbose_name = _("Colony care event")
+        verbose_name_plural = _("Colony care events")
+
+    def __str__(self):
+        return f"{self.get_category_display()} for {self.colony} on {self.date}"
+

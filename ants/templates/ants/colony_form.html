@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% load crispy_forms_tags static thumbnail %}
+{% block title %}{% if is_edit %}Edit colony{% else %}Add a colony{% endif %} — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <h2 class="mb-4">{% if is_edit %}Edit colony{% else %}Add a colony{% endif %}</h2>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if is_edit %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Ant species</label>
+                <p class="form-control-plaintext"><em>{{ species_name }}</em></p>
+                {{ form.species }}
+            </div>
+            {% else %}
+            <div class="mb-3">
+                <label for="species-search" class="form-label fw-semibold">
+                    Ant species <span class="text-danger">*</span>
+                </label>
+                <input type="text"
+                       id="species-search"
+                       name="q"
+                       class="form-control{% if form.species.errors %} is-invalid{% endif %}"
+                       placeholder="Type at least 4 characters to search…"
+                       value="{{ species_name }}"
+                       autocomplete="off"
+                       hx-get="{% url 'nuptial_flight_species_suggest' %}"
+                       hx-trigger="input changed delay:300ms"
+                       hx-target="#species-suggestions"
+                       hx-swap="innerHTML">
+                {# Populated by JS on suggestion click; the actual field submitted to Django #}
+                {{ form.species }}
+                <div id="species-suggestions" class="position-relative species-suggestions-dropdown"></div>
+                {% if form.species.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.species.errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold" for="title_image">Title photo (optional)</label>
+                <input type="file" class="form-control" id="title_image" name="title_image" accept="image/*">
+                {% if is_edit and colony.title_image %}
+                <div class="mt-2">
+                    {% thumbnail colony.title_image.image_file "160x120" crop="center" as im %}
+                    <img class="rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="">
+                    {% endthumbnail %}
+                    <p class="form-text mb-0">Uploading a new photo replaces the current one.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% crispy form %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script src="{% static 'ants/js/colony_form.js' %}"></script>
+{% endblock %}

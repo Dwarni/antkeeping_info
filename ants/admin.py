@@ -9,15 +9,19 @@ from ants.models import (
     AntSpecies,
     AntSpeciesDistribution,
     AntSpeciesImage,
+    Colony,
+    ColonyCareEvent,
+    ColonyCensus,
+    ColonyJournalEntry,
     CommonName,
     Distribution,
     Family,
     FoodItem,
     Genus,
     InvalidName,
+    SpeciesDescription,
     SpeciesDifficultyRating,
     SpeciesFoodRating,
-    SpeciesDescription,
     SubFamily,
     Tribe,
 )
@@ -252,3 +256,57 @@ class SpeciesFoodRatingAdmin(admin.ModelAdmin):
     list_filter = ("vote", "food_item__category")
     search_fields = ("species__name", "food_item__name", "user__username")
     readonly_fields = ("created_at", "updated_at")
+
+
+class ColonyJournalEntryInline(admin.StackedInline):
+    model = ColonyJournalEntry
+    extra = 0
+
+
+class ColonyCensusInline(admin.TabularInline):
+    model = ColonyCensus
+    extra = 0
+
+
+class ColonyCareEventInline(admin.TabularInline):
+    model = ColonyCareEvent
+    extra = 0
+
+
+@admin.register(Colony)
+class ColonyAdmin(admin.ModelAdmin):
+    list_display = ("name", "species", "user", "status", "is_public", "force_private_by_staff", "created_at")
+    list_filter = ("status", "is_public", "force_private_by_staff", "origin_type")
+    search_fields = ("name", "species__name", "user__username")
+    readonly_fields = ("slug", "created_at", "updated_at", "status_changed_at")
+    inlines = [ColonyJournalEntryInline, ColonyCensusInline, ColonyCareEventInline]
+    actions = ["force_private"]
+
+    @admin.action(description=_("Force selected colonies private (moderation)"))
+    def force_private(self, request, queryset):
+        updated = queryset.update(force_private_by_staff=True)
+        self.message_user(request, _("%(n)d colony/colonies hidden from public view.") % {"n": updated})
+
+
+@admin.register(ColonyJournalEntry)
+class ColonyJournalEntryAdmin(admin.ModelAdmin):
+    list_display = ("colony", "date", "event_type", "created_at")
+    list_filter = ("event_type",)
+    search_fields = ("colony__name", "note")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ColonyCensus)
+class ColonyCensusAdmin(admin.ModelAdmin):
+    list_display = ("colony", "date", "queens", "workers", "eggs", "eggs_unit", "larvae", "pupae", "created_at")
+    list_filter = ("eggs_unit", "workers_is_estimated", "eggs_is_estimated")
+    search_fields = ("colony__name", "note")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ColonyCareEvent)
+class ColonyCareEventAdmin(admin.ModelAdmin):
+    list_display = ("colony", "date", "category", "food_item", "details", "created_at")
+    list_filter = ("category",)
+    search_fields = ("colony__name", "details")
+    readonly_fields = ("created_at",)

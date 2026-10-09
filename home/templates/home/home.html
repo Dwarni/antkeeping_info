@@ -15,6 +15,37 @@
 <h1 class="display-1">Welcome to Antkeeping.info</h1>
 <p class="lead pb-2">A data-focused resource for ant enthusiasts and developers. Browse tables and databases directly, or use the <a href="{% url 'api-doc' %}">REST API</a> to integrate ant data into your own projects.</p>
 
+<h2 class="pb-2 border-bottom">Colony management</h2>
+<div class="row g-4 py-5 row-cols-1 row-cols-lg-2">
+  <div class="col">
+    <div class="card h-100 feature-card">
+      <div class="card-body d-flex align-items-start">
+        {% bs_icon "journal-richtext" "fs-3 flex-shrink-0 me-3 text-success" %}
+        <div>
+          {% if user.is_authenticated %}
+          <h3 class="h5 mb-1"><a href="{% url 'user_profile' %}#your-colonies" class="stretched-link">Your Colonies</a></h3>
+          <p class="mb-0">Keep track of the colonies you're raising — species, status, and a running journal with photos.</p>
+          {% else %}
+          <h3 class="h5 mb-1"><a href="{% url 'colony_create' %}" class="stretched-link">Track Your Colonies</a></h3>
+          <p class="mb-0">Sign up to record species, status, and a running journal with photos for every colony you keep.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card h-100 feature-card">
+      <div class="card-body d-flex align-items-start">
+        {% bs_icon "people-fill" "fs-3 flex-shrink-0 me-3 text-info" %}
+        <div>
+          <h3 class="h5 mb-1"><a href="{% url 'community_journal' %}" class="stretched-link">Community Journal</a></h3>
+          <p class="mb-0">Browse journal entries from colonies kept by the community — filter by species, genus, or keeper.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <h2 class="pb-2 border-bottom">Nuptial flights</h2>
 <div class="row g-4 py-5 row-cols-1 row-cols-lg-2">
   <div class="col">

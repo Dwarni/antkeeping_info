@@ -10,7 +10,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
-if settings.DEBUG:
+if settings.DEBUG_TOOLBAR_ENABLED:
     from debug_toolbar.toolbar import debug_toolbar_urls
 
 from django.contrib.sitemaps.views import sitemap
@@ -78,7 +78,7 @@ if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
 
 
-if settings.DEBUG and not settings.TESTING:
+if settings.DEBUG_TOOLBAR_ENABLED and not settings.TESTING:
     urlpatterns = [
         *urlpatterns,
     ] + debug_toolbar_urls()

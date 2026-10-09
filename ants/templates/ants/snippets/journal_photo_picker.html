@@ -1,0 +1,10 @@
+<div class="mb-2 journal-photo-picker" data-max-files="6">
+    <label class="form-label small fw-semibold">{{ photo_picker_label|default:"Photos (optional)" }}</label>
+    <div class="d-flex flex-wrap gap-2 photo-picker-thumbs">
+        <button type="button" class="photo-picker-add-tile" title="Add photos" aria-label="Add photos">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    </div>
+    <input type="file" name="images" accept="image/*" multiple class="d-none photo-picker-file-input">
+    <p class="form-text mb-0 photo-picker-hint">Add up to 6 photos. Drag thumbnails to reorder.</p>
+</div>

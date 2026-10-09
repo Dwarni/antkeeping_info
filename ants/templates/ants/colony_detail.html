@@ -1,0 +1,950 @@
+{% extends "layout.html" %}
+{% load i18n static thumbnail %}
+{% block title %}{{ colony.name }} — Antkeeping.info{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/colony_journal_photos.css' %}">
+<link rel="stylesheet" href="{% static 'ants/css/journal_image_lightbox.css' %}">
+<style>
+.metric-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+}
+.timeline-item {
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--bs-border-color);
+    margin-bottom: 1.5rem;
+}
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--bs-primary);
+    border: 2px solid var(--bs-body-bg);
+}
+.timeline-item.care::before {
+    background-color: var(--bs-info);
+}
+.timeline-item.census::before {
+    background-color: var(--bs-success);
+}
+.quick-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-9 col-md-11">
+
+        {% if is_owner and not colony.is_public %}
+        <div class="alert alert-secondary py-2 small d-flex align-items-center gap-2">
+            <i class="bi bi-lock-fill"></i>
+            <span>{% trans "This colony is private — only you can see this page." %}</span>
+        </div>
+        {% elif is_owner and colony.is_public and not colony.is_visible_publicly %}
+        <div class="alert alert-warning py-2 small d-flex align-items-center gap-2">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>{% trans 'This colony has been hidden from public view by site staff, even though "Public" is still checked below.' %}</span>
+        </div>
+        {% endif %}
+
+        {# Header Section #}
+        <div class="card mb-4 border-0 shadow-sm bg-body-tertiary">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h1 class="h2 mb-0 fw-bold">{{ colony.name }}</h1>
+                            <span class="badge {% if colony.status == 'ACTIVE' %}text-bg-success{% elif colony.status == 'DEAD' %}text-bg-secondary{% else %}text-bg-info{% endif %}">
+                                {{ colony.get_status_display }}
+                            </span>
+                            {% if colony.is_public %}
+                            <span class="badge text-bg-light border">{% trans "Public" %}</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary"><i class="bi bi-lock-fill me-1"></i>{% trans "Private" %}</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted mb-0 fs-5">
+                            <a href="{% url 'ant_detail' colony.species.slug %}" class="text-decoration-none">
+                                <em>{{ colony.species.name }}</em>
+                            </a>
+                            <span class="text-muted small ms-2">
+                                {% trans "Kept by" %} <a href="{% url 'community_journal' %}?user={{ colony.user.username }}">{{ colony.user.username }}</a>
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        {% if colony.is_public %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="copy-link-btn"
+                                data-url="{{ request.build_absolute_uri }}" title="{% trans 'Copy public link' %}">
+                            <i class="bi bi-share me-1"></i>{% trans "Share" %}
+                        </button>
+                        {% endif %}
+                        {% if is_owner %}
+                        <a href="{% url 'colony_edit' colony.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil me-1"></i>{% trans "Edit" %}
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#deleteColonyModal"
+                                title="{% trans 'Delete colony' %}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Colony Image #}
+                {% if colony.title_image %}
+                <figure class="figure mb-3 w-100 text-center">
+                    {% thumbnail colony.title_image.image_file "900x500" crop="center" as im %}
+                    <img class="figure-img img-fluid rounded shadow-sm" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ colony.name }}">
+                    {% endthumbnail %}
+                </figure>
+                {% endif %}
+
+                {# Metadata Details #}
+                <div class="row g-2 small text-muted pt-2 border-top">
+                    {% if colony.found_location %}
+                        {% if colony.share_found_location or is_owner %}
+                        <div class="col-sm-6 col-md-4">
+                            <span class="fw-semibold text-body">{% trans "Found location" %}:</span> {{ colony.found_location }}
+                            {% if is_owner and not colony.share_found_location %}
+                            <span class="badge text-bg-secondary ms-1">{% trans "Hidden from public" %}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    {% if colony.found_date %}
+                    <div class="col-sm-6 col-md-4">
+                        <span class="fw-semibold text-body">{% trans "Found" %}:</span> {{ colony.found_date_display }}
+                    </div>
+                    {% endif %}
+                    {% if is_owner %}
+                        {% if colony.origin_type %}
+                        <div class="col-sm-6 col-md-4">
+                            <span class="fw-semibold text-body">{% trans "Origin" %}:</span> {{ colony.get_origin_type_display }}
+                        </div>
+                        {% endif %}
+                        {% if colony.purchase_date %}
+                        <div class="col-sm-6 col-md-4">
+                            <span class="fw-semibold text-body">{% trans "Purchase date" %}:</span> {{ colony.purchase_date_display }}
+                        </div>
+                        {% endif %}
+                        {% if colony.purchase_shop %}
+                        <div class="col-sm-6 col-md-4">
+                            <span class="fw-semibold text-body">{% trans "Purchased from" %}:</span> {{ colony.purchase_shop }}
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Dashboard Cards: Population Census & Care Status #}
+        <div class="row g-3 mb-4">
+            {# Card 1: Latest Population Count #}
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-2">
+                        <span class="fw-semibold"><i class="bi bi-people-fill text-primary me-1"></i> {% trans "Population & Brood" %}</span>
+                        {% if is_owner %}
+                        <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2"
+                                data-bs-toggle="collapse" data-bs-target="#collapse-add-census">
+                            <i class="bi bi-plus-lg"></i> {% trans "Record count" %}
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if latest_census %}
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            {% if latest_census.queens is not None %}
+                            <div class="metric-badge">
+                                <span>👑</span>
+                                <span>{% if latest_census.queens_is_estimated %}~{% endif %}{{ latest_census.queens }}</span>
+                                <span class="text-muted small">{% trans "Queen" %}{{ latest_census.queens|pluralize }}</span>
+                            </div>
+                            {% endif %}
+                            {% if latest_census.workers is not None %}
+                            <div class="metric-badge text-bg-primary text-white border-primary">
+                                <span>🐜</span>
+                                <span class="fw-bold">{% if latest_census.workers_is_estimated %}~{% endif %}{{ latest_census.workers }}</span>
+                                <span class="small opacity-75">{% trans "Workers" %}</span>
+                            </div>
+                            {% endif %}
+                            {% if latest_census.eggs is not None %}
+                            <div class="metric-badge">
+                                <span>🥚</span>
+                                <span>{% if latest_census.eggs_is_estimated %}~{% endif %}{{ latest_census.eggs }}</span>
+                                <span class="text-muted small">{% if latest_census.eggs_unit == 'CLUTCHES' %}{% trans "Egg clutches" %}{% else %}{% trans "Eggs" %}{% endif %}</span>
+                            </div>
+                            {% endif %}
+                            {% if latest_census.larvae is not None %}
+                            <div class="metric-badge">
+                                <span>🐛</span>
+                                <span>{% if latest_census.larvae_is_estimated %}~{% endif %}{{ latest_census.larvae }}</span>
+                                <span class="text-muted small">{% trans "Larvae" %}</span>
+                            </div>
+                            {% endif %}
+                            {% if latest_census.pupae is not None %}
+                            <div class="metric-badge">
+                                <span>⚪</span>
+                                <span>{% if latest_census.pupae_is_estimated %}~{% endif %}{{ latest_census.pupae }}</span>
+                                <span class="text-muted small">{% trans "Pupae" %}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted d-flex justify-content-between align-items-center mt-2">
+                            <span>{% trans "As of" %}: {{ latest_census.date|date:"N j, Y" }}</span>
+                            {% if latest_census.note %}
+                            <span class="text-truncate" style="max-width: 200px;" title="{{ latest_census.note }}">{{ latest_census.note }}</span>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted small mb-0">{% trans "No counts recorded yet." %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# Card 2: Care Status & Quick Actions #}
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-2">
+                        <span class="fw-semibold"><i class="bi bi-heart-pulse-fill text-danger me-1"></i> {% trans "Care & Maintenance" %}</span>
+                        {% if is_owner %}
+                        <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2"
+                                data-bs-toggle="collapse" data-bs-target="#collapse-add-care">
+                            <i class="bi bi-plus-lg"></i> {% trans "Log action" %}
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2 small mb-3">
+                            <div class="col-6">
+                                <span class="fw-semibold">🍽️ {% trans "Feeding" %}:</span>
+                                {% if care_summary.FEEDING %}
+                                <span class="text-body">{{ care_summary.FEEDING.date|date:"N j" }}</span>
+                                {% else %}<span class="text-muted">—</span>{% endif %}
+                            </div>
+                            <div class="col-6">
+                                <span class="fw-semibold">💦 {% trans "Humidify" %}:</span>
+                                {% if care_summary.HUMIDIFY %}
+                                <span class="text-body">{{ care_summary.HUMIDIFY.date|date:"N j" }}</span>
+                                {% else %}<span class="text-muted">—</span>{% endif %}
+                            </div>
+                            <div class="col-6">
+                                <span class="fw-semibold">💧 {% trans "Water" %}:</span>
+                                {% if care_summary.WATER %}
+                                <span class="text-body">{{ care_summary.WATER.date|date:"N j" }}</span>
+                                {% else %}<span class="text-muted">—</span>{% endif %}
+                            </div>
+                            <div class="col-6">
+                                <span class="fw-semibold">🧹 {% trans "Cleaned" %}:</span>
+                                {% if care_summary.CLEANING %}
+                                <span class="text-body">{{ care_summary.CLEANING.date|date:"N j" }}</span>
+                                {% else %}<span class="text-muted">—</span>{% endif %}
+                            </div>
+                        </div>
+
+                        {# Quick-Action Buttons for Owner #}
+                        {% if is_owner %}
+                        <div class="d-flex flex-wrap gap-1 pt-2 border-top">
+                            <form method="post" action="{% url 'colony_care_event_create' colony.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="category" value="FEEDING">
+                                <input type="hidden" name="date" value="{% now 'Y-m-d' %}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary quick-action-btn" title="{% trans 'Log feeding today' %}">
+                                    🍽️ {% trans "Fed" %}
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'colony_care_event_create' colony.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="category" value="HUMIDIFY">
+                                <input type="hidden" name="date" value="{% now 'Y-m-d' %}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary quick-action-btn" title="{% trans 'Log nest humidifying today' %}">
+                                    💦 {% trans "Humidified" %}
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'colony_care_event_create' colony.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="category" value="WATER">
+                                <input type="hidden" name="date" value="{% now 'Y-m-d' %}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary quick-action-btn" title="{% trans 'Log water refill today' %}">
+                                    💧 {% trans "Water" %}
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'colony_care_event_create' colony.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="category" value="CLEANING">
+                                <input type="hidden" name="date" value="{% now 'Y-m-d' %}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary quick-action-btn" title="{% trans 'Log cleaning today' %}">
+                                    🧹 {% trans "Cleaned" %}
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Owner Forms (Collapsible Panels) #}
+        {% if is_owner %}
+        {# Add Journal Entry Collapse #}
+        <div class="collapse mb-4" id="collapse-add-journal">
+            <div class="card card-body shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h6 mb-0 fw-bold"><i class="bi bi-journal-plus me-1"></i> {% trans "Add journal entry" %}</h3>
+                    <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#collapse-add-journal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'colony_journal_entry_create' colony.pk %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold" for="journal-date">{% trans "Date" %}</label>
+                            <input type="date" class="form-control form-control-sm" id="journal-date" name="date" value="{% now 'Y-m-d' %}" required>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold" for="journal-event-type">{% trans "Event / Milestone (optional)" %}</label>
+                            <select class="form-select form-select-sm" id="journal-event-type" name="event_type">
+                                {% for val, label in journal_event_types %}
+                                <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold" for="journal-note">{% trans "Note" %}</label>
+                        <textarea class="form-control form-control-sm" id="journal-note" name="note" rows="3" maxlength="2000" required
+                                  placeholder="{% trans 'Record your observations, feeding behavior, nest changes...' %}"></textarea>
+                    </div>
+                    {% include "ants/snippets/journal_photo_picker.html" %}
+                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Add entry" %}</button>
+                </form>
+            </div>
+        </div>
+
+        {# Add Census Collapse #}
+        <div class="collapse mb-4" id="collapse-add-census">
+            <div class="card card-body shadow-sm border-primary">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h6 mb-0 fw-bold text-primary"><i class="bi bi-bar-chart-fill me-1"></i> {% trans "Record population count (Census)" %}</h3>
+                    <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#collapse-add-census" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'colony_census_create' colony.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">{% trans "Date" %}</label>
+                        <input type="date" class="form-control form-control-sm" name="date" value="{% now 'Y-m-d' %}" required style="max-width: 200px;">
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">👑 {% trans "Queens" %}</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" min="0" name="queens" class="form-control" placeholder="1" value="1">
+                                <div class="input-group-text">
+                                    <input class="form-check-input mt-0 me-1" type="checkbox" name="queens_is_estimated" id="c-q-est">
+                                    <label class="small mb-0" for="c-q-est">{% trans "ca." %}</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">🐜 {% trans "Workers" %}</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" min="0" name="workers" class="form-control" placeholder="e.g. 35">
+                                <div class="input-group-text">
+                                    <input class="form-check-input mt-0 me-1" type="checkbox" name="workers_is_estimated" id="c-w-est">
+                                    <label class="small mb-0" for="c-w-est">{% trans "ca." %}</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">🥚 {% trans "Eggs" %}</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" min="0" name="eggs" class="form-control" placeholder="e.g. 15 or 1">
+                                <select name="eggs_unit" class="form-select" style="max-width: 120px;">
+                                    <option value="EGGS">{% trans "Eggs" %}</option>
+                                    <option value="CLUTCHES">{% trans "Clutches" %}</option>
+                                </select>
+                                <div class="input-group-text">
+                                    <input class="form-check-input mt-0 me-1" type="checkbox" name="eggs_is_estimated" id="c-e-est">
+                                    <label class="small mb-0" for="c-e-est">{% trans "ca." %}</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">🐛 {% trans "Larvae" %}</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" min="0" name="larvae" class="form-control" placeholder="e.g. 10">
+                                <div class="input-group-text">
+                                    <input class="form-check-input mt-0 me-1" type="checkbox" name="larvae_is_estimated" id="c-l-est">
+                                    <label class="small mb-0" for="c-l-est">{% trans "ca." %}</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">⚪ {% trans "Pupae" %}</label>
+                            <div class="input-group input-group-sm">
+                                <input type="number" min="0" name="pupae" class="form-control" placeholder="e.g. 8">
+                                <div class="input-group-text">
+                                    <input class="form-check-input mt-0 me-1" type="checkbox" name="pupae_is_estimated" id="c-p-est">
+                                    <label class="small mb-0" for="c-p-est">{% trans "ca." %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">{% trans "Optional Note" %}</label>
+                        <input type="text" name="note" class="form-control form-control-sm" placeholder="{% trans 'e.g. counted precisely via AntCounter photo' %}" maxlength="255">
+                    </div>
+
+                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Save count" %}</button>
+                </form>
+            </div>
+        </div>
+
+        {# Add Care Event Collapse #}
+        <div class="collapse mb-4" id="collapse-add-care">
+            <div class="card card-body shadow-sm border-info">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h6 mb-0 fw-bold text-info-emphasis"><i class="bi bi-tools me-1"></i> {% trans "Log care or maintenance" %}</h3>
+                    <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#collapse-add-care" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'colony_care_event_create' colony.pk %}">
+                    {% csrf_token %}
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">{% trans "Category" %}</label>
+                            <select name="category" class="form-select form-select-sm" required>
+                                {% for val, label in care_categories %}
+                                <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">{% trans "Date" %}</label>
+                            <input type="date" class="form-control form-control-sm" name="date" value="{% now 'Y-m-d' %}" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">{% trans "Food item (if feeding)" %}</label>
+                            <select name="food_item" class="form-select form-select-sm">
+                                <option value="">{% trans "— Select food (optional) —" %}</option>
+                                {% for item in food_items %}
+                                <option value="{{ item.pk }}">{{ item.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold">{% trans "Details / Note" %}</label>
+                            <input type="text" name="details" class="form-control form-control-sm" placeholder="{% trans 'e.g. Invert sugar & fruit fly' %}" maxlength="255">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-info text-white">{% trans "Save care event" %}</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Activities Timeline Section with Tabs #}
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+            <h2 class="h5 mb-0 fw-bold">{% trans "Activity & History" %}</h2>
+            {% if is_owner %}
+            <div class="d-flex gap-1">
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#collapse-add-journal">
+                    <i class="bi bi-pencil-square me-1"></i> {% trans "Add Journal Entry" %}
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        {# Tabs Navigation #}
+        <ul class="nav nav-tabs mb-4" id="colonyTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-journal" data-bs-toggle="tab" data-bs-target="#content-journal" type="button" role="tab">
+                    📖 {% trans "Journal" %} <span class="badge text-bg-secondary ms-1">{{ journal_entries.count }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-census" data-bs-toggle="tab" data-bs-target="#content-census" type="button" role="tab">
+                    📊 {% trans "Counts" %} <span class="badge text-bg-secondary ms-1">{{ censuses.count }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-care" data-bs-toggle="tab" data-bs-target="#content-care" type="button" role="tab">
+                    🛠️ {% trans "Care Log" %} <span class="badge text-bg-secondary ms-1">{{ care_events.count }}</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="colonyTabContent">
+            {# Tab 1: Journal Entries #}
+            <div class="tab-pane fade show active" id="content-journal" role="tabpanel">
+                {% if not journal_entries %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-journal-x fs-1 mb-2 d-block"></i>
+                    <p class="mb-0">{% trans "No journal entries yet." %}</p>
+                </div>
+                {% endif %}
+
+                <ul class="list-group mb-4 border-0">
+                    {% for entry in journal_entries %}
+                    <li class="list-group-item shadow-sm mb-3 rounded" id="entry-{{ entry.pk }}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="fw-bold">{{ entry.date|date:"N j, Y" }}</span>
+                                {% if entry.event_type and entry.event_type != 'GENERAL' %}
+                                <span class="badge text-bg-info text-white ms-1">{{ entry.get_event_type_display }}</span>
+                                {% endif %}
+                            </div>
+                            {% if is_owner %}
+                            <div class="d-flex gap-2 ms-2">
+                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none"
+                                        data-bs-toggle="collapse" data-bs-target="#edit-entry-{{ entry.pk }}">
+                                    {% trans "Edit" %}
+                                </button>
+                                <form method="post" action="{% url 'colony_journal_entry_delete' colony.pk entry.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none"
+                                            onclick="return confirm('{% trans "Delete this journal entry?" %}')">
+                                        {% trans "Delete" %}
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <p class="mb-2">{{ entry.note|linebreaksbr }}</p>
+
+                        {% if entry.images.all %}
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            {% for img in entry.images.all %}
+                            {% thumbnail img.image_file "120x120" crop="center" as im %}
+                            <a href="#" class="journal-photo-thumb" data-gallery="colony-entry-{{ entry.pk }}"
+                               data-full-src="{{ img.image_file.url }}" data-caption="{{ img.caption }}">
+                                <img class="rounded shadow-sm" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
+                            </a>
+                            {% endthumbnail %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if is_owner %}
+                        <div class="collapse mt-3" id="edit-entry-{{ entry.pk }}">
+                            <div class="card card-body bg-body-tertiary">
+                                <form method="post" action="{% url 'colony_journal_entry_edit' colony.pk entry.pk %}"
+                                      enctype="multipart/form-data" class="mb-2">
+                                    {% csrf_token %}
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-sm-6">
+                                            <label class="form-label small fw-semibold">{% trans "Date" %}</label>
+                                            <input type="date" class="form-control form-control-sm"
+                                                   name="date" value="{{ entry.date|date:'Y-m-d' }}" required>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <label class="form-label small fw-semibold">{% trans "Event / Milestone" %}</label>
+                                            <select class="form-select form-select-sm" name="event_type">
+                                                {% for val, label in journal_event_types %}
+                                                <option value="{{ val }}"{% if entry.event_type == val %} selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-semibold">{% trans "Note" %}</label>
+                                        <textarea class="form-control form-control-sm"
+                                                  name="note" rows="3" maxlength="2000" required>{{ entry.note }}</textarea>
+                                    </div>
+
+                                    {% if entry.images.all %}
+                                    <div class="mb-2 journal-existing-photos">
+                                        <label class="form-label small fw-semibold">{% trans "Existing photos" %}</label>
+                                        <div class="d-flex flex-wrap gap-2 existing-photos-thumbs">
+                                            {% for img in entry.images.all %}
+                                            {% thumbnail img.image_file "80x80" crop="center" as im %}
+                                            <div class="photo-picker-thumb" draggable="true">
+                                                <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
+                                                <button type="button" class="btn-close btn-close-white photo-picker-remove"
+                                                        aria-label="Remove photo"></button>
+                                                <input type="hidden" name="existing_image" value="{{ img.pk }}">
+                                            </div>
+                                            {% endthumbnail %}
+                                            {% endfor %}
+                                        </div>
+                                        <p class="form-text mb-0">{% trans "Drag to reorder, click × to remove. Applies when you hit Save." %}</p>
+                                    </div>
+                                    {% endif %}
+
+                                    {% include "ants/snippets/journal_photo_picker.html" with photo_picker_label="Add more photos (optional)" %}
+                                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Save" %}</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            {# Tab 2: Census History #}
+            <div class="tab-pane fade" id="content-census" role="tabpanel">
+                {% if not censuses %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-bar-chart fs-1 mb-2 d-block"></i>
+                    <p class="mb-0">{% trans "No counts recorded yet." %}</p>
+                </div>
+                {% else %}
+                {% if census_chart_json %}
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                        <span class="fw-bold"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>{% trans "Worker Population Trend" %}</span>
+                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i>{% trans "Worker count over time" %}</small>
+                    </div>
+                    <div class="card-body">
+                        <div style="position: relative; height: 260px; width: 100%;">
+                            <canvas id="colonyGrowthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="list-group mb-4 shadow-sm">
+                    {% for c in censuses %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+                        <div>
+                            <div class="fw-bold mb-1">{{ c.date|date:"N j, Y" }}</div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                {% if c.queens is not None %}
+                                <span class="badge text-bg-light border">👑 {% if c.queens_is_estimated %}~{% endif %}{{ c.queens }} {% trans "Queen" %}{{ c.queens|pluralize }}</span>
+                                {% endif %}
+                                {% if c.workers is not None %}
+                                <span class="badge text-bg-primary">🐜 {% if c.workers_is_estimated %}~{% endif %}{{ c.workers }} {% trans "Workers" %}</span>
+                                {% endif %}
+                                {% if c.eggs is not None %}
+                                <span class="badge text-bg-light border">🥚 {% if c.eggs_is_estimated %}~{% endif %}{{ c.eggs }} {% if c.eggs_unit == 'CLUTCHES' %}{% trans "Clutches" %}{% else %}{% trans "Eggs" %}{% endif %}</span>
+                                {% endif %}
+                                {% if c.larvae is not None %}
+                                <span class="badge text-bg-light border">🐛 {% if c.larvae_is_estimated %}~{% endif %}{{ c.larvae }} {% trans "Larvae" %}</span>
+                                {% endif %}
+                                {% if c.pupae is not None %}
+                                <span class="badge text-bg-light border">⚪ {% if c.pupae_is_estimated %}~{% endif %}{{ c.pupae }} {% trans "Pupae" %}</span>
+                                {% endif %}
+                            </div>
+                            {% if c.note %}
+                            <p class="small text-muted mb-0 mt-2">{{ c.note }}</p>
+                            {% endif %}
+                        </div>
+                        {% if is_owner %}
+                        <form method="post" action="{% url 'colony_census_delete' colony.pk c.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none"
+                                    onclick="return confirm('{% trans "Delete this census entry?" %}')">
+                                {% trans "Delete" %}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            {# Tab 3: Care Log History #}
+            <div class="tab-pane fade" id="content-care" role="tabpanel">
+                {% if not care_events %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-heart-pulse fs-1 mb-2 d-block"></i>
+                    <p class="mb-0">{% trans "No care events logged yet." %}</p>
+                </div>
+                {% else %}
+                <div class="list-group mb-4 shadow-sm">
+                    {% for ev in care_events %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 py-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-5">
+                                {% if ev.category == 'FEEDING' %}🍽️
+                                {% elif ev.category == 'HUMIDIFY' %}💦
+                                {% elif ev.category == 'WATER' %}💧
+                                {% elif ev.category == 'CLEANING' %}🧹
+                                {% elif ev.category == 'HIBERNATION_START' or ev.category == 'HIBERNATION_END' %}❄️
+                                {% else %}🔧{% endif %}
+                            </span>
+                            <div>
+                                <span class="fw-semibold">{{ ev.get_category_display }}</span>
+                                <span class="text-muted small ms-2">{{ ev.date|date:"N j, Y" }}</span>
+                                {% if ev.food_item %}
+                                <span class="badge text-bg-light border ms-1">{{ ev.food_item.name }}</span>
+                                {% endif %}
+                                {% if ev.details %}
+                                <span class="small text-muted ms-1">— {{ ev.details }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if is_owner %}
+                        <form method="post" action="{% url 'colony_care_event_delete' colony.pk ev.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none"
+                                    onclick="return confirm('{% trans "Delete this care log entry?" %}')">
+                                {% trans "Delete" %}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Owner Settings Card #}
+        {% if is_owner %}
+        <div class="card mb-4 border-0 shadow-sm bg-body-tertiary">
+            <div class="card-body">
+                <h2 class="h6 mb-3 fw-bold"><i class="bi bi-gear-fill me-1"></i> {% trans "Owner settings" %}</h2>
+
+                <form method="post" action="{% url 'colony_status_update' colony.pk %}" class="row gy-2 gx-2 align-items-center mb-3">
+                    {% csrf_token %}
+                    <div class="col-auto">
+                        <select name="status" class="form-select form-select-sm" aria-label="Colony status">
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}"{% if value == colony.status %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">{% trans "Update status" %}</button>
+                    </div>
+                </form>
+
+                <form method="post" action="{% url 'colony_visibility_update' colony.pk %}">
+                    {% csrf_token %}
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="colony-keep-private" name="keep_private"{% if not colony.is_public %} checked{% endif %}>
+                        <label class="form-check-label small" for="colony-keep-private">{% trans "Keep this colony private" %}</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" id="colony-hide-location" name="hide_found_location"{% if not colony.share_found_location %} checked{% endif %}>
+                        <label class="form-check-label small" for="colony-hide-location">{% trans "Hide found location from the public page" %}</label>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">{% trans "Save visibility" %}</button>
+                </form>
+                {% if colony.is_public %}
+                <p class="form-text mb-0 mt-2 small">
+                    {% trans "Public page" %}: <a href="{{ colony.get_absolute_url }}">{{ request.build_absolute_uri }}</a>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% if is_owner %}
+{# Modal: Delete Colony Confirmation #}
+<div class="modal fade" id="deleteColonyModal" tabindex="-1" aria-labelledby="deleteColonyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteColonyModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>{% trans "Delete Colony" %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger mb-3">
+                    <h6 class="alert-heading fw-bold mb-2">
+                        <i class="bi bi-exclamation-octagon-fill me-1"></i>{% trans "Warning: This action cannot be undone!" %}
+                    </h6>
+                    <p class="mb-2 small">
+                        {% blocktrans with name=colony.name %}Deleting <strong>{{ name }}</strong> will permanently remove all data associated with this colony:{% endblocktrans %}
+                    </p>
+                    <ul class="mb-0 small ps-3">
+                        <li><strong>{% trans "All journal entries" %}</strong> ({{ journal_entries|length }})</li>
+                        <li><strong>{% trans "All colony counts / censuses" %}</strong> ({{ censuses|length }})</li>
+                        <li><strong>{% trans "All care & routine logs" %}</strong> ({{ care_events|length }})</li>
+                        <li><strong>{% trans "All uploaded photos" %}</strong></li>
+                    </ul>
+                </div>
+
+                <form method="post" action="{% url 'colony_delete' colony.pk %}" id="delete-colony-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="confirm-colony-name-input" class="form-label small text-muted">
+                            {% blocktrans with name=colony.name %}To confirm deletion, please type the exact colony name <strong class="text-danger user-select-all">{{ name }}</strong> below:{% endblocktrans %}
+                        </label>
+                        <input type="text"
+                               name="confirm_colony_name"
+                               id="confirm-colony-name-input"
+                               class="form-control"
+                               data-colony-name="{{ colony.name }}"
+                               placeholder="{{ colony.name }}"
+                               autocomplete="off"
+                               required>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                        <button type="submit" id="confirm-delete-colony-btn" class="btn btn-danger" disabled>
+                            <i class="bi bi-trash me-1"></i>{% trans "Delete Colony Permanently" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% include "ants/snippets/journal_image_lightbox.html" %}
+{% endblock %}
+{% block script %}
+<script src="{% static 'ants/js/colony_journal_photos.js' %}"></script>
+<script src="{% static 'ants/js/journal_image_lightbox.js' %}"></script>
+{% if census_chart_json %}
+<script src="{% static 'ants/js/vendor/Chart.bundle.min.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var chartData = {{ census_chart_json|safe }};
+    if (!chartData || !chartData.workers || chartData.workers.length < 2) return;
+
+    var chartCanvas = document.getElementById('colonyGrowthChart');
+    if (!chartCanvas) return;
+
+    var chartInstance = null;
+
+    function initOrResizeChart() {
+        if (chartInstance) {
+            chartInstance.resize();
+            return;
+        }
+
+        var ctx = chartCanvas.getContext('2d');
+        var pointBackgroundColors = chartData.is_estimated.map(function(est) {
+            return est ? '#ffc107' : '#0d6efd';
+        });
+        var pointRadius = chartData.is_estimated.map(function(est) {
+            return est ? 5 : 6;
+        });
+
+        var gradient = ctx.createLinearGradient(0, 0, 0, 240);
+        gradient.addColorStop(0, 'rgba(13, 110, 253, 0.22)');
+        gradient.addColorStop(1, 'rgba(13, 110, 253, 0.0)');
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: '{% trans "Workers" %}',
+                    data: chartData.workers,
+                    borderColor: '#0d6efd',
+                    backgroundColor: gradient,
+                    borderWidth: 2.5,
+                    fill: true,
+                    lineTension: 0.25,
+                    pointBackgroundColor: pointBackgroundColors,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: pointRadius,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                legend: {
+                    display: false
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            var idx = tooltipItem.index;
+                            var val = tooltipItem.yLabel;
+                            var est = chartData.is_estimated[idx];
+                            return (est ? '~' : '') + val + ' ' + (est ? '{% trans "Workers (estimated)" %}' : '{% trans "Workers (counted)" %}');
+                        }
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            display: false
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            precision: 0
+                        },
+                        gridLines: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }]
+                }
+            }
+        });
+    }
+
+    var censusPane = document.getElementById('content-census');
+    if (censusPane && censusPane.classList.contains('active')) {
+        initOrResizeChart();
+    }
+
+    var censusTabBtn = document.getElementById('tab-census');
+    if (censusTabBtn) {
+        censusTabBtn.addEventListener('shown.bs.tab', function () {
+            initOrResizeChart();
+        });
+    }
+});
+</script>
+{% endif %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const copyBtn = document.getElementById("copy-link-btn");
+    if (copyBtn) {
+        copyBtn.addEventListener("click", function () {
+            const url = this.getAttribute("data-url");
+            navigator.clipboard.writeText(url).then(() => {
+                const orig = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-check-lg me-1"></i>{% trans "Copied!" %}';
+                setTimeout(() => { this.innerHTML = orig; }, 2000);
+            });
+        });
+    }
+
+    const confirmInput = document.getElementById("confirm-colony-name-input");
+    const deleteBtn = document.getElementById("confirm-delete-colony-btn");
+    if (confirmInput && deleteBtn) {
+        const targetName = confirmInput.getAttribute("data-colony-name");
+        confirmInput.addEventListener("input", function () {
+            if (this.value.trim() === targetName) {
+                deleteBtn.removeAttribute("disabled");
+            } else {
+                deleteBtn.setAttribute("disabled", "disabled");
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

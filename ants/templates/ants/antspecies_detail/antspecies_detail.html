@@ -45,6 +45,19 @@
     </a>
 </p>
 {% endif %}
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+    {% if community_colonies_count %}
+    <a href="{% url 'community_journal' %}?species={{ object.slug }}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-journal-bookmark-fill me-1"></i>
+        {% blocktrans with col_count=community_colonies_count entry_count=community_journal_entries_count %}{{ col_count }} community colon{{ col_count|pluralize:"y,ies" }} ({{ entry_count }} journal entr{{ entry_count|pluralize:"y,ies" }}){% endblocktrans %}
+    </a>
+    {% endif %}
+    {% if user.is_authenticated %}
+    <a href="{% url 'colony_create' %}?species={{ object.id }}" class="btn btn-sm btn-outline-success">
+        <i class="bi bi-plus-circle me-1"></i> {% trans 'Add to my colonies' %}
+    </a>
+    {% endif %}
+</div>
 {% if not user.is_authenticated %}
 <p class="mb-2 small text-muted">
     <a href="{% url 'account_login' %}">{% trans 'Log in' %}</a>

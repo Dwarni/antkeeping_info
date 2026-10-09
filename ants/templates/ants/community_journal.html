@@ -1,0 +1,135 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block title %}Community Journal | Antkeeping.info{% endblock %}
+{% block og_title %}Community Journal — Antkeeping.info{% endblock %}
+{% block og_description %}Browse journal entries from ant colonies kept by the community — filter by species, genus, or keeper.{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/journal_image_lightbox.css' %}">
+{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">Community Journal</h1>
+<p class="text-muted mb-4">Recent updates from public colonies kept by the community.</p>
+
+<div class="row">
+    {# Filter panel #}
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-funnel me-1"></i> Filters
+                </h5>
+                <form id="filter-form"
+                      hx-get="{% url 'community_journal_results' %}"
+                      hx-target="#results-container"
+                      hx-trigger="change delay:300ms, input changed delay:400ms from:#search-input"
+                      hx-indicator="#htmx-spinner">
+
+                    <div class="mb-3">
+                        <label for="search-input" class="form-label fw-semibold">Search Note</label>
+                        <input type="search" name="q" id="search-input" class="form-control form-control-sm"
+                               placeholder="e.g. winterruhe, setup, brood..." value="{{ request.GET.q }}">
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="has_photos" value="1" id="photos-check"
+                               {% if request.GET.has_photos == "1" %}checked{% endif %}>
+                        <label class="form-check-label small fw-semibold" for="photos-check">
+                            📷 Only with photos
+                        </label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="event-select" class="form-label fw-semibold">Event / Milestone</label>
+                        <select name="event_type" id="event-select" class="form-select form-select-sm">
+                            <option value="">Any</option>
+                            {% for val, label in event_types %}
+                            <option value="{{ val }}"{% if request.GET.event_type == val %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="genus-select" class="form-label fw-semibold">Genus</label>
+                        <select name="genus" id="genus-select" class="form-select form-select-sm">
+                            <option value="">Any</option>
+                            {% for genus in genera %}
+                            <option value="{{ genus.slug }}"{% if request.GET.genus == genus.slug %} selected{% endif %}>{{ genus.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="species-select" class="form-label fw-semibold">Species</label>
+                        <select name="species" id="species-select" class="form-select form-select-sm">
+                            <option value="">Any</option>
+                            {% for species in species_list %}
+                            <option value="{{ species.slug }}"{% if request.GET.species == species.slug %} selected{% endif %}>{{ species.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="user-select" class="form-label fw-semibold">Keeper</label>
+                        <select name="user" id="user-select" class="form-select form-select-sm">
+                            <option value="">Any</option>
+                            {% for username in usernames %}
+                            <option value="{{ username }}"{% if request.GET.user == username %} selected{% endif %}>{{ username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="reset-btn">
+                        <i class="bi bi-x-circle me-1"></i>Reset
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="htmx-spinner" class="htmx-indicator mt-2 text-center">
+            <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
+        </div>
+    </div>
+
+    {# Results area #}
+    <div class="col-md-9">
+        <div id="results-container"
+             hx-get="{% url 'community_journal_results' %}"
+             hx-trigger="load"
+             hx-include="#filter-form"
+             hx-indicator="#htmx-spinner">
+        </div>
+    </div>
+</div>
+{% include "ants/snippets/journal_image_lightbox.html" %}
+{% endblock %}
+{% block script %}
+<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+<script src="{% static 'ants/js/journal_image_lightbox.js' %}"></script>
+<script>
+(function () {
+    var form = document.getElementById('filter-form');
+    var resetBtn = document.getElementById('reset-btn');
+
+    function syncUrl() {
+        var params = new URLSearchParams(new FormData(form));
+        for (var key of [...params.keys()]) {
+            if (!params.get(key)) { params.delete(key); }
+        }
+        var search = params.toString();
+        history.replaceState(null, '', search ? location.pathname + '?' + search : location.pathname);
+    }
+
+    form.addEventListener('change', syncUrl);
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            form.querySelectorAll('select').forEach(function (sel) { sel.value = ''; });
+            form.querySelectorAll('input[type="search"]').forEach(function (inp) { inp.value = ''; });
+            form.querySelectorAll('input[type="checkbox"]').forEach(function (chk) { chk.checked = false; });
+            history.replaceState(null, '', location.pathname);
+            htmx.trigger(form, 'change');
+        });
+    }
+})();
+</script>
+{% endblock %}
