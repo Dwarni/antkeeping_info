@@ -1101,10 +1101,16 @@ class ColonyCensus(models.Model):
     pupae = models.PositiveIntegerField("Pupae", null=True, blank=True)
     pupae_is_estimated = models.BooleanField("Pupae estimated", default=False)
 
+    image_file = ImageField(
+        "Count image", upload_to="colony_census_images", null=True, blank=True
+    )
+
     note = models.CharField("Note", max_length=255, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    MAX_IMAGE_DIMENSION = 1920
 
     class Meta:
         ordering = ["-date", "-created_at"]
@@ -1114,6 +1120,15 @@ class ColonyCensus(models.Model):
     def __str__(self):
         return f"Census for {self.colony} on {self.date}"
 
+    def save(self, *args, **kwargs):
+        if (
+            self.image_file
+            and hasattr(self.image_file, "file")
+            and isinstance(self.image_file.file, UploadedFile)
+        ):
+            downscale_to_max_dimension(self.image_file, self.MAX_IMAGE_DIMENSION)
+        super().save(*args, **kwargs)
+
     def clean(self):
         super().clean()
         if (
@@ -1122,9 +1137,13 @@ class ColonyCensus(models.Model):
             and self.eggs is None
             and self.larvae is None
             and self.pupae is None
+            and not self.image_file
         ):
             raise ValidationError(
-                _("Please enter at least one count (queens, workers, eggs, larvae, or pupae).")
+                _(
+                    "Please enter at least one count (queens, workers, "
+                    "eggs, larvae, or pupae) or upload a count image."
+                )
             )
 
     @property

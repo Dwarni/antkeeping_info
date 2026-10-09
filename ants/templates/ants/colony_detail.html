@@ -218,6 +218,9 @@
                         </div>
                         <div class="small text-muted d-flex justify-content-between align-items-center mt-2">
                             <span>{% trans "As of" %}: {{ latest_census.date|date:"N j, Y" }}</span>
+                            {% if latest_census.image_file %}
+                            <span class="badge text-bg-secondary"><i class="bi bi-camera-fill me-1"></i>{% trans "Photo" %}</span>
+                            {% endif %}
                             {% if latest_census.note %}
                             <span class="text-truncate" style="max-width: 200px;" title="{{ latest_census.note }}">{{ latest_census.note }}</span>
                             {% endif %}
@@ -386,7 +389,14 @@
                     <h3 class="h6 mb-0 fw-bold text-primary"><i class="bi bi-bar-chart-fill me-1"></i> {% trans "Record population count (Census)" %}</h3>
                     <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#collapse-add-census" aria-label="Close"></button>
                 </div>
-                <form method="post" action="{% url 'colony_census_create' colony.pk %}" id="form-add-census">
+                <div class="alert alert-info d-flex align-items-start gap-2 py-2 px-3 mb-3 small">
+                    <i class="bi bi-calculator-fill text-info fs-5 flex-shrink-0 mt-1"></i>
+                    <div>
+                        <strong>{% trans "Tip for exact counting:" %}</strong>
+                        {% blocktrans %}You can use the free web tool <a href="https://crazyants.de/antcounter/" target="_blank" rel="noopener noreferrer" class="alert-link fw-semibold">AntCounter <i class="bi bi-box-arrow-up-right small"></i></a> to accurately count workers and brood from photos. The app allows exporting the counted image (including legend and numbers) which you can attach directly below.{% endblocktrans %}
+                    </div>
+                </div>
+                <form method="post" action="{% url 'colony_census_create' colony.pk %}" id="form-add-census" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">{% trans "Date" %}</label>
@@ -452,6 +462,13 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {% trans "Count photo (optional)" as census_photo_label %}
+                        {% trans "Add count photo" as census_btn_title %}
+                        {% trans "Attach exported AntCounter image (with dots & legend) or photo. Drop file or paste (Ctrl+V)." as census_photo_hint %}
+                        {% include "ants/snippets/journal_photo_picker.html" with photo_picker_name="image_file" photo_picker_max="1" photo_picker_label=census_photo_label photo_picker_button_title=census_btn_title photo_picker_hint=census_photo_hint %}
                     </div>
 
                     <div class="mb-3">
@@ -700,9 +717,31 @@
                 {% if not censuses %}
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-bar-chart fs-1 mb-2 d-block"></i>
-                    <p class="mb-0">{% trans "No counts recorded yet." %}</p>
+                    <p class="mb-2">{% trans "No counts recorded yet." %}</p>
+                    {% if is_owner %}
+                    <button type="button" class="btn btn-sm btn-primary mb-3"
+                            data-bs-toggle="collapse" data-bs-target="#collapse-add-census">
+                        <i class="bi bi-plus-lg me-1"></i>{% trans "Record count" %}
+                    </button>
+                    {% endif %}
+                    <p class="small mb-0">
+                        <i class="bi bi-lightbulb me-1 text-warning"></i>
+                        {% blocktrans %}Tip: For exact counting from photos, you can use <a href="https://crazyants.de/antcounter/" target="_blank" rel="noopener noreferrer">AntCounter <i class="bi bi-box-arrow-up-right small"></i></a>.{% endblocktrans %}
+                    </p>
                 </div>
                 {% else %}
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div class="small text-muted">
+                        <i class="bi bi-lightbulb me-1 text-warning"></i>
+                        {% blocktrans %}Tip: For exact counting from photos, you can use <a href="https://crazyants.de/antcounter/" target="_blank" rel="noopener noreferrer">AntCounter <i class="bi bi-box-arrow-up-right small"></i></a>.{% endblocktrans %}
+                    </div>
+                    {% if is_owner %}
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-bs-toggle="collapse" data-bs-target="#collapse-add-census">
+                        <i class="bi bi-plus-lg me-1"></i>{% trans "Record count" %}
+                    </button>
+                    {% endif %}
+                </div>
                 {% if census_chart_json %}
                 <div class="card mb-4 shadow-sm border-0">
                     <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
@@ -740,6 +779,17 @@
                             </div>
                             {% if c.note %}
                             <p class="small text-muted mb-0 mt-2">{{ c.note }}</p>
+                            {% endif %}
+                            {% if c.image_file %}
+                            <div class="mt-2">
+                                {% thumbnail c.image_file "120x120" crop="center" as im %}
+                                <a href="#" class="journal-photo-thumb" data-gallery="colony-census-{{ c.pk }}"
+                                   data-full-src="{{ c.image_file.url }}"
+                                   data-caption="{% blocktrans with date=c.date|date:'N j, Y' %}Count on {{ date }}{% endblocktrans %}{% if c.note %} — {{ c.note }}{% endif %}">
+                                    <img class="rounded shadow-sm border" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{% trans 'Count photo' %}">
+                                </a>
+                                {% endthumbnail %}
+                            </div>
                             {% endif %}
                         </div>
                         {% if is_owner %}
@@ -1116,6 +1166,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (note && note.value.trim() !== "") return true;
             const queens = form.querySelector('[name="queens"]');
             if (queens && queens.value !== "1") return true;
+            const imgInput = form.querySelector('[name="image_file"]');
+            if (imgInput && imgInput.files && imgInput.files.length > 0) return true;
             return false;
         }
 

@@ -37,11 +37,21 @@
             });
 
             addTile.disabled = files.length >= maxFiles;
+            if (maxFiles === 1) {
+                addTile.style.display = files.length >= 1 ? 'none' : '';
+            }
         }
 
         function addFileList(fileList) {
             var remaining = maxFiles - files.length;
-            if (remaining <= 0) return;
+            if (remaining <= 0) {
+                if (maxFiles === 1 && fileList.length > 0) {
+                    files = [];
+                    remaining = 1;
+                } else {
+                    return;
+                }
+            }
             var added = 0;
             for (var i = 0; i < fileList.length; i++) {
                 var file = fileList[i];
@@ -97,7 +107,7 @@
             // Check for external file drop from OS
             if (e.dataTransfer && e.dataTransfer.types) {
                 var isFiles = Array.prototype.indexOf.call(e.dataTransfer.types, 'Files') !== -1;
-                if (isFiles && files.length < maxFiles) {
+                if (isFiles && (files.length < maxFiles || maxFiles === 1)) {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'copy';
                     thumbs.classList.add('drag-over');

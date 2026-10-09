@@ -242,6 +242,16 @@ class ColonyJournalEntryForm(forms.ModelForm):
 class ColonyCensusForm(forms.ModelForm):
     """Form for recording counts of castes and brood stages."""
 
+    eggs_unit = forms.ChoiceField(
+        choices=ColonyCensus.EGG_UNIT_CHOICES,
+        required=False,
+        initial=ColonyCensus.UNIT_EGGS,
+        widget=forms.Select(attrs={"class": "form-select form-select-sm"}),
+    )
+
+    def clean_eggs_unit(self):
+        return self.cleaned_data.get("eggs_unit") or ColonyCensus.UNIT_EGGS
+
     class Meta:
         model = ColonyCensus
         fields = [
@@ -257,6 +267,7 @@ class ColonyCensusForm(forms.ModelForm):
             "larvae_is_estimated",
             "pupae",
             "pupae_is_estimated",
+            "image_file",
             "note",
         ]
         widgets = {
@@ -272,6 +283,9 @@ class ColonyCensusForm(forms.ModelForm):
             "larvae_is_estimated": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "pupae": forms.NumberInput(attrs={"min": 0, "class": "form-control form-control-sm", "placeholder": "e.g. 5"}),
             "pupae_is_estimated": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "image_file": forms.ClearableFileInput(
+                attrs={"class": "d-none photo-picker-file-input", "accept": "image/*"}
+            ),
             "note": forms.TextInput(attrs={"class": "form-control form-control-sm", "placeholder": "Optional note (e.g. counted via photo)"}),
         }
 

@@ -298,10 +298,25 @@ class ColonyJournalEntryAdmin(admin.ModelAdmin):
 
 @admin.register(ColonyCensus)
 class ColonyCensusAdmin(admin.ModelAdmin):
-    list_display = ("colony", "date", "queens", "workers", "eggs", "eggs_unit", "larvae", "pupae", "created_at")
+    list_display = (
+        "colony",
+        "date",
+        "queens",
+        "workers",
+        "eggs",
+        "eggs_unit",
+        "larvae",
+        "pupae",
+        "has_image",
+        "created_at",
+    )
     list_filter = ("eggs_unit", "workers_is_estimated", "eggs_is_estimated")
     search_fields = ("colony__name", "note")
     readonly_fields = ("created_at", "updated_at")
+
+    @admin.display(boolean=True, description=_("Image"))
+    def has_image(self, obj):
+        return bool(obj.image_file)
 
 
 @admin.register(ColonyCareEvent)

@@ -1788,11 +1788,14 @@ class ColonyCensusCreateView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
         colony = get_object_or_404(Colony, user=request.user, pk=pk)
-        form = ColonyCensusForm(request.POST)
+        form = ColonyCensusForm(request.POST, request.FILES)
         if not form.is_valid():
             for field, errs in form.errors.items():
                 for err in errs:
-                    messages.error(request, f"{field}: {err}" if field != "__all__" else err)
+                    messages.error(
+                        request,
+                        f"{field}: {err}" if field != "__all__" else err,
+                    )
             return redirect(colony.get_absolute_url())
 
         census = form.save(commit=False)
@@ -1812,6 +1815,8 @@ class ColonyCensusDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk, census_pk):
         colony = get_object_or_404(Colony, user=request.user, pk=pk)
         census = get_object_or_404(ColonyCensus, pk=census_pk, colony=colony)
+        if census.image_file:
+            census.image_file.delete(save=False)
         census.delete()
         messages.success(request, _("Census entry deleted."))
         return redirect(colony.get_absolute_url())

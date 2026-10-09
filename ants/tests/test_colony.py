@@ -883,6 +883,17 @@ class ColonyCensusModelTests(TestCase):
         with self.assertRaises(ValidationError):
             census.clean()
 
+    def test_census_creation_with_image(self):
+        census = ColonyCensus.objects.create(
+            colony=self.colony,
+            workers=60,
+            image_file=_png_upload("antcounter_count.png"),
+            note="Counted via AntCounter",
+        )
+        self.assertEqual(census.workers, 60)
+        self.assertTrue(bool(census.image_file))
+        self.assertIn("colony_census_images", census.image_file.name)
+
 
 class ColonyCareEventModelTests(TestCase):
     def setUp(self):
@@ -949,6 +960,56 @@ class ColonyCensusAndCareViewsTests(TestCase):
         url = reverse("colony_census_delete", args=[self.colony.pk, census.pk])
         response = self.client.post(url)
         self.assertEqual(response.status_code, 404)
+
+    def test_owner_creates_census_with_image(self):
+        self.client.force_login(self.user)
+        url = reverse("colony_census_create", args=[self.colony.pk])
+        image = _png_upload("exported_count.png")
+        response = self.client.post(
+            url,
+            {
+                "date": "2026-04-01",
+                "workers": 75,
+                "eggs_unit": "EGGS",
+                "note": "Counted with AntCounter",
+                "image_file": image,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        census = self.colony.censuses.first()
+        self.assertIsNotNone(census)
+        self.assertEqual(census.workers, 75)
+        self.assertTrue(bool(census.image_file))
+
+    def test_owner_deletes_census_with_image(self):
+        census = ColonyCensus.objects.create(
+            colony=self.colony,
+            workers=15,
+            image_file=_png_upload("to_delete.png"),
+        )
+        self.assertTrue(bool(census.image_file))
+        self.client.force_login(self.user)
+        url = reverse("colony_census_delete", args=[self.colony.pk, census.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.colony.censuses.count(), 0)
+
+    def test_colony_detail_renders_antcounter_link_and_census_image(self):
+        census = ColonyCensus.objects.create(
+            colony=self.colony,
+            workers=80,
+            image_file=_png_upload("display_count.png"),
+        )
+        self.client.force_login(self.user)
+        url = reverse(
+            "colony_detail",
+            kwargs={"username": self.user.username, "slug": self.colony.slug},
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "https://crazyants.de/antcounter/")
+        self.assertContains(response, "AntCounter")
+        self.assertContains(response, "display_count")
 
     def test_owner_creates_care_event(self):
         self.client.force_login(self.user)
