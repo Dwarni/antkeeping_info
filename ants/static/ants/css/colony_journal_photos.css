@@ -84,3 +84,9 @@
     opacity: 0.4;
     cursor: not-allowed;
 }
+.photo-picker-thumbs.drag-over {
+    outline: 2px dashed var(--bs-primary);
+    outline-offset: 4px;
+    border-radius: 0.375rem;
+    background-color: rgba(var(--bs-primary-rgb), 0.08);
+}

@@ -39,17 +39,30 @@
             addTile.disabled = files.length >= maxFiles;
         }
 
+        function addFileList(fileList) {
+            var remaining = maxFiles - files.length;
+            if (remaining <= 0) return;
+            var added = 0;
+            for (var i = 0; i < fileList.length; i++) {
+                var file = fileList[i];
+                if (file.type && file.type.indexOf('image/') === 0) {
+                    files.push(file);
+                    added++;
+                    if (added >= remaining) break;
+                }
+            }
+            if (added > 0) {
+                syncInputFiles();
+                render();
+            }
+        }
+
         addTile.addEventListener('click', function () {
             fileInput.click();
         });
 
         fileInput.addEventListener('change', function () {
-            var remaining = maxFiles - files.length;
-            Array.prototype.slice.call(fileInput.files, 0, remaining).forEach(function (file) {
-                files.push(file);
-            });
-            syncInputFiles();
-            render();
+            addFileList(fileInput.files);
         });
 
         thumbs.addEventListener('click', function (e) {
@@ -76,23 +89,77 @@
         });
 
         thumbs.addEventListener('dragover', function (e) {
-            if (dragIndex === null) return;
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
+            if (dragIndex !== null) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                return;
+            }
+            // Check for external file drop from OS
+            if (e.dataTransfer && e.dataTransfer.types) {
+                var isFiles = Array.prototype.indexOf.call(e.dataTransfer.types, 'Files') !== -1;
+                if (isFiles && files.length < maxFiles) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    thumbs.classList.add('drag-over');
+                }
+            }
+        });
+
+        thumbs.addEventListener('dragleave', function (e) {
+            if (e.relatedTarget && thumbs.contains(e.relatedTarget)) return;
+            thumbs.classList.remove('drag-over');
         });
 
         thumbs.addEventListener('drop', function (e) {
-            var thumb = e.target.closest('.photo-picker-thumb');
-            if (!thumb || dragIndex === null) return;
-            e.preventDefault();
-            var dropIndex = parseInt(thumb.dataset.index, 10);
-            if (dropIndex === dragIndex) return;
-            var moved = files.splice(dragIndex, 1)[0];
-            files.splice(dropIndex, 0, moved);
-            dragIndex = null;
-            syncInputFiles();
-            render();
+            thumbs.classList.remove('drag-over');
+            if (dragIndex !== null) {
+                var thumb = e.target.closest('.photo-picker-thumb');
+                if (!thumb) return;
+                e.preventDefault();
+                var dropIndex = parseInt(thumb.dataset.index, 10);
+                if (dropIndex === dragIndex) return;
+                var moved = files.splice(dragIndex, 1)[0];
+                files.splice(dropIndex, 0, moved);
+                dragIndex = null;
+                syncInputFiles();
+                render();
+                return;
+            }
+            // External file drop
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                e.preventDefault();
+                addFileList(e.dataTransfer.files);
+            }
         });
+
+        // Paste support from clipboard (Ctrl+V / Cmd+V)
+        var form = root.closest('form');
+        if (form) {
+            form.addEventListener('paste', function (e) {
+                if (!e.clipboardData || !e.clipboardData.items) return;
+                var pastedFiles = [];
+                for (var i = 0; i < e.clipboardData.items.length; i++) {
+                    var item = e.clipboardData.items[i];
+                    if (item.type && item.type.indexOf('image/') === 0) {
+                        var blob = item.getAsFile();
+                        if (blob) {
+                            var filename = 'pasted_image_' + Date.now() + '.png';
+                            var f = new File([blob], filename, { type: blob.type });
+                            pastedFiles.push(f);
+                        }
+                    }
+                }
+                if (pastedFiles.length > 0) {
+                    addFileList(pastedFiles);
+                }
+            });
+
+            form.addEventListener('reset', function () {
+                files = [];
+                syncInputFiles();
+                render();
+            });
+        }
 
         render();
     }

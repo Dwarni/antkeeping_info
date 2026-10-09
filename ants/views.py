@@ -1491,7 +1491,7 @@ def _build_colony_detail_context(colony, request):
     care_events = colony.care_events.select_related("food_item").all()
 
     care_summary = {}
-    for cat, _ in ColonyCareEvent.CATEGORY_CHOICES:
+    for cat, _label in ColonyCareEvent.CATEGORY_CHOICES:
         latest = care_events.filter(category=cat).first()
         if latest:
             care_summary[cat] = latest
@@ -1529,6 +1529,28 @@ def _build_colony_detail_context(colony, request):
         "status_choices": Colony.STATUS_CHOICES,
         "care_categories": ColonyCareEvent.CATEGORY_CHOICES,
         "journal_event_types": ColonyJournalEntry.EVENT_TYPE_CHOICES,
+        "journal_event_types_grouped": [
+            (_("General & Routine"), [
+                (ColonyJournalEntry.EVENT_GENERAL, _("General update")),
+                (ColonyJournalEntry.EVENT_FEEDING, _("Feeding / Food trial")),
+            ]),
+            (_("Milestones & Development"), [
+                (ColonyJournalEntry.EVENT_FOUNDING, _("Founding / First eggs")),
+                (ColonyJournalEntry.EVENT_FIRST_WORKER, _("First worker (Nanitic)")),
+                (ColonyJournalEntry.EVENT_NEST_MOVE, _("Nest move / New setup")),
+                (ColonyJournalEntry.EVENT_ALATES, _("Alates")),
+                (ColonyJournalEntry.EVENT_NUPTIAL_FLIGHT, _("Nuptial flight")),
+            ]),
+            (_("Seasonal / Hibernation"), [
+                (ColonyJournalEntry.EVENT_HIBERNATION_START, _("Hibernation started")),
+                (ColonyJournalEntry.EVENT_HIBERNATION_END, _("Hibernation ended")),
+            ]),
+            (_("Incidents & Problems"), [
+                (ColonyJournalEntry.EVENT_ESCAPE, _("Escape")),
+                (ColonyJournalEntry.EVENT_ISSUE, _("Issue (mold, mites, die-off)")),
+                (ColonyJournalEntry.EVENT_QUEEN_DIED, _("Queen died")),
+            ]),
+        ],
         "census_chart_json": json.dumps(census_chart_data) if census_chart_data else None,
     }
     if is_owner:

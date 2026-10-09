@@ -44,6 +44,14 @@
     align-items: center;
     gap: 0.3rem;
 }
+.journal-note-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+.btn-group-xs > .btn {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.72rem;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -312,29 +320,61 @@
                     <h3 class="h6 mb-0 fw-bold"><i class="bi bi-journal-plus me-1"></i> {% trans "Add journal entry" %}</h3>
                     <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#collapse-add-journal" aria-label="Close"></button>
                 </div>
-                <form method="post" action="{% url 'colony_journal_entry_create' colony.pk %}" enctype="multipart/form-data">
+                <form method="post" action="{% url 'colony_journal_entry_create' colony.pk %}" enctype="multipart/form-data" id="form-add-journal" data-colony-id="{{ colony.pk }}">
                     {% csrf_token %}
                     <div class="row g-2 mb-2">
                         <div class="col-sm-6">
-                            <label class="form-label small fw-semibold" for="journal-date">{% trans "Date" %}</label>
-                            <input type="date" class="form-control form-control-sm" id="journal-date" name="date" value="{% now 'Y-m-d' %}" required>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-semibold mb-0" for="journal-date">{% trans "Date" %}</label>
+                                <div class="btn-group btn-group-xs" role="group">
+                                    <button type="button" class="btn btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;" id="journal-date-today" title="{% trans 'Set to today' %}">{% trans "Today" %}</button>
+                                    <button type="button" class="btn btn-outline-secondary py-0 px-2" style="font-size: 0.72rem;" id="journal-date-yesterday" title="{% trans 'Set to yesterday' %}">{% trans "Yesterday" %}</button>
+                                </div>
+                            </div>
+                            <input type="date" class="form-control form-control-sm" id="journal-date" name="date" value="{% now 'Y-m-d' %}" max="{% now 'Y-m-d' %}" required>
                         </div>
                         <div class="col-sm-6">
-                            <label class="form-label small fw-semibold" for="journal-event-type">{% trans "Event / Milestone (optional)" %}</label>
+                            <label class="form-label small fw-semibold mb-1" for="journal-event-type">{% trans "Event / Milestone (optional)" %}</label>
                             <select class="form-select form-select-sm" id="journal-event-type" name="event_type">
-                                {% for val, label in journal_event_types %}
-                                <option value="{{ val }}">{{ label }}</option>
-                                {% endfor %}
+                                {% if journal_event_types_grouped %}
+                                    {% for group_label, items in journal_event_types_grouped %}
+                                    <optgroup label="{{ group_label }}">
+                                        {% for val, label in items %}
+                                        <option value="{{ val }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    {% endfor %}
+                                {% else %}
+                                    {% for val, label in journal_event_types %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                {% endif %}
                             </select>
                         </div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label small fw-semibold" for="journal-note">{% trans "Note" %}</label>
-                        <textarea class="form-control form-control-sm" id="journal-note" name="note" rows="3" maxlength="2000" required
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0" for="journal-note">{% trans "Note" %}</label>
+                            <span class="text-muted small journal-char-counter" id="journal-char-counter" style="font-size: 0.75rem;">0 / 2000</span>
+                        </div>
+                        <textarea class="form-control form-control-sm journal-note-textarea" id="journal-note" name="note" rows="3" maxlength="2000" required
                                   placeholder="{% trans 'Record your observations, feeding behavior, nest changes...' %}"></textarea>
+                        <div class="form-text small d-flex justify-content-between align-items-center mt-1">
+                            <span class="text-muted"><kbd class="bg-body-secondary text-body border" style="font-size: 0.7rem;">Ctrl</kbd> + <kbd class="bg-body-secondary text-body border" style="font-size: 0.7rem;">Enter</kbd> {% trans "to save quickly" %}</span>
+                            <span class="text-success small d-none" id="journal-draft-indicator"><i class="bi bi-cloud-check me-1"></i>{% trans "Draft saved" %}</span>
+                        </div>
                     </div>
                     {% include "ants/snippets/journal_photo_picker.html" %}
-                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Add entry" %}</button>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#collapse-add-journal" id="btn-cancel-add-journal">
+                            {% trans "Cancel" %}
+                        </button>
+                        <button type="submit" class="btn btn-sm btn-primary" id="btn-submit-add-journal">
+                            <span class="spinner-border spinner-border-sm me-1 d-none" role="status" aria-hidden="true" id="submit-spinner-add-journal"></span>
+                            <i class="bi bi-check-lg me-1" id="submit-icon-add-journal"></i>
+                            <span id="submit-text-add-journal">{% trans "Add entry" %}</span>
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -505,7 +545,12 @@
                 {% if not journal_entries %}
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-journal-x fs-1 mb-2 d-block"></i>
-                    <p class="mb-0">{% trans "No journal entries yet." %}</p>
+                    <p class="mb-3">{% trans "No journal entries yet." %}</p>
+                    {% if is_owner %}
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-empty-add-journal">
+                        <i class="bi bi-pencil-square me-1"></i> {% trans "Write first journal entry" %}
+                    </button>
+                    {% endif %}
                 </div>
                 {% endif %}
 
@@ -585,15 +630,28 @@
                                         <div class="col-sm-6">
                                             <label class="form-label small fw-semibold">{% trans "Event / Milestone" %}</label>
                                             <select class="form-select form-select-sm" name="event_type">
-                                                {% for val, label in journal_event_types %}
-                                                <option value="{{ val }}"{% if entry.event_type == val %} selected{% endif %}>{{ label }}</option>
-                                                {% endfor %}
+                                                {% if journal_event_types_grouped %}
+                                                    {% for group_label, items in journal_event_types_grouped %}
+                                                    <optgroup label="{{ group_label }}">
+                                                        {% for val, label in items %}
+                                                        <option value="{{ val }}"{% if entry.event_type == val %} selected{% endif %}>{{ label }}</option>
+                                                        {% endfor %}
+                                                    </optgroup>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    {% for val, label in journal_event_types %}
+                                                    <option value="{{ val }}"{% if entry.event_type == val %} selected{% endif %}>{{ label }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
                                             </select>
                                         </div>
                                     </div>
                                     <div class="mb-2">
-                                        <label class="form-label small fw-semibold">{% trans "Note" %}</label>
-                                        <textarea class="form-control form-control-sm"
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="form-label small fw-semibold mb-0">{% trans "Note" %}</label>
+                                            <span class="text-muted small edit-journal-char-counter" style="font-size: 0.75rem;">{{ entry.note|length }} / 2000</span>
+                                        </div>
+                                        <textarea class="form-control form-control-sm journal-note-textarea"
                                                   name="note" rows="3" maxlength="2000" required>{{ entry.note }}</textarea>
                                     </div>
 
@@ -1015,6 +1073,185 @@ document.addEventListener("DOMContentLoaded", function () {
                 sortEntries("created");
             });
         }
+    }
+
+    // Journal Add Entry Form Enhancements
+    const journalForm = document.getElementById("form-add-journal");
+    const journalCollapseEl = document.getElementById("collapse-add-journal");
+    const tabJournalBtn = document.getElementById("tab-journal");
+    const btnEmptyAdd = document.getElementById("btn-empty-add-journal");
+    const addJournalTriggerBtns = document.querySelectorAll('[data-bs-target="#collapse-add-journal"]');
+
+    function openAndFocusJournalForm() {
+        if (tabJournalBtn && !tabJournalBtn.classList.contains("active")) {
+            tabJournalBtn.click();
+        }
+        if (journalCollapseEl) {
+            const bsCollapse = bootstrap.Collapse.getOrCreateInstance(journalCollapseEl, { toggle: false });
+            bsCollapse.show();
+            journalCollapseEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            setTimeout(() => {
+                const noteInput = document.getElementById("journal-note");
+                if (noteInput) noteInput.focus();
+            }, 300);
+        }
+    }
+
+    if (btnEmptyAdd) {
+        btnEmptyAdd.addEventListener("click", openAndFocusJournalForm);
+    }
+
+    addJournalTriggerBtns.forEach(btn => {
+        btn.addEventListener("click", function () {
+            if (tabJournalBtn && !tabJournalBtn.classList.contains("active")) {
+                tabJournalBtn.click();
+            }
+            setTimeout(() => {
+                const noteInput = document.getElementById("journal-note");
+                if (noteInput && journalCollapseEl && journalCollapseEl.classList.contains("show")) {
+                    noteInput.focus();
+                }
+            }, 300);
+        });
+    });
+
+    // Date Quick Pickers (Today / Yesterday)
+    const dateInput = document.getElementById("journal-date");
+    const btnToday = document.getElementById("journal-date-today");
+    const btnYesterday = document.getElementById("journal-date-yesterday");
+
+    function formatDateYMD(d) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    if (dateInput && btnToday && btnYesterday) {
+        btnToday.addEventListener("click", function () {
+            dateInput.value = formatDateYMD(new Date());
+        });
+        btnYesterday.addEventListener("click", function () {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            dateInput.value = formatDateYMD(d);
+        });
+    }
+
+    // Auto-grow & Character Counter on Textareas
+    function setupTextareaEnhancements(textarea, counterEl) {
+        if (!textarea) return;
+
+        function update() {
+            // Auto grow
+            textarea.style.height = "auto";
+            textarea.style.height = Math.max(80, textarea.scrollHeight) + "px";
+
+            // Counter
+            if (counterEl) {
+                const len = textarea.value.length;
+                const max = textarea.getAttribute("maxlength") || 2000;
+                counterEl.textContent = `${len} / ${max}`;
+                if (len >= 1950) {
+                    counterEl.className = "small journal-char-counter text-danger fw-bold";
+                } else if (len >= 1800) {
+                    counterEl.className = "small journal-char-counter text-warning fw-semibold";
+                } else {
+                    counterEl.className = "text-muted small journal-char-counter";
+                }
+            }
+        }
+
+        textarea.addEventListener("input", update);
+        update();
+    }
+
+    const mainNoteTextarea = document.getElementById("journal-note");
+    const mainCharCounter = document.getElementById("journal-char-counter");
+    if (mainNoteTextarea) {
+        setupTextareaEnhancements(mainNoteTextarea, mainCharCounter);
+    }
+
+    // Also enhance edit note textareas
+    document.querySelectorAll("#journal-entries-list textarea[name='note']").forEach(ta => {
+        const counter = ta.closest(".card-body") ? ta.closest(".card-body").querySelector(".edit-journal-char-counter") : null;
+        setupTextareaEnhancements(ta, counter);
+    });
+
+    // Ctrl+Enter / Cmd+Enter Shortcut to Submit
+    document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            const activeEl = document.activeElement;
+            if (activeEl && activeEl.tagName === "TEXTAREA" && activeEl.name === "note") {
+                const targetForm = activeEl.closest("form");
+                if (targetForm) {
+                    e.preventDefault();
+                    targetForm.requestSubmit();
+                }
+            }
+        }
+    });
+
+    // Draft Auto-saving in localStorage
+    if (journalForm && mainNoteTextarea) {
+        const colonyId = journalForm.getAttribute("data-colony-id");
+        const draftKey = `colony_journal_draft_${colonyId}`;
+        const draftIndicator = document.getElementById("journal-draft-indicator");
+        let draftSaveTimeout = null;
+
+        // Restore draft if empty
+        const savedDraft = localStorage.getItem(draftKey);
+        if (savedDraft && !mainNoteTextarea.value.trim()) {
+            mainNoteTextarea.value = savedDraft;
+            setupTextareaEnhancements(mainNoteTextarea, mainCharCounter);
+            if (draftIndicator) {
+                draftIndicator.classList.remove("d-none");
+                draftIndicator.innerHTML = '<i class="bi bi-clock-history me-1"></i>{% trans "Draft restored" %}';
+                setTimeout(() => { draftIndicator.classList.add("d-none"); }, 4000);
+            }
+        }
+
+        mainNoteTextarea.addEventListener("input", function () {
+            clearTimeout(draftSaveTimeout);
+            draftSaveTimeout = setTimeout(() => {
+                if (mainNoteTextarea.value.trim()) {
+                    localStorage.setItem(draftKey, mainNoteTextarea.value);
+                    if (draftIndicator) {
+                        draftIndicator.classList.remove("d-none");
+                        draftIndicator.innerHTML = '<i class="bi bi-cloud-check me-1"></i>{% trans "Draft saved" %}';
+                        setTimeout(() => { draftIndicator.classList.add("d-none"); }, 2000);
+                    }
+                } else {
+                    localStorage.removeItem(draftKey);
+                }
+            }, 500);
+        });
+
+        // Cancel button clears draft and resets
+        const btnCancel = document.getElementById("btn-cancel-add-journal");
+        if (btnCancel) {
+            btnCancel.addEventListener("click", function () {
+                localStorage.removeItem(draftKey);
+                journalForm.reset();
+                setupTextareaEnhancements(mainNoteTextarea, mainCharCounter);
+            });
+        }
+
+        // On submit: loading state & clear draft
+        journalForm.addEventListener("submit", function () {
+            const submitBtn = document.getElementById("btn-submit-add-journal");
+            const spinner = document.getElementById("submit-spinner-add-journal");
+            const icon = document.getElementById("submit-icon-add-journal");
+            const text = document.getElementById("submit-text-add-journal");
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                if (spinner) spinner.classList.remove("d-none");
+                if (icon) icon.classList.add("d-none");
+                if (text) text.textContent = '{% trans "Saving..." %}';
+            }
+            localStorage.removeItem(draftKey);
+        });
     }
 });
 </script>
