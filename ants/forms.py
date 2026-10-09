@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from ants.models import AntSpecies, Colony, ColonyJournalEntry, FoodItem, Month
+from ants.models import AntSpecies, Colony, ColonyCareEvent, ColonyCensus, ColonyJournalEntry, FoodItem, Month
 from ants.utils.partial_date import PartialDateField
 
 
@@ -231,8 +231,66 @@ class ColonyJournalEntryForm(forms.ModelForm):
 
     class Meta:
         model = ColonyJournalEntry
-        fields = ["date", "note"]
+        fields = ["date", "event_type", "note"]
         widgets = {
-            "date": forms.DateInput(attrs={"type": "date"}),
-            "note": forms.Textarea(attrs={"rows": 3}),
+            "date": forms.DateInput(attrs={"type": "date", "class": "form-control form-control-sm"}),
+            "event_type": forms.Select(attrs={"class": "form-select form-select-sm"}),
+            "note": forms.Textarea(attrs={"rows": 3, "class": "form-control form-control-sm"}),
         }
+
+
+class ColonyCensusForm(forms.ModelForm):
+    """Form for recording counts of castes and brood stages."""
+
+    class Meta:
+        model = ColonyCensus
+        fields = [
+            "date",
+            "queens",
+            "queens_is_estimated",
+            "workers",
+            "workers_is_estimated",
+            "eggs",
+            "eggs_unit",
+            "eggs_is_estimated",
+            "larvae",
+            "larvae_is_estimated",
+            "pupae",
+            "pupae_is_estimated",
+            "note",
+        ]
+        widgets = {
+            "date": forms.DateInput(attrs={"type": "date", "class": "form-control form-control-sm"}),
+            "queens": forms.NumberInput(attrs={"min": 0, "class": "form-control form-control-sm", "placeholder": "e.g. 1"}),
+            "queens_is_estimated": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "workers": forms.NumberInput(attrs={"min": 0, "class": "form-control form-control-sm", "placeholder": "e.g. 25"}),
+            "workers_is_estimated": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "eggs": forms.NumberInput(attrs={"min": 0, "class": "form-control form-control-sm", "placeholder": "e.g. 15"}),
+            "eggs_unit": forms.Select(attrs={"class": "form-select form-select-sm"}),
+            "eggs_is_estimated": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "larvae": forms.NumberInput(attrs={"min": 0, "class": "form-control form-control-sm", "placeholder": "e.g. 10"}),
+            "larvae_is_estimated": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "pupae": forms.NumberInput(attrs={"min": 0, "class": "form-control form-control-sm", "placeholder": "e.g. 5"}),
+            "pupae_is_estimated": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "note": forms.TextInput(attrs={"class": "form-control form-control-sm", "placeholder": "Optional note (e.g. counted via photo)"}),
+        }
+
+
+class ColonyCareEventForm(forms.ModelForm):
+    """Form for recording a maintenance or care event."""
+
+    class Meta:
+        model = ColonyCareEvent
+        fields = ["category", "date", "time", "food_item", "details"]
+        widgets = {
+            "category": forms.Select(attrs={"class": "form-select form-select-sm"}),
+            "date": forms.DateInput(attrs={"type": "date", "class": "form-control form-control-sm"}),
+            "time": forms.TimeInput(attrs={"type": "time", "class": "form-control form-control-sm"}),
+            "food_item": forms.Select(attrs={"class": "form-select form-select-sm"}),
+            "details": forms.TextInput(attrs={"class": "form-control form-control-sm", "placeholder": "e.g. Honey water & small cricket"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["food_item"].queryset = FoodItem.objects.all().order_by("name")
+        self.fields["food_item"].required = False

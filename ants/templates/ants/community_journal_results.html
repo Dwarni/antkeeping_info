@@ -13,6 +13,9 @@
                 <a href="{{ entry.colony.get_absolute_url }}">{{ entry.colony.name }}</a>
                 &mdash; <em>{{ entry.colony.species.name }}</em>
                 <span class="text-muted small ms-1">by {{ entry.colony.user.username }}</span>
+                {% if entry.event_type and entry.event_type != 'GENERAL' %}
+                <span class="badge text-bg-info text-white ms-1">{{ entry.get_event_type_display }}</span>
+                {% endif %}
             </div>
             <span class="text-muted small text-nowrap">{{ entry.date|date:"N j, Y" }}</span>
         </div>

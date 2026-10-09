@@ -31,6 +31,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.utils.decorators import method_decorator
 from django.utils.text import slugify
 from django.views.decorators.cache import never_cache
@@ -43,6 +44,8 @@ logger = logging.getLogger(__name__)
 from flights.models import Flight
 
 from .forms import (
+    ColonyCareEventForm,
+    ColonyCensusForm,
     ColonyForm,
     ColonyJournalEntryForm,
     FoodItemCreateForm,
@@ -53,6 +56,8 @@ from .models import (
     AntSize,
     AntSpecies,
     Colony,
+    ColonyCareEvent,
+    ColonyCensus,
     ColonyImage,
     ColonyJournalEntry,
     ColonyJournalEntryImage,
@@ -800,6 +805,12 @@ class AntSpeciesDetail(DetailView):
 
         context.update(_build_food_context(ant, self.request.user))
 
+        public_colonies_qs = Colony.objects.filter(species=ant, is_public=True)
+        context["community_colonies_count"] = public_colonies_qs.count()
+        context["community_journal_entries_count"] = ColonyJournalEntry.objects.filter(
+            colony__in=public_colonies_qs
+        ).count()
+
         return context
 
 
@@ -1475,14 +1486,45 @@ def _save_title_image(request, colony):
 
 def _build_colony_detail_context(colony, request):
     is_owner = request.user.is_authenticated and request.user == colony.user
+    censuses = colony.censuses.all()
+    latest_census = censuses.first()
+    care_events = colony.care_events.select_related("food_item").all()
+
+    care_summary = {}
+    for cat, _ in ColonyCareEvent.CATEGORY_CHOICES:
+        latest = care_events.filter(category=cat).first()
+        if latest:
+            care_summary[cat] = latest
+
+    worker_censuses = list(
+        colony.censuses.filter(workers__isnull=False).order_by("date", "id")
+    )
+    census_chart_data = None
+    if len(worker_censuses) >= 2:
+        census_chart_data = {
+            "labels": [c.date.strftime("%d.%m.%Y") for c in worker_censuses],
+            "workers": [c.workers for c in worker_censuses],
+            "is_estimated": [bool(c.workers_is_estimated) for c in worker_censuses],
+        }
+
     context = {
         "colony": colony,
         "is_owner": is_owner,
         "journal_entries": colony.journal_entries.prefetch_related("images"),
+        "censuses": censuses,
+        "latest_census": latest_census,
+        "care_events": care_events,
+        "care_summary": care_summary,
         "status_choices": Colony.STATUS_CHOICES,
+        "care_categories": ColonyCareEvent.CATEGORY_CHOICES,
+        "journal_event_types": ColonyJournalEntry.EVENT_TYPE_CHOICES,
+        "census_chart_json": json.dumps(census_chart_data) if census_chart_data else None,
     }
     if is_owner:
         context["journal_form"] = ColonyJournalEntryForm()
+        context["census_form"] = ColonyCensusForm()
+        context["care_form"] = ColonyCareEventForm()
+        context["food_items"] = FoodItem.objects.all().order_by("name")
     return context
 
 
@@ -1496,10 +1538,30 @@ class ColonyCreateView(LoginRequiredMixin, FormView):
     MAX_CREATIONS_PER_WINDOW = 5
     RATE_LIMIT_WINDOW = datetime.timedelta(hours=1)
 
+    def get_initial(self):
+        initial = super().get_initial()
+        species_id = self.request.GET.get("species")
+        if species_id:
+            try:
+                species = AntSpecies.objects.get(pk=int(species_id))
+                initial["species"] = species.id
+            except (AntSpecies.DoesNotExist, ValueError):
+                pass
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_edit"] = False
-        context.setdefault("species_name", "")
+        species_name = kwargs.get("species_name")
+        if not species_name:
+            species_id = self.request.GET.get("species")
+            if species_id:
+                try:
+                    species = AntSpecies.objects.get(pk=int(species_id))
+                    species_name = species.name
+                except (AntSpecies.DoesNotExist, ValueError):
+                    pass
+        context.setdefault("species_name", species_name or "")
         return context
 
     def form_invalid(self, form):
@@ -1577,13 +1639,24 @@ class ColonyUpdateView(LoginRequiredMixin, FormView):
 
 
 class ColonyDeleteView(LoginRequiredMixin, View):
-    """Permanently deletes a colony (with its journal entries and photos)."""
+    """Permanently deletes a colony (with its journal entries, counts, care logs, and photos)."""
 
     def post(self, request, pk):
         colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        confirm_name = request.POST.get("confirm_colony_name", "").strip()
+        if confirm_name != colony.name:
+            messages.error(
+                request,
+                _("Colony name did not match. Deletion was cancelled."),
+            )
+            return redirect(colony.get_absolute_url())
+
         name = colony.name
         colony.delete()
-        messages.success(request, f'"{name}" was deleted.')
+        messages.success(
+            request,
+            _('"{name}" and all associated entries were permanently deleted.').format(name=name),
+        )
         return redirect("user_profile")
 
 
@@ -1677,6 +1750,68 @@ class ColonyJournalEntryUpdateView(LoginRequiredMixin, View):
 
 
 
+class ColonyCensusCreateView(LoginRequiredMixin, View):
+    """Adds a population and brood census to a colony."""
+
+    def post(self, request, pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        form = ColonyCensusForm(request.POST)
+        if not form.is_valid():
+            for field, errs in form.errors.items():
+                for err in errs:
+                    messages.error(request, f"{field}: {err}" if field != "__all__" else err)
+            return redirect(colony.get_absolute_url())
+
+        census = form.save(commit=False)
+        census.colony = colony
+        try:
+            census.full_clean()
+            census.save()
+            messages.success(request, _("Census recorded successfully."))
+        except ValidationError as e:
+            messages.error(request, "; ".join(e.messages))
+        return redirect(colony.get_absolute_url())
+
+
+class ColonyCensusDeleteView(LoginRequiredMixin, View):
+    """Deletes a census entry from one of the user's colonies."""
+
+    def post(self, request, pk, census_pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        census = get_object_or_404(ColonyCensus, pk=census_pk, colony=colony)
+        census.delete()
+        messages.success(request, _("Census entry deleted."))
+        return redirect(colony.get_absolute_url())
+
+
+class ColonyCareEventCreateView(LoginRequiredMixin, View):
+    """Adds a maintenance or care event to a colony."""
+
+    def post(self, request, pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        form = ColonyCareEventForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, _("Please provide a valid care category and date."))
+            return redirect(colony.get_absolute_url())
+
+        event = form.save(commit=False)
+        event.colony = colony
+        event.save()
+        messages.success(request, _("Care action recorded."))
+        return redirect(colony.get_absolute_url())
+
+
+class ColonyCareEventDeleteView(LoginRequiredMixin, View):
+    """Deletes a care event from one of the user's colonies."""
+
+    def post(self, request, pk, event_pk):
+        colony = get_object_or_404(Colony, user=request.user, pk=pk)
+        event = get_object_or_404(ColonyCareEvent, pk=event_pk, colony=colony)
+        event.delete()
+        messages.success(request, _("Care event deleted."))
+        return redirect(colony.get_absolute_url())
+
+
 class ColonyJournalEntryDeleteView(LoginRequiredMixin, View):
     """Deletes a journal entry (and its photos) from one of the user's colonies."""
 
@@ -1744,6 +1879,17 @@ def _community_journal_queryset(request):
         .order_by("-date", "-created_at")
     )
 
+    q = request.GET.get("q", "").strip()
+    if q:
+        qs = qs.filter(note__icontains=q)
+
+    if request.GET.get("has_photos") == "1":
+        qs = qs.filter(images__isnull=False).distinct()
+
+    event_type = request.GET.get("event_type", "").strip()
+    if event_type:
+        qs = qs.filter(event_type=event_type)
+
     genus_slug = request.GET.get("genus", "")
     if genus_slug:
         qs = qs.filter(colony__species__genus__slug__iexact=genus_slug)
@@ -1778,6 +1924,7 @@ class CommunityJournalView(TemplateView):
         context["usernames"] = (
             _visible_colonies().values_list("user__username", flat=True).distinct().order_by("user__username")
         )
+        context["event_types"] = ColonyJournalEntry.EVENT_TYPE_CHOICES
         return context
 
 

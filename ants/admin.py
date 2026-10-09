@@ -10,6 +10,8 @@ from ants.models import (
     AntSpeciesDistribution,
     AntSpeciesImage,
     Colony,
+    ColonyCareEvent,
+    ColonyCensus,
     ColonyJournalEntry,
     CommonName,
     Distribution,
@@ -261,13 +263,23 @@ class ColonyJournalEntryInline(admin.StackedInline):
     extra = 0
 
 
+class ColonyCensusInline(admin.TabularInline):
+    model = ColonyCensus
+    extra = 0
+
+
+class ColonyCareEventInline(admin.TabularInline):
+    model = ColonyCareEvent
+    extra = 0
+
+
 @admin.register(Colony)
 class ColonyAdmin(admin.ModelAdmin):
     list_display = ("name", "species", "user", "status", "is_public", "force_private_by_staff", "created_at")
     list_filter = ("status", "is_public", "force_private_by_staff", "origin_type")
     search_fields = ("name", "species__name", "user__username")
     readonly_fields = ("slug", "created_at", "updated_at", "status_changed_at")
-    inlines = [ColonyJournalEntryInline]
+    inlines = [ColonyJournalEntryInline, ColonyCensusInline, ColonyCareEventInline]
     actions = ["force_private"]
 
     @admin.action(description=_("Force selected colonies private (moderation)"))
@@ -278,6 +290,23 @@ class ColonyAdmin(admin.ModelAdmin):
 
 @admin.register(ColonyJournalEntry)
 class ColonyJournalEntryAdmin(admin.ModelAdmin):
-    list_display = ("colony", "date", "created_at")
+    list_display = ("colony", "date", "event_type", "created_at")
+    list_filter = ("event_type",)
     search_fields = ("colony__name", "note")
     readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ColonyCensus)
+class ColonyCensusAdmin(admin.ModelAdmin):
+    list_display = ("colony", "date", "queens", "workers", "eggs", "eggs_unit", "larvae", "pupae", "created_at")
+    list_filter = ("eggs_unit", "workers_is_estimated", "eggs_is_estimated")
+    search_fields = ("colony__name", "note")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ColonyCareEvent)
+class ColonyCareEventAdmin(admin.ModelAdmin):
+    list_display = ("colony", "date", "category", "food_item", "details", "created_at")
+    list_filter = ("category",)
+    search_fields = ("colony__name", "details")
+    readonly_fields = ("created_at",)

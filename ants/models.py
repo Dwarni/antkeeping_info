@@ -989,8 +989,33 @@ class ColonyImage(models.Model):
 class ColonyJournalEntry(models.Model):
     """A dated, free-text log entry for a colony."""
 
+    EVENT_GENERAL = "GENERAL"
+    EVENT_FOUNDING = "FOUNDING"
+    EVENT_FIRST_WORKER = "FIRST_WORKER"
+    EVENT_NEST_MOVE = "NEST_MOVE"
+    EVENT_HIBERNATION_START = "HIBERNATION_START"
+    EVENT_HIBERNATION_END = "HIBERNATION_END"
+    EVENT_FEEDING = "FEEDING"
+    EVENT_ISSUE = "ISSUE"
+    EVENT_QUEEN_DIED = "QUEEN_DIED"
+
+    EVENT_TYPE_CHOICES = [
+        (EVENT_GENERAL, _("General update")),
+        (EVENT_FOUNDING, _("Founding / First eggs")),
+        (EVENT_FIRST_WORKER, _("First worker (Nanitic)")),
+        (EVENT_NEST_MOVE, _("Nest move / New setup")),
+        (EVENT_HIBERNATION_START, _("Hibernation started")),
+        (EVENT_HIBERNATION_END, _("Hibernation ended")),
+        (EVENT_FEEDING, _("Feeding / Food trial")),
+        (EVENT_ISSUE, _("Issue (mold, mites, die-off)")),
+        (EVENT_QUEEN_DIED, _("Queen died")),
+    ]
+
     colony = models.ForeignKey(Colony, on_delete=models.CASCADE, related_name="journal_entries")
     date = models.DateField()
+    event_type = models.CharField(
+        max_length=25, choices=EVENT_TYPE_CHOICES, default=EVENT_GENERAL, blank=True
+    )
     note = models.TextField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1026,3 +1051,116 @@ class ColonyJournalEntryImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.journal_entry}"
+
+
+class ColonyCensus(models.Model):
+    """A count of castes and brood stages in a colony on a given date.
+
+    All count fields are optional so keepers can record just workers, just
+    brood, or an exact full census.
+    """
+
+    UNIT_EGGS = "EGGS"
+    UNIT_CLUTCHES = "CLUTCHES"
+    EGG_UNIT_CHOICES = [
+        (UNIT_EGGS, _("Eggs (single)")),
+        (UNIT_CLUTCHES, _("Egg clutches / clumps")),
+    ]
+
+    colony = models.ForeignKey(Colony, on_delete=models.CASCADE, related_name="censuses")
+    date = models.DateField(default=timezone.now)
+
+    queens = models.PositiveIntegerField("Queens", null=True, blank=True)
+    queens_is_estimated = models.BooleanField("Queens estimated", default=False)
+
+    workers = models.PositiveIntegerField("Workers", null=True, blank=True)
+    workers_is_estimated = models.BooleanField("Workers estimated", default=False)
+
+    eggs = models.PositiveIntegerField("Eggs", null=True, blank=True)
+    eggs_unit = models.CharField(
+        "Egg unit", max_length=10, choices=EGG_UNIT_CHOICES, default=UNIT_EGGS
+    )
+    eggs_is_estimated = models.BooleanField("Eggs estimated", default=False)
+
+    larvae = models.PositiveIntegerField("Larvae", null=True, blank=True)
+    larvae_is_estimated = models.BooleanField("Larvae estimated", default=False)
+
+    pupae = models.PositiveIntegerField("Pupae", null=True, blank=True)
+    pupae_is_estimated = models.BooleanField("Pupae estimated", default=False)
+
+    note = models.CharField("Note", max_length=255, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        verbose_name = _("Colony census")
+        verbose_name_plural = _("Colony censuses")
+
+    def __str__(self):
+        return f"Census for {self.colony} on {self.date}"
+
+    def clean(self):
+        super().clean()
+        if (
+            self.queens is None
+            and self.workers is None
+            and self.eggs is None
+            and self.larvae is None
+            and self.pupae is None
+        ):
+            raise ValidationError(
+                _("Please enter at least one count (queens, workers, eggs, larvae, or pupae).")
+            )
+
+    @property
+    def has_adult_counts(self):
+        return self.queens is not None or self.workers is not None
+
+    @property
+    def has_brood_counts(self):
+        return self.eggs is not None or self.larvae is not None or self.pupae is not None
+
+
+class ColonyCareEvent(models.Model):
+    """A recorded maintenance or care action for a colony (feeding, watering, humidifying, etc.)."""
+
+    FEEDING = "FEEDING"
+    HUMIDIFY = "HUMIDIFY"
+    WATER = "WATER"
+    CLEANING = "CLEANING"
+    MAINTENANCE = "MAINTENANCE"
+    HIBERNATION_START = "HIBERNATION_START"
+    HIBERNATION_END = "HIBERNATION_END"
+
+    CATEGORY_CHOICES = [
+        (FEEDING, _("Feeding")),
+        (HUMIDIFY, _("Humidifying")),
+        (WATER, _("Water refill")),
+        (CLEANING, _("Cleaning")),
+        (MAINTENANCE, _("Maintenance / Nest adjustment")),
+        (HIBERNATION_START, _("Hibernation started")),
+        (HIBERNATION_END, _("Hibernation ended")),
+    ]
+
+    colony = models.ForeignKey(Colony, on_delete=models.CASCADE, related_name="care_events")
+    category = models.CharField(max_length=25, choices=CATEGORY_CHOICES)
+    date = models.DateField(default=timezone.now)
+    time = models.TimeField(null=True, blank=True)
+
+    food_item = models.ForeignKey(
+        FoodItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="colony_care_feedings"
+    )
+    details = models.CharField(max_length=255, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        verbose_name = _("Colony care event")
+        verbose_name_plural = _("Colony care events")
+
+    def __str__(self):
+        return f"{self.get_category_display()} for {self.colony} on {self.date}"
+

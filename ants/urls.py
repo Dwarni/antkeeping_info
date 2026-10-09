@@ -108,6 +108,26 @@ urlpatterns = [
         name="colony_visibility_update",
     ),
     path(
+        "colonies/<int:pk>/census/new/",
+        views.ColonyCensusCreateView.as_view(),
+        name="colony_census_create",
+    ),
+    path(
+        "colonies/<int:pk>/census/<int:census_pk>/delete/",
+        views.ColonyCensusDeleteView.as_view(),
+        name="colony_census_delete",
+    ),
+    path(
+        "colonies/<int:pk>/care/new/",
+        views.ColonyCareEventCreateView.as_view(),
+        name="colony_care_event_create",
+    ),
+    path(
+        "colonies/<int:pk>/care/<int:event_pk>/delete/",
+        views.ColonyCareEventDeleteView.as_view(),
+        name="colony_care_event_delete",
+    ),
+    path(
         "colonies/<int:pk>/journal/new/",
         views.ColonyJournalEntryCreateView.as_view(),
         name="colony_journal_entry_create",

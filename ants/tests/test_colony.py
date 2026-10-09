@@ -9,11 +9,15 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from django.core.exceptions import ValidationError
 from ants.models import (
     AntSpecies,
     Colony,
+    ColonyCareEvent,
+    ColonyCensus,
     ColonyJournalEntry,
     ColonyJournalEntryImage,
+    FoodItem,
     Genus,
 )
 from ants.utils.partial_date import (
@@ -224,17 +228,37 @@ class ColonyDeleteViewTest(TestCase):
         self.user = User.objects.create_user(username="tester", password="pass")
         self.colony = Colony.objects.create(user=self.user, species=self.species, name="Ants")
 
-    def test_owner_can_delete(self):
+    def test_owner_can_delete_with_matching_name(self):
         self.client.login(username="tester", password="pass")
-        response = self.client.post(reverse("colony_delete", args=[self.colony.pk]))
+        response = self.client.post(
+            reverse("colony_delete", args=[self.colony.pk]),
+            {"confirm_colony_name": "Ants"},
+        )
         self.assertRedirects(response, reverse("user_profile"))
         self.assertFalse(Colony.objects.filter(pk=self.colony.pk).exists())
 
-    def test_delete_cascades_to_journal_entries(self):
-        entry = ColonyJournalEntry.objects.create(colony=self.colony, date="2026-01-01", note="Hi")
+    def test_owner_cannot_delete_with_wrong_name(self):
         self.client.login(username="tester", password="pass")
-        self.client.post(reverse("colony_delete", args=[self.colony.pk]))
+        response = self.client.post(
+            reverse("colony_delete", args=[self.colony.pk]),
+            {"confirm_colony_name": "Wrong Name"},
+        )
+        self.assertRedirects(response, self.colony.get_absolute_url())
+        self.assertTrue(Colony.objects.filter(pk=self.colony.pk).exists())
+
+    def test_delete_cascades_to_journal_entries_censuses_and_care_events(self):
+        entry = ColonyJournalEntry.objects.create(colony=self.colony, date="2026-01-01", note="Hi")
+        census = ColonyCensus.objects.create(colony=self.colony, date="2026-01-01", workers=50)
+        care = ColonyCareEvent.objects.create(colony=self.colony, category=ColonyCareEvent.FEEDING)
+
+        self.client.login(username="tester", password="pass")
+        self.client.post(
+            reverse("colony_delete", args=[self.colony.pk]),
+            {"confirm_colony_name": "Ants"},
+        )
         self.assertFalse(ColonyJournalEntry.objects.filter(pk=entry.pk).exists())
+        self.assertFalse(ColonyCensus.objects.filter(pk=census.pk).exists())
+        self.assertFalse(ColonyCareEvent.objects.filter(pk=care.pk).exists())
 
 
 class ColonyStatusAndVisibilityViewTest(TestCase):
@@ -760,3 +784,207 @@ class CommunityJournalViewTest(TestCase):
         response = self.client.get(self.public_colony.get_absolute_url())
         self.assertContains(response, f'id="entry-{entry.pk}"')
         self.assertContains(response, long_note)
+
+
+class ColonyCensusModelTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="censuskeeper", password="pw")
+        self.species = _make_species()
+        self.colony = Colony.objects.create(user=self.user, species=self.species, name="CensusColony")
+
+    def test_census_creation_workers_only(self):
+        census = ColonyCensus.objects.create(
+            colony=self.colony,
+            workers=42,
+            workers_is_estimated=True,
+            note="Counted via photo",
+        )
+        self.assertEqual(census.workers, 42)
+        self.assertTrue(census.workers_is_estimated)
+        self.assertIsNone(census.eggs)
+        self.assertTrue(census.has_adult_counts)
+        self.assertFalse(census.has_brood_counts)
+
+    def test_census_creation_with_egg_clutches(self):
+        census = ColonyCensus.objects.create(
+            colony=self.colony,
+            queens=1,
+            workers=10,
+            eggs=2,
+            eggs_unit=ColonyCensus.UNIT_CLUTCHES,
+            eggs_is_estimated=False,
+            larvae=5,
+            pupae=3,
+        )
+        self.assertEqual(census.eggs_unit, ColonyCensus.UNIT_CLUTCHES)
+        self.assertTrue(census.has_adult_counts)
+        self.assertTrue(census.has_brood_counts)
+
+    def test_empty_census_raises_validation_error(self):
+        census = ColonyCensus(colony=self.colony)
+        with self.assertRaises(ValidationError):
+            census.clean()
+
+
+class ColonyCareEventModelTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="carekeeper", password="pw")
+        self.species = _make_species()
+        self.colony = Colony.objects.create(user=self.user, species=self.species, name="CareColony")
+        self.food = FoodItem.objects.create(name="Honey water")
+
+    def test_care_event_creation(self):
+        event = ColonyCareEvent.objects.create(
+            colony=self.colony,
+            category=ColonyCareEvent.FEEDING,
+            food_item=self.food,
+            details="Fresh batch",
+        )
+        self.assertEqual(event.category, ColonyCareEvent.FEEDING)
+        self.assertEqual(event.food_item.name, "Honey water")
+        self.assertIn("Feeding", str(event))
+
+
+class ColonyCensusAndCareViewsTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="owner", password="pw")
+        self.other_user = User.objects.create_user(username="intruder", password="pw")
+        self.species = _make_species()
+        self.colony = Colony.objects.create(user=self.user, species=self.species, name="MyColony")
+
+    def test_owner_creates_census(self):
+        self.client.force_login(self.user)
+        url = reverse("colony_census_create", args=[self.colony.pk])
+        response = self.client.post(url, {
+            "date": "2026-04-01",
+            "workers": 50,
+            "workers_is_estimated": "on",
+            "eggs": 2,
+            "eggs_unit": "CLUTCHES",
+            "note": "Growing fast",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.colony.censuses.count(), 1)
+        census = self.colony.censuses.first()
+        self.assertEqual(census.workers, 50)
+        self.assertTrue(census.workers_is_estimated)
+        self.assertEqual(census.eggs, 2)
+        self.assertEqual(census.eggs_unit, "CLUTCHES")
+
+    def test_non_owner_cannot_create_census(self):
+        self.client.force_login(self.other_user)
+        url = reverse("colony_census_create", args=[self.colony.pk])
+        response = self.client.post(url, {"date": "2026-04-01", "workers": 10})
+        self.assertEqual(response.status_code, 404)
+
+    def test_owner_deletes_census(self):
+        census = ColonyCensus.objects.create(colony=self.colony, workers=15)
+        self.client.force_login(self.user)
+        url = reverse("colony_census_delete", args=[self.colony.pk, census.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.colony.censuses.count(), 0)
+
+    def test_non_owner_cannot_delete_census(self):
+        census = ColonyCensus.objects.create(colony=self.colony, workers=15)
+        self.client.force_login(self.other_user)
+        url = reverse("colony_census_delete", args=[self.colony.pk, census.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_owner_creates_care_event(self):
+        self.client.force_login(self.user)
+        url = reverse("colony_care_event_create", args=[self.colony.pk])
+        response = self.client.post(url, {
+            "category": "HUMIDIFY",
+            "date": "2026-04-01",
+            "details": "Added 2ml water to nest",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.colony.care_events.count(), 1)
+        event = self.colony.care_events.first()
+        self.assertEqual(event.category, "HUMIDIFY")
+
+    def test_owner_deletes_care_event(self):
+        event = ColonyCareEvent.objects.create(colony=self.colony, category="WATER")
+        self.client.force_login(self.user)
+        url = reverse("colony_care_event_delete", args=[self.colony.pk, event.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.colony.care_events.count(), 0)
+
+    def test_journal_entry_with_event_type(self):
+        entry = ColonyJournalEntry.objects.create(
+            colony=self.colony,
+            date="2026-04-01",
+            event_type=ColonyJournalEntry.EVENT_FIRST_WORKER,
+            note="First worker emerged!",
+        )
+        self.assertEqual(entry.event_type, ColonyJournalEntry.EVENT_FIRST_WORKER)
+
+
+    def test_census_chart_requires_at_least_two_worker_counts(self):
+        # 1 census with workers, 1 census with only eggs -> chart should be None
+        ColonyCensus.objects.create(colony=self.colony, date="2026-03-01", workers=10)
+        ColonyCensus.objects.create(colony=self.colony, date="2026-04-01", eggs=20)
+        self.client.force_login(self.user)
+        response = self.client.get(self.colony.get_absolute_url())
+        self.assertIsNone(response.context["census_chart_json"])
+
+        # Add a 2nd census with workers -> chart should now be populated
+        ColonyCensus.objects.create(colony=self.colony, date="2026-05-01", workers=30, workers_is_estimated=True)
+        response2 = self.client.get(self.colony.get_absolute_url())
+        self.assertIsNotNone(response2.context["census_chart_json"])
+        self.assertIn('"workers": [10, 30]', response2.context["census_chart_json"])
+        self.assertIn('"is_estimated": [false, true]', response2.context["census_chart_json"])
+
+    def test_colony_create_prefill_from_species(self):
+        self.client.force_login(self.user)
+        url = reverse("colony_create") + f"?species={self.species.pk}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["species_name"], self.species.name)
+        form = response.context["form"]
+        self.assertEqual(form.initial.get("species"), self.species.pk)
+
+    def test_species_detail_community_stats(self):
+        # Create a journal entry for the public colony
+        ColonyJournalEntry.objects.create(
+            colony=self.colony,
+            date="2026-04-01",
+            note="Our public queen is doing great!",
+        )
+        url = reverse("ant_detail", args=[self.species.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["community_colonies_count"], 1)
+        self.assertEqual(response.context["community_journal_entries_count"], 1)
+
+    def test_community_journal_filters_query_and_event_type(self):
+        entry1 = ColonyJournalEntry.objects.create(
+            colony=self.colony,
+            date="2026-04-01",
+            event_type=ColonyJournalEntry.EVENT_FIRST_WORKER,
+            note="Exciting first worker emerged!",
+        )
+        entry2 = ColonyJournalEntry.objects.create(
+            colony=self.colony,
+            date="2026-04-02",
+            event_type=ColonyJournalEntry.EVENT_NEST_MOVE,
+            note="Moved into new Ytong nest.",
+        )
+        url = reverse("community_journal_results")
+
+        # Test search q=
+        resp_q = self.client.get(url + "?q=Ytong")
+        self.assertEqual(resp_q.status_code, 200)
+        entries = list(resp_q.context["page_obj"])
+        self.assertIn(entry2, entries)
+        self.assertNotIn(entry1, entries)
+
+        # Test event_type filter
+        resp_event = self.client.get(url + f"?event_type={ColonyJournalEntry.EVENT_FIRST_WORKER}")
+        self.assertEqual(resp_event.status_code, 200)
+        entries = list(resp_event.context["page_obj"])
+        self.assertIn(entry1, entries)
+        self.assertNotIn(entry2, entries)

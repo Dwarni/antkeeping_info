@@ -21,8 +21,32 @@
                 <form id="filter-form"
                       hx-get="{% url 'community_journal_results' %}"
                       hx-target="#results-container"
-                      hx-trigger="change delay:300ms"
+                      hx-trigger="change delay:300ms, input changed delay:400ms from:#search-input"
                       hx-indicator="#htmx-spinner">
+
+                    <div class="mb-3">
+                        <label for="search-input" class="form-label fw-semibold">Search Note</label>
+                        <input type="search" name="q" id="search-input" class="form-control form-control-sm"
+                               placeholder="e.g. winterruhe, setup, brood..." value="{{ request.GET.q }}">
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="has_photos" value="1" id="photos-check"
+                               {% if request.GET.has_photos == "1" %}checked{% endif %}>
+                        <label class="form-check-label small fw-semibold" for="photos-check">
+                            📷 Only with photos
+                        </label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="event-select" class="form-label fw-semibold">Event / Milestone</label>
+                        <select name="event_type" id="event-select" class="form-select form-select-sm">
+                            <option value="">Any</option>
+                            {% for val, label in event_types %}
+                            <option value="{{ val }}"{% if request.GET.event_type == val %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
                     <div class="mb-3">
                         <label for="genus-select" class="form-label fw-semibold">Genus</label>
@@ -100,6 +124,8 @@
     if (resetBtn) {
         resetBtn.addEventListener('click', function () {
             form.querySelectorAll('select').forEach(function (sel) { sel.value = ''; });
+            form.querySelectorAll('input[type="search"]').forEach(function (inp) { inp.value = ''; });
+            form.querySelectorAll('input[type="checkbox"]').forEach(function (chk) { chk.checked = false; });
             history.replaceState(null, '', location.pathname);
             htmx.trigger(form, 'change');
         });
