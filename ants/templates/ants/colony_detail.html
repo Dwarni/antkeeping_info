@@ -386,7 +386,7 @@
                     <h3 class="h6 mb-0 fw-bold text-primary"><i class="bi bi-bar-chart-fill me-1"></i> {% trans "Record population count (Census)" %}</h3>
                     <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#collapse-add-census" aria-label="Close"></button>
                 </div>
-                <form method="post" action="{% url 'colony_census_create' colony.pk %}">
+                <form method="post" action="{% url 'colony_census_create' colony.pk %}" id="form-add-census">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">{% trans "Date" %}</label>
@@ -459,7 +459,12 @@
                         <input type="text" name="note" class="form-control form-control-sm" placeholder="{% trans 'e.g. counted precisely via AntCounter photo' %}" maxlength="255">
                     </div>
 
-                    <button type="submit" class="btn btn-sm btn-primary">{% trans "Save count" %}</button>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#collapse-add-census">
+                            {% trans "Cancel" %}
+                        </button>
+                        <button type="submit" class="btn btn-sm btn-primary">{% trans "Save count" %}</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -471,7 +476,7 @@
                     <h3 class="h6 mb-0 fw-bold text-info-emphasis"><i class="bi bi-tools me-1"></i> {% trans "Log care or maintenance" %}</h3>
                     <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#collapse-add-care" aria-label="Close"></button>
                 </div>
-                <form method="post" action="{% url 'colony_care_event_create' colony.pk %}">
+                <form method="post" action="{% url 'colony_care_event_create' colony.pk %}" id="form-add-care">
                     {% csrf_token %}
                     <div class="row g-2 mb-2">
                         <div class="col-sm-6">
@@ -502,7 +507,12 @@
                             <input type="text" name="details" class="form-control form-control-sm" placeholder="{% trans 'e.g. Invert sugar & fruit fly' %}" maxlength="255">
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-sm btn-info text-white">{% trans "Save care event" %}</button>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#collapse-add-care">
+                            {% trans "Cancel" %}
+                        </button>
+                        <button type="submit" class="btn btn-sm btn-info text-white">{% trans "Save care event" %}</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -1075,45 +1085,171 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Journal Add Entry Form Enhancements
-    const journalForm = document.getElementById("form-add-journal");
-    const journalCollapseEl = document.getElementById("collapse-add-journal");
-    const tabJournalBtn = document.getElementById("tab-journal");
+    // Owner Panels Coordination (Exclusive Accordion + Unsaved Changes Guard)
+    const OWNER_PANEL_IDS = ["#collapse-add-journal", "#collapse-add-census", "#collapse-add-care"];
+    const MSG_DISCARD = '{% trans "You have unsaved changes in your current form. Do you want to discard them?" %}';
     const btnEmptyAdd = document.getElementById("btn-empty-add-journal");
-    const addJournalTriggerBtns = document.querySelectorAll('[data-bs-target="#collapse-add-journal"]');
 
-    function openAndFocusJournalForm() {
-        if (tabJournalBtn && !tabJournalBtn.classList.contains("active")) {
-            tabJournalBtn.click();
+    function isPanelDirty(collapseId) {
+        if (collapseId === "#collapse-add-journal") {
+            const note = document.getElementById("journal-note");
+            if (note && note.value.trim().length > 0) return true;
+            const fileInput = document.querySelector("#collapse-add-journal .photo-picker-file-input");
+            if (fileInput && fileInput.files && fileInput.files.length > 0) return true;
+            const eventType = document.getElementById("journal-event-type");
+            if (eventType && eventType.value && eventType.value !== "GENERAL") return true;
+            return false;
         }
-        if (journalCollapseEl) {
-            const bsCollapse = bootstrap.Collapse.getOrCreateInstance(journalCollapseEl, { toggle: false });
-            bsCollapse.show();
-            journalCollapseEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-            setTimeout(() => {
-                const noteInput = document.getElementById("journal-note");
-                if (noteInput) noteInput.focus();
-            }, 300);
+
+        if (collapseId === "#collapse-add-census") {
+            const form = document.getElementById("form-add-census") || document.querySelector("#collapse-add-census form");
+            if (!form) return false;
+            const workers = form.querySelector('[name="workers"]');
+            if (workers && workers.value.trim() !== "") return true;
+            const eggs = form.querySelector('[name="eggs"]');
+            if (eggs && eggs.value.trim() !== "") return true;
+            const larvae = form.querySelector('[name="larvae"]');
+            if (larvae && larvae.value.trim() !== "") return true;
+            const pupae = form.querySelector('[name="pupae"]');
+            if (pupae && pupae.value.trim() !== "") return true;
+            const note = form.querySelector('[name="note"]');
+            if (note && note.value.trim() !== "") return true;
+            const queens = form.querySelector('[name="queens"]');
+            if (queens && queens.value !== "1") return true;
+            return false;
         }
+
+        if (collapseId === "#collapse-add-care") {
+            const form = document.getElementById("form-add-care") || document.querySelector("#collapse-add-care form");
+            if (!form) return false;
+            const details = form.querySelector('[name="details"]');
+            if (details && details.value.trim() !== "") return true;
+            const food = form.querySelector('[name="food_item"]');
+            if (food && food.value !== "") return true;
+            return false;
+        }
+
+        return false;
     }
 
-    if (btnEmptyAdd) {
-        btnEmptyAdd.addEventListener("click", openAndFocusJournalForm);
-    }
-
-    addJournalTriggerBtns.forEach(btn => {
-        btn.addEventListener("click", function () {
-            if (tabJournalBtn && !tabJournalBtn.classList.contains("active")) {
-                tabJournalBtn.click();
-            }
-            setTimeout(() => {
-                const noteInput = document.getElementById("journal-note");
-                if (noteInput && journalCollapseEl && journalCollapseEl.classList.contains("show")) {
-                    noteInput.focus();
+    function resetPanel(collapseId) {
+        if (collapseId === "#collapse-add-journal") {
+            const form = document.getElementById("form-add-journal");
+            if (form) {
+                form.reset();
+                const colonyId = form.getAttribute("data-colony-id");
+                if (colonyId) localStorage.removeItem(`colony_journal_draft_${colonyId}`);
+                const note = document.getElementById("journal-note");
+                const counter = document.getElementById("journal-char-counter");
+                if (note && counter) {
+                    note.style.height = "auto";
+                    counter.textContent = "0 / 2000";
+                    counter.className = "text-muted small journal-char-counter";
                 }
-            }, 300);
+            }
+        } else if (collapseId === "#collapse-add-census") {
+            const form = document.getElementById("form-add-census") || document.querySelector("#collapse-add-census form");
+            if (form) form.reset();
+        } else if (collapseId === "#collapse-add-care") {
+            const form = document.getElementById("form-add-care") || document.querySelector("#collapse-add-care form");
+            if (form) form.reset();
+        }
+    }
+
+    function getCurrentlyOpenPanel() {
+        for (const id of OWNER_PANEL_IDS) {
+            const el = document.querySelector(id);
+            if (el && (el.classList.contains("show") || el.classList.contains("collapsing"))) {
+                return id;
+            }
+        }
+        return null;
+    }
+
+    function switchPanelTabAndFocus(collapseId) {
+        let tabBtn = null;
+        if (collapseId === "#collapse-add-journal") tabBtn = document.getElementById("tab-journal");
+        else if (collapseId === "#collapse-add-census") tabBtn = document.getElementById("tab-census");
+        else if (collapseId === "#collapse-add-care") tabBtn = document.getElementById("tab-care");
+
+        if (tabBtn && !tabBtn.classList.contains("active")) {
+            tabBtn.click();
+        }
+
+        setTimeout(() => {
+            if (collapseId === "#collapse-add-journal") {
+                const note = document.getElementById("journal-note");
+                if (note) note.focus();
+            } else if (collapseId === "#collapse-add-census") {
+                const workers = document.querySelector('#collapse-add-census [name="workers"]');
+                if (workers) workers.focus();
+            } else if (collapseId === "#collapse-add-care") {
+                const details = document.querySelector('#collapse-add-care [name="details"]');
+                if (details) details.focus();
+            }
+        }, 300);
+    }
+
+    function openOwnerPanel(targetId) {
+        const currentOpenId = getCurrentlyOpenPanel();
+
+        if (currentOpenId === targetId) {
+            if (isPanelDirty(currentOpenId)) {
+                if (!confirm(MSG_DISCARD)) return;
+                resetPanel(currentOpenId);
+            }
+            const el = document.querySelector(targetId);
+            if (el) bootstrap.Collapse.getOrCreateInstance(el).hide();
+            return;
+        }
+
+        if (currentOpenId) {
+            if (isPanelDirty(currentOpenId)) {
+                if (!confirm(MSG_DISCARD)) return;
+                resetPanel(currentOpenId);
+            }
+            const openEl = document.querySelector(currentOpenId);
+            if (openEl) bootstrap.Collapse.getOrCreateInstance(openEl).hide();
+        }
+
+        const targetEl = document.querySelector(targetId);
+        if (targetEl) {
+            bootstrap.Collapse.getOrCreateInstance(targetEl).show();
+            targetEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            switchPanelTabAndFocus(targetId);
+        }
+    }
+
+    OWNER_PANEL_IDS.forEach(panelId => {
+        const triggers = document.querySelectorAll(`[data-bs-target="${panelId}"]`);
+        triggers.forEach(btn => {
+            btn.addEventListener("click", function (e) {
+                const insidePanel = btn.closest(panelId);
+                if (insidePanel) {
+                    if (isPanelDirty(panelId)) {
+                        if (!confirm(MSG_DISCARD)) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return;
+                        }
+                        resetPanel(panelId);
+                    }
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+                openOwnerPanel(panelId);
+            });
         });
     });
+
+    if (btnEmptyAdd) {
+        btnEmptyAdd.addEventListener("click", function (e) {
+            e.preventDefault();
+            openOwnerPanel("#collapse-add-journal");
+        });
+    }
 
     // Date Quick Pickers (Today / Yesterday)
     const dateInput = document.getElementById("journal-date");
