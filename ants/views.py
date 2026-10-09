@@ -1507,10 +1507,21 @@ def _build_colony_detail_context(colony, request):
             "is_estimated": [bool(c.workers_is_estimated) for c in worker_censuses],
         }
 
+    journal_sort = request.GET.get("journal_sort", "date").strip()
+    if journal_sort == "created":
+        journal_entries = colony.journal_entries.prefetch_related("images").order_by(
+            "-created_at", "-date"
+        )
+    else:
+        journal_entries = colony.journal_entries.prefetch_related("images").order_by(
+            "-date", "-created_at"
+        )
+
     context = {
         "colony": colony,
         "is_owner": is_owner,
-        "journal_entries": colony.journal_entries.prefetch_related("images"),
+        "journal_entries": journal_entries,
+        "journal_sort": journal_sort,
         "censuses": censuses,
         "latest_census": latest_census,
         "care_events": care_events,
@@ -1876,8 +1887,13 @@ def _community_journal_queryset(request):
         )
         .select_related("colony", "colony__species", "colony__user")
         .prefetch_related("images")
-        .order_by("-date", "-created_at")
     )
+
+    sort = request.GET.get("sort", "created").strip()
+    if sort == "date":
+        qs = qs.order_by("-date", "-created_at")
+    else:
+        qs = qs.order_by("-created_at", "-date")
 
     q = request.GET.get("q", "").strip()
     if q:

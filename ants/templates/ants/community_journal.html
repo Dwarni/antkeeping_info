@@ -25,9 +25,17 @@
                       hx-indicator="#htmx-spinner">
 
                     <div class="mb-3">
+                        <label for="sort-select" class="form-label fw-semibold">Sort by</label>
+                        <select name="sort" id="sort-select" class="form-select form-select-sm">
+                            <option value="created"{% if not request.GET.sort or request.GET.sort == "created" %} selected{% endif %}>Recently added</option>
+                            <option value="date"{% if request.GET.sort == "date" %} selected{% endif %}>Event date (newest first)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="search-input" class="form-label fw-semibold">Search Note</label>
                         <input type="search" name="q" id="search-input" class="form-control form-control-sm"
-                               placeholder="e.g. winterruhe, setup, brood..." value="{{ request.GET.q }}">
+                               placeholder="e.g. hibernation, setup, brood..." value="{{ request.GET.q }}">
                     </div>
 
                     <div class="form-check mb-3">
@@ -123,7 +131,13 @@
 
     if (resetBtn) {
         resetBtn.addEventListener('click', function () {
-            form.querySelectorAll('select').forEach(function (sel) { sel.value = ''; });
+            form.querySelectorAll('select').forEach(function (sel) {
+                if (sel.name === 'sort') {
+                    sel.value = 'created';
+                } else {
+                    sel.value = '';
+                }
+            });
             form.querySelectorAll('input[type="search"]').forEach(function (inp) { inp.value = ''; });
             form.querySelectorAll('input[type="checkbox"]').forEach(function (chk) { chk.checked = false; });
             history.replaceState(null, '', location.pathname);

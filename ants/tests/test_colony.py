@@ -367,6 +367,40 @@ class ColonyJournalEntryViewTest(TestCase):
         self.assertEqual(entry.note, "Hi (updated)")
         self.assertEqual(entry.images.count(), 2)
 
+    def test_date_differs_from_created_property(self):
+        today = timezone.localdate()
+        entry_same = ColonyJournalEntry.objects.create(
+            colony=self.colony, date=today, note="Today entry"
+        )
+        self.assertFalse(entry_same.date_differs_from_created)
+
+        entry_backdated = ColonyJournalEntry.objects.create(
+            colony=self.colony,
+            date=today - datetime.timedelta(days=365),
+            note="Old entry",
+        )
+        self.assertTrue(entry_backdated.date_differs_from_created)
+
+    def test_colony_detail_journal_sorting(self):
+        today = timezone.localdate()
+        entry1 = ColonyJournalEntry.objects.create(
+            colony=self.colony, date=today, note="Entry Newer Date"
+        )
+        entry2 = ColonyJournalEntry.objects.create(
+            colony=self.colony,
+            date=today - datetime.timedelta(days=100),
+            note="Entry Older Date Backdated",
+        )
+        resp_date = self.client.get(self.colony.get_absolute_url())
+        entries_date = list(resp_date.context["journal_entries"])
+        self.assertEqual(entries_date, [entry1, entry2])
+
+        resp_created = self.client.get(
+            self.colony.get_absolute_url(), {"journal_sort": "created"}
+        )
+        entries_created = list(resp_created.context["journal_entries"])
+        self.assertEqual(entries_created, [entry2, entry1])
+
 
 class ColonyJournalEntryImageManagementTest(TestCase):
     """Existing photos are reordered/removed client-side and only applied
@@ -784,6 +818,30 @@ class CommunityJournalViewTest(TestCase):
         response = self.client.get(self.public_colony.get_absolute_url())
         self.assertContains(response, f'id="entry-{entry.pk}"')
         self.assertContains(response, long_note)
+
+    def test_default_sort_is_recently_added_and_supports_sort_by_date(self):
+        backdated_entry = ColonyJournalEntry.objects.create(
+            colony=self.public_colony, date="2020-01-01", note="Retroactive update"
+        )
+        response = self.client.get(reverse("community_journal_results"))
+        page_entries = list(response.context["page_obj"])
+        self.assertEqual(page_entries[0], backdated_entry)
+
+        response_date = self.client.get(reverse("community_journal_results"), {"sort": "date"})
+        page_entries_date = list(response_date.context["page_obj"])
+        self.assertEqual(page_entries_date[0], self.other_public_entry)
+        self.assertEqual(page_entries_date[-1], backdated_entry)
+
+    def test_backdated_entry_displays_added_date(self):
+        today = timezone.localdate()
+        ColonyJournalEntry.objects.create(
+            colony=self.public_colony,
+            date=today - datetime.timedelta(days=200),
+            note="Backdated note",
+        )
+        response = self.client.get(reverse("community_journal_results"))
+        self.assertContains(response, "Backdated note")
+        self.assertContains(response, "added")
 
 
 class ColonyCensusModelTests(TestCase):

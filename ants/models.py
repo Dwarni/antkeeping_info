@@ -1025,6 +1025,13 @@ class ColonyJournalEntry(models.Model):
         verbose_name_plural = _("Colony journal entries")
         ordering = ["-date", "-created_at"]
 
+    @property
+    def date_differs_from_created(self):
+        """Returns True if the journal date differs from the creation date."""
+        if not self.created_at or not self.date:
+            return False
+        return self.date != timezone.localdate(self.created_at)
+
     def __str__(self):
         return f"{self.colony} — {self.date}"
 

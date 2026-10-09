@@ -1,4 +1,4 @@
-{% load ants thumbnail %}
+{% load ants thumbnail i18n %}
 {# HTMX fragment: filtered journal entry feed + count + pagination #}
 {# Target: #results-container #}
 
@@ -17,7 +17,12 @@
                 <span class="badge text-bg-info text-white ms-1">{{ entry.get_event_type_display }}</span>
                 {% endif %}
             </div>
-            <span class="text-muted small text-nowrap">{{ entry.date|date:"N j, Y" }}</span>
+            <div class="text-end text-muted small text-nowrap">
+                <span>{{ entry.date|date:"N j, Y" }}</span>
+                {% if entry.date_differs_from_created %}
+                <span class="d-block text-secondary small">({% trans "added" %} {{ entry.created_at|date:"N j, Y" }})</span>
+                {% endif %}
+            </div>
         </div>
         <p class="mb-1">{{ entry.note|truncatewords:40|linebreaksbr }}</p>
         {% if entry.note|wordcount > 40 %}

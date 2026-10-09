@@ -509,12 +509,31 @@
                 </div>
                 {% endif %}
 
-                <ul class="list-group mb-4 border-0">
+                {% if journal_entries %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small">
+                        {% blocktrans count counter=journal_entries|length %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktrans %}
+                    </span>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="{% trans "Sort journal entries" %}" id="journal-sort-group">
+                        <a href="?journal_sort=date" class="btn btn-outline-secondary {% if journal_sort != "created" %}active{% endif %}" id="btn-sort-date" data-sort="date" title="{% trans "Sort by event date" %}">
+                            <i class="bi bi-calendar3 me-1"></i>{% trans "Event date" %}
+                        </a>
+                        <a href="?journal_sort=created" class="btn btn-outline-secondary {% if journal_sort == "created" %}active{% endif %}" id="btn-sort-created" data-sort="created" title="{% trans "Sort by recently added" %}">
+                            <i class="bi bi-clock-history me-1"></i>{% trans "Recently added" %}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <ul class="list-group mb-4 border-0" id="journal-entries-list">
                     {% for entry in journal_entries %}
-                    <li class="list-group-item shadow-sm mb-3 rounded" id="entry-{{ entry.pk }}">
+                    <li class="list-group-item shadow-sm mb-3 rounded" id="entry-{{ entry.pk }}" data-entry-date="{{ entry.date|date:'Y-m-d' }}" data-entry-created="{{ entry.created_at|date:'c' }}">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <span class="fw-bold">{{ entry.date|date:"N j, Y" }}</span>
+                                {% if entry.date_differs_from_created %}
+                                <span class="text-muted small ms-1">({% trans "added" %} {{ entry.created_at|date:"N j, Y" }})</span>
+                                {% endif %}
                                 {% if entry.event_type and entry.event_type != 'GENERAL' %}
                                 <span class="badge text-bg-info text-white ms-1">{{ entry.get_event_type_display }}</span>
                                 {% endif %}
@@ -944,6 +963,58 @@ document.addEventListener("DOMContentLoaded", function () {
                 deleteBtn.setAttribute("disabled", "disabled");
             }
         });
+    }
+
+    const sortGroup = document.getElementById("journal-sort-group");
+    const entriesList = document.getElementById("journal-entries-list");
+    if (sortGroup && entriesList) {
+        const btnDate = document.getElementById("btn-sort-date");
+        const btnCreated = document.getElementById("btn-sort-created");
+
+        function sortEntries(by) {
+            const items = Array.from(entriesList.children);
+            items.sort(function (a, b) {
+                const valA = a.getAttribute(by === "created" ? "data-entry-created" : "data-entry-date") || "";
+                const valB = b.getAttribute(by === "created" ? "data-entry-created" : "data-entry-date") || "";
+                if (valA < valB) return 1;
+                if (valA > valB) return -1;
+                const secA = a.getAttribute(by === "created" ? "data-entry-date" : "data-entry-created") || "";
+                const secB = b.getAttribute(by === "created" ? "data-entry-date" : "data-entry-created") || "";
+                if (secA < secB) return 1;
+                if (secA > secB) return -1;
+                return 0;
+            });
+            items.forEach(function (item) {
+                entriesList.appendChild(item);
+            });
+
+            if (by === "created") {
+                btnCreated.classList.add("active");
+                btnDate.classList.remove("active");
+            } else {
+                btnDate.classList.add("active");
+                btnCreated.classList.remove("active");
+            }
+
+            const url = new URL(window.location);
+            if (by === "created") {
+                url.searchParams.set("journal_sort", "created");
+            } else {
+                url.searchParams.delete("journal_sort");
+            }
+            window.history.replaceState(null, "", url.toString());
+        }
+
+        if (btnDate && btnCreated) {
+            btnDate.addEventListener("click", function (e) {
+                e.preventDefault();
+                sortEntries("date");
+            });
+            btnCreated.addEventListener("click", function (e) {
+                e.preventDefault();
+                sortEntries("created");
+            });
+        }
     }
 });
 </script>
