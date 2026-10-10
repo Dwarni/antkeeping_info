@@ -3,8 +3,8 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 {% block title %}{% trans 'Nuptial Flight Table' %} | Antkeeping.info{% endblock %}
-{% block og_title %}Nuptial Flight Table — Antkeeping.info{% endblock %}
-{% block og_description %}When do ant queens fly? Browse nuptial flight months for hundreds of ant species, filterable by region and genus. Includes CSV and JSON export.{% endblock %}
+{% block og_title %}{% trans 'Nuptial Flight Table' %} — Antkeeping.info{% endblock %}
+{% block og_description %}{% trans 'When do ant queens fly? Browse nuptial flight months for ant species, filterable by region, country, and month. Includes CSV and JSON export.' %}{% endblock %}
 {% block meta %}
 <meta name="description" content="{% trans 'A table that lists during which months specific ant species have their nuptial flights.' %}">
 <script type="application/ld+json">
@@ -24,17 +24,33 @@
 </script>
 {% endblock %}
 {% block content %}
-    <h1 class="h3">{% trans 'Nuptial Flight Table' %}<span id="nuptial-title-location">{% if initial_location_label %} ({{ initial_location_label }}){% endif %}</span></h1>
+    <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-1">
+        <h1 class="h3 fw-bold mb-0">
+            {% trans 'Nuptial Flight Table' %}
+            <span id="nuptial-title-location" class="text-muted fw-normal fs-5">{% if initial_location_label %} ({{ initial_location_label }}){% endif %}</span>
+        </h1>
+    </div>
+    <p class="text-muted small mb-3">
+        {% trans 'Compare nuptial flight timing across months, flight hours, and weather preferences for keeping and queen hunting.' %}
+    </p>
 
     <div id="nuptial-flight-table">
 
-        {# Toolbar: filter toggle + action buttons #}
-        <div class="d-flex gap-2 mb-2 align-items-center">
-            <button type="button" class="btn btn-light" id="filter-toggle"
-                    title="{% trans 'Toggle filter' %}"
-                    onclick="document.getElementById('filter-sidebar').classList.toggle('d-none')">
+        {# Toolbar: filter toggle + quick action + export buttons #}
+        <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
+            <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" id="filter-toggle"
+                    title="{% trans 'Toggle filter sidebar' %}"
+                    onclick="document.getElementById('filter-sidebar').classList.toggle('d-none'); this.classList.toggle('active');">
                 <i class="bi bi-funnel"></i>
+                <span>{% trans 'Filter' %}</span>
             </button>
+
+            <button type="button" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1 {% if initial_month == 'current' %}active{% endif %}" id="quick-current-month-btn"
+                    title="{% trans 'Filter to species flying in the current month' %}">
+                <i class="bi bi-stars"></i>
+                <span>{% trans 'Flying Now' %} ({{ current_month_name }})</span>
+            </button>
+
             <div class="btn-group">
                 <button type="button" class="btn btn-outline-secondary btn-sm"
                         id="print-btn"
@@ -52,6 +68,7 @@
                     <i class="bi bi-filetype-json"></i>
                 </button>
             </div>
+
             <button type="button" class="btn btn-outline-primary btn-sm ms-auto"
                     data-bs-toggle="modal" data-bs-target="#reportModal"
                     title="{% trans 'Report flight data' %}">
@@ -63,69 +80,75 @@
         </div>
 
         <div class="row mb-4">
-            {# Filter sidebar #}
+            {# Filter sidebar card #}
             <div id="filter-sidebar" class="col-md-3 order-md-2 mb-4">
-                <h4 class="text-muted mb-3">Filter</h4>
-                <form id="filter-form"
-                      hx-get="{% url 'nuptial_flight_table_rows' %}"
-                      hx-target="#table-container"
-                      hx-trigger="change, input delay:300ms"
-                      hx-indicator="#htmx-spinner">
-
-                    <div class="mb-3">
-                        <label for="name-filter" class="form-label">Name:</label>
-                        <input type="text" name="name" id="name-filter"
-                               class="form-control" placeholder="e.g. lasius"
-                               value="{{ initial_name }}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="country-select" class="form-label">Country:</label>
-                        <select name="country" id="country-select" class="form-select form-select-sm"
-                                hx-get="{% url 'nuptial_flight_table_states' %}"
-                                hx-target="#state-wrapper"
-                                hx-trigger="change"
-                                hx-include="[name=country]"
-                                hx-indicator="#htmx-spinner">
-                            <option value="all" {% if initial_country == "all" %}selected{% endif %}>All</option>
-                            {% for country in countries %}
-                            <option value="{{ country.code|lower }}" {% if country.code|lower == initial_country %}selected{% endif %}>{{ country.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div id="state-wrapper" class="mb-3">
-                        {% if initial_states %}
-                        <label for="state-select" class="form-label">State:</label>
-                        <select id="state-select" name="state" class="form-select form-select-sm">
-                            <option value="all" {% if initial_state == "all" %}selected{% endif %}>All</option>
-                            {% for state in initial_states %}
-                            <option value="{{ state.code|lower }}" {% if state.code|lower == initial_state %}selected{% endif %}>{{ state.name }}</option>
-                            {% endfor %}
-                        </select>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="month-select" class="form-label">Month:</label>
-                        <select name="month" id="month-select" class="form-select form-select-sm">
-                            <option value="all" {% if initial_month == "all" %}selected{% endif %}>All Months</option>
-                            <option value="current" {% if initial_month == "current" %}selected{% endif %}>Current Month ({{ current_month_name }})</option>
-                            {% for month_num, month_name in months_full %}
-                            <option value="{{ month_num }}"
-                                    {% if month_num|stringformat:"s" == initial_month %}selected{% endif %}>
-                                {{ month_name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="reset-btn">
-                            Reset
+                <div class="card border shadow-sm rounded-3 p-3 filter-card">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                        <h5 class="mb-0 fs-6 fw-bold d-flex align-items-center gap-2">
+                            <i class="bi bi-sliders text-primary"></i>
+                            <span>{% trans "Filter" %}</span>
+                        </h5>
+                        <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 text-muted" id="reset-btn">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>{% trans "Reset" %}
                         </button>
                     </div>
-                </form>
+
+                    <form id="filter-form"
+                          hx-get="{% url 'nuptial_flight_table_rows' %}"
+                          hx-target="#table-container"
+                          hx-trigger="change, input delay:300ms"
+                          hx-indicator="#htmx-spinner">
+
+                        <div class="mb-3">
+                            <label for="name-filter" class="form-label small fw-semibold">{% trans "Species name:" %}</label>
+                            <input type="text" name="name" id="name-filter"
+                                   class="form-control form-control-sm" placeholder="{% trans 'e.g. Lasius' %}"
+                                   value="{{ initial_name }}">
+                            <div class="form-text small" style="font-size: 0.75rem;">{% trans "Min. 3 letters to filter" %}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="country-select" class="form-label small fw-semibold">{% trans "Country:" %}</label>
+                            <select name="country" id="country-select" class="form-select form-select-sm"
+                                    hx-get="{% url 'nuptial_flight_table_states' %}"
+                                    hx-target="#state-wrapper"
+                                    hx-trigger="change"
+                                    hx-include="[name=country]"
+                                    hx-indicator="#htmx-spinner">
+                                <option value="all" {% if initial_country == "all" %}selected{% endif %}>{% trans "All Countries" %}</option>
+                                {% for country in countries %}
+                                <option value="{{ country.code|lower }}" {% if country.code|lower == initial_country %}selected{% endif %}>{{ country.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="state-wrapper" class="mb-3">
+                            {% if initial_states %}
+                            <label for="state-select" class="form-label small fw-semibold">{% trans "State / Province:" %}</label>
+                            <select id="state-select" name="state" class="form-select form-select-sm">
+                                <option value="all" {% if initial_state == "all" %}selected{% endif %}>{% trans "All States" %}</option>
+                                {% for state in initial_states %}
+                                <option value="{{ state.code|lower }}" {% if state.code|lower == initial_state %}selected{% endif %}>{{ state.name }}</option>
+                                {% endfor %}
+                            </select>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="month-select" class="form-label small fw-semibold">{% trans "Month:" %}</label>
+                            <select name="month" id="month-select" class="form-select form-select-sm">
+                                <option value="all" {% if initial_month == "all" %}selected{% endif %}>{% trans "All Months" %}</option>
+                                <option value="current" {% if initial_month == "current" %}selected{% endif %}>{% trans "Current Month" %} ({{ current_month_name }})</option>
+                                {% for month_num, month_name in months_full %}
+                                <option value="{{ month_num }}"
+                                        {% if month_num|stringformat:"s" == initial_month %}selected{% endif %}>
+                                    {{ month_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             {# Table area #}
@@ -172,7 +195,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted">
+                    <p class="text-muted small">
                         {% trans 'Found an error or have additional data? Select the species, tick the months it swarms, and describe your source.' %}
                     </p>
                     <div id="report-form-container">
@@ -184,11 +207,11 @@
     </div>
 {% endblock %}
 {% block css %}
-<link rel="stylesheet" href="{% static 'ants/css/nuptial_flight_table.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'ants/css/nuptial_flight_table.css' %}?v=8">
 {% endblock %}
 {% block script %}
 <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
-<script src="{% static 'ants/js/nuptial_flight_table.js' %}?v=7"></script>
+<script src="{% static 'ants/js/nuptial_flight_table.js' %}?v=8"></script>
 <script>
 (function () {
     // --- Species autocomplete ---

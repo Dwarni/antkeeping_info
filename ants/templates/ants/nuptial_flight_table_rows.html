@@ -2,54 +2,84 @@
 {# HTMX fragment: paginated table rows + pagination + species count #}
 {# Target: #table-container #}
 
-<small class="text-muted d-block mb-2">{{ total }} {% trans "species" %}</small>
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <small class="text-muted fw-medium">
+        {% blocktrans count counter=total %}{{ counter }} species found{% plural %}{{ counter }} species found{% endblocktrans %}
+    </small>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <small class="text-muted">
+        {% blocktrans with page=page_obj.number total_pages=page_obj.paginator.num_pages %}Page {{ page }} of {{ total_pages }}{% endblocktrans %}
+    </small>
+    {% endif %}
+</div>
 
 {% if entries %}
-<div class="table-responsive">
-    <table class="table table-sm table-bordered nuptial-flight-table">
-        <thead class="table-light">
+<div class="table-responsive nuptial-table-wrapper mb-3 shadow-sm">
+    <table class="table table-sm table-hover nuptial-flight-table align-middle mb-0">
+        <thead class="nuptial-table-head">
             <tr>
-                <th>Species</th>
+                <th class="species-th">{% trans "Species" %}</th>
                 {% for month_num, month_short in months %}
-                <th class="month-column">{{ month_short }}</th>
+                <th class="month-column {% if month_num == current_month %}current-month-header{% endif %}"
+                    title="{% if month_num == current_month %}{% trans 'Current month' %}{% endif %}">
+                    {{ month_short }}
+                    {% if month_num == current_month %}
+                    <span class="current-month-dot" title="{% trans 'Current month' %}">&bull;</span>
+                    {% endif %}
+                </th>
                 {% endfor %}
-                <th class="time-column">Time</th>
-                <th class="climate-column">Climate</th>
+                <th class="time-column text-center">{% trans "Time" %}</th>
+                <th class="climate-column text-center">{% trans "Climate" %}</th>
             </tr>
         </thead>
         <tbody>
             {% for entry in entries %}
             <tr>
-                <td class="name-column">
-                    <a class="fst-italic" href="/ants/{{ entry.slug }}">{{ entry.name }}</a>
-                    <a href="https://antwiki.org/wiki/{{ entry.antwiki_slug }}" class="ms-1"
-                       title="AntWiki" target="_blank" rel="noopener">
-                        <span class="badge rounded-pill bg-success">AW</span>
-                    </a>
-                    {% if entry.forbidden_in_eu %}
-                    <span class="badge bg-danger ms-1" title="Forbidden in EU">
-                        <i class="bi bi-ban"></i> EU
-                    </span>
-                    {% endif %}
+                <td class="name-column sticky-col">
+                    <div class="d-flex align-items-center flex-wrap gap-1">
+                        <a class="fst-italic fw-medium text-decoration-none" href="/ants/{{ entry.slug }}">{{ entry.name }}</a>
+                        <a href="https://antwiki.org/wiki/{{ entry.antwiki_slug }}" class="badge rounded-pill bg-success-subtle text-success border border-success-subtle text-decoration-none px-1 py-0"
+                           title="AntWiki" target="_blank" rel="noopener">AW</a>
+                        {% if entry.forbidden_in_eu %}
+                        <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-1 py-0" title="{% trans 'Forbidden to keep in the EU' %}">
+                            <i class="bi bi-ban"></i> EU
+                        </span>
+                        {% endif %}
+                    </div>
                 </td>
                 {% for month_num, month_short in months %}
-                <td class="month-column {% if month_num in entry.flight_months %}may-fly{% else %}may-not-fly{% endif %}">
-                    {{ month_short }}
-                </td>
-                {% endfor %}
-                <td class="time-column">
-                    {% if entry.flight_hour_range_lower is not None %}
-                    <i class="bi bi-clock-fill"></i>
-                    {{ entry.flight_hour_range_lower }}-{{ entry.flight_hour_range_upper }}
+                <td class="month-column {% if month_num in entry.flight_months %}may-fly{% else %}may-not-fly{% endif %} {% if month_num == current_month %}current-month-cell{% endif %}">
+                    {% if month_num in entry.flight_months %}
+                        <span class="flight-pill" title="{{ entry.name }} {% trans 'flies in' %} {{ month_short }}">{{ month_short }}</span>
+                    {% else %}
+                        <span class="no-flight-dash">&middot;</span>
                     {% endif %}
                 </td>
-                <td class="climate-column">
+                {% endfor %}
+                <td class="time-column text-center">
+                    {% if entry.flight_hour_range_lower is not None %}
+                    <span class="badge bg-body-secondary text-body border fw-normal py-1" title="{% trans 'Time of flight' %}">
+                        <i class="bi bi-clock me-1 text-primary"></i>{{ entry.flight_hour_range_lower }}&ndash;{{ entry.flight_hour_range_upper }}
+                    </span>
+                    {% else %}
+                    <span class="text-muted small">&mdash;</span>
+                    {% endif %}
+                </td>
+                <td class="climate-column text-center">
                     {% if entry.flight_climate == 'm' %}
-                    <i class="bi bi-thermometer-half" title="Moderate climate"></i>
+                    <span class="badge bg-info-subtle text-info border border-info-subtle py-1" title="{% trans 'Moderate temperature' %}">
+                        <i class="bi bi-thermometer-half me-1"></i>{% trans 'Moderate' %}
+                    </span>
                     {% elif entry.flight_climate == 'w' %}
-                    <i class="bi bi-thermometer-high" title="Warm climate"></i>
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-1" title="{% trans 'Warm temperature' %}">
+                        <i class="bi bi-thermometer-high me-1"></i>{% trans 'Warm' %}
+                    </span>
                     {% elif entry.flight_climate == 's' %}
-                    <i class="bi bi-thermometer-high" title="Muggy climate"></i><i class="bi bi-lightning-fill"></i>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle py-1" title="{% trans 'Muggy / Thundery conditions' %}">
+                        <i class="bi bi-lightning-charge me-1"></i>{% trans 'Muggy' %}
+                    </span>
+                    {% else %}
+                    <span class="text-muted small">&mdash;</span>
                     {% endif %}
                 </td>
             </tr>
@@ -58,9 +88,40 @@
     </table>
 </div>
 
+{# Interactive On-Screen Legend #}
+<div class="card border bg-body-tertiary rounded-3 p-2 px-3 mb-3 small nuptial-legend">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 text-muted">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            <span class="fw-semibold text-body"><i class="bi bi-info-circle me-1 text-primary"></i>{% trans "Legend:" %}</span>
+            <span class="d-inline-flex align-items-center gap-1">
+                <span class="legend-swatch flight-swatch"></span> {% trans "Flight period" %}
+            </span>
+            <span class="d-inline-flex align-items-center gap-1">
+                <span class="legend-swatch current-swatch"></span> {% trans "Current month" %}
+            </span>
+            <span class="d-inline-flex align-items-center gap-1">
+                <i class="bi bi-clock text-primary"></i> {% trans "Flight hours" %}
+            </span>
+            <span class="d-inline-flex align-items-center gap-1">
+                <i class="bi bi-thermometer-half text-info"></i> {% trans "Moderate" %}
+            </span>
+            <span class="d-inline-flex align-items-center gap-1">
+                <i class="bi bi-thermometer-high text-warning"></i> {% trans "Warm" %}
+            </span>
+            <span class="d-inline-flex align-items-center gap-1">
+                <i class="bi bi-lightning-charge text-danger"></i> {% trans "Muggy / Thunderstorm" %}
+            </span>
+        </div>
+        <div class="small">
+            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle">AW</span> AntWiki
+            <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle ms-1">EU</span> {% trans "Forbidden in EU" %}
+        </div>
+    </div>
+</div>
+
 {% if page_obj.paginator.num_pages > 1 %}
-<nav aria-label="Pagination">
-    <ul class="pagination justify-content-center">
+<nav aria-label="{% trans 'Pagination' %}">
+    <ul class="pagination pagination-sm justify-content-center">
         <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
             <a class="page-link"
                {% if page_obj.has_previous %}
@@ -68,7 +129,7 @@
                hx-target="#table-container"
                hx-include="#filter-form"
                {% endif %}
-               href="#">Previous</a>
+               href="#">{% trans "Previous" %}</a>
         </li>
         {% for n in page_obj.paginator.page_range %}
         <li class="page-item {% if page_obj.number == n %}active{% endif %}">
@@ -86,12 +147,23 @@
                hx-target="#table-container"
                hx-include="#filter-form"
                {% endif %}
-               href="#">Next</a>
+               href="#">{% trans "Next" %}</a>
         </li>
     </ul>
 </nav>
 {% endif %}
 
 {% else %}
-<div class="alert alert-warning" role="alert">{% trans "No entries found." %}</div>
+<div class="card border-0 bg-body-tertiary rounded-4 p-5 text-center my-3">
+    <div class="card-body">
+        <div class="icon-box bg-warning-subtle text-warning-emphasis mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem;">
+            <i class="bi bi-search"></i>
+        </div>
+        <h3 class="h5 fw-bold mb-2">{% trans "No matching ant species found" %}</h3>
+        <p class="text-muted mb-3 small">{% trans "Try selecting another month or region, or reset your search filters." %}</p>
+        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="document.getElementById('reset-btn').click();">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>{% trans "Reset Filters" %}
+        </button>
+    </div>
+</div>
 {% endif %}

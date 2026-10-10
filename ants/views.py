@@ -293,6 +293,7 @@ class NuptialFlightTableRowsView(View):
         paginator = Paginator(qs, self.ENTRIES_PER_PAGE)
         page_obj = paginator.get_page(request.GET.get("page", 1))
         entries = _build_entries(page_obj.object_list)
+        today = datetime.date.today()
         html = render_to_string(
             "ants/nuptial_flight_table_rows.html",
             {
@@ -300,6 +301,7 @@ class NuptialFlightTableRowsView(View):
                 "page_obj": page_obj,
                 "total": total,
                 "months": MONTHS,
+                "current_month": today.month,
             },
             request=request,
         )
