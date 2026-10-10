@@ -51,6 +51,13 @@
                 <span class="fw-semibold">{{ entry.comments_count }}</span>
                 <span class="d-none d-sm-inline">{% blocktrans count counter=entry.comments_count %}Comment{% plural %}Comments{% endblocktrans %}</span>
             </a>
+            <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm btn-share-trigger"
+                    data-share-url="{{ request.scheme }}://{{ request.get_host }}{{ entry.get_absolute_url }}"
+                    data-share-title="{{ entry.colony.name }} — {% trans 'Journal' %} ({{ entry.date|date:'N j, Y' }})"
+                    title="{% trans 'Share entry' %}">
+                <i class="bi bi-share"></i>
+                <span class="d-none d-sm-inline">{% trans "Share" %}</span>
+            </button>
             <a href="{% url 'colony_journal' entry.colony.user.username entry.colony.slug %}"
                class="btn btn-sm btn-link text-decoration-none ms-auto small">
                 <i class="bi bi-journal-richtext me-1"></i>{% trans "Colony journal" %} &rarr;

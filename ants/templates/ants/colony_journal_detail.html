@@ -98,7 +98,11 @@
                     </a>
 
                     {# Share Button #}
-                    <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm d-inline-flex align-items-center gap-1" id="btn-share-entry">
+                    <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm d-inline-flex align-items-center gap-1 btn-share-trigger"
+                            id="btn-share-entry"
+                            data-share-url="{{ request.build_absolute_uri }}"
+                            data-share-title="{{ colony.name }} &mdash; {% trans 'Journal' %} ({{ entry.date|date:'N j, Y' }})"
+                            title="{% trans 'Share entry' %}">
                         <i class="bi bi-share"></i>
                         <span id="share-btn-text">{% trans "Share" %}</span>
                     </button>
@@ -182,6 +186,7 @@
 </div>
 
 {% include "ants/snippets/journal_image_lightbox.html" %}
+{% include "ants/snippets/share_modal.html" %}
 {% endblock %}
 
 {% block js %}
@@ -225,22 +230,7 @@
         });
     }
 
-    // Share Button: copy URL to clipboard
-    const shareBtn = document.getElementById("btn-share-entry");
-    const shareText = document.getElementById("share-btn-text");
-    if (shareBtn && shareText) {
-        shareBtn.addEventListener("click", function() {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(window.location.href).then(function() {
-                    const original = shareText.textContent;
-                    shareText.textContent = '{% trans "Copied!" %}';
-                    setTimeout(function() {
-                        shareText.textContent = original;
-                    }, 2000);
-                });
-            }
-        });
-    }
+
 })();
 </script>
 {% endblock %}

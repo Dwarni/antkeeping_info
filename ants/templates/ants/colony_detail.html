@@ -106,8 +106,10 @@
 
                     <div class="d-flex gap-2">
                         {% if colony.is_public %}
-                        <button type="button" class="btn btn-sm btn-outline-secondary" id="copy-link-btn"
-                                data-url="{{ request.build_absolute_uri }}" title="{% trans 'Copy public link' %}">
+                        <button type="button" class="btn btn-sm btn-outline-secondary btn-share-trigger" id="copy-link-btn"
+                                data-share-url="{{ request.build_absolute_uri }}"
+                                data-share-title="{{ colony.name }} - {{ colony.species.name }}"
+                                title="{% trans 'Share colony' %}">
                             <i class="bi bi-share me-1"></i>{% trans "Share" %}
                         </button>
                         {% endif %}
@@ -985,6 +987,7 @@
 {% endif %}
 
 {% include "ants/snippets/journal_image_lightbox.html" %}
+{% include "ants/snippets/share_modal.html" %}
 {% endblock %}
 {% block script %}
 <script src="{% static 'ants/js/colony_journal_photos.js' %}"></script>
@@ -1090,17 +1093,7 @@ document.addEventListener("DOMContentLoaded", function () {
 {% endif %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const copyBtn = document.getElementById("copy-link-btn");
-    if (copyBtn) {
-        copyBtn.addEventListener("click", function () {
-            const url = this.getAttribute("data-url");
-            navigator.clipboard.writeText(url).then(() => {
-                const orig = this.innerHTML;
-                this.innerHTML = '<i class="bi bi-check-lg me-1"></i>{% trans "Copied!" %}';
-                setTimeout(() => { this.innerHTML = orig; }, 2000);
-            });
-        });
-    }
+
 
     const confirmInput = document.getElementById("confirm-colony-name-input");
     const deleteBtn = document.getElementById("confirm-delete-colony-btn");

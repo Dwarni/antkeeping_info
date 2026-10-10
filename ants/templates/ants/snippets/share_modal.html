@@ -1,0 +1,253 @@
+{% load i18n %}
+{# Reusable Share Modal #}
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-0 pb-1">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="shareModalLabel">
+                    <span class="badge bg-primary-subtle text-primary p-2 rounded-circle">
+                        <i class="bi bi-share"></i>
+                    </span>
+                    <span>{% trans "Share" %}</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+            </div>
+            <div class="modal-body py-3">
+                {# Social Icons Grid #}
+                <div class="d-flex justify-content-center align-items-start text-center flex-wrap gap-3 my-2">
+                    {# WhatsApp #}
+                    <a href="#" id="share-link-whatsapp" target="_blank" rel="noopener noreferrer" class="share-icon-btn text-decoration-none">
+                        <div class="share-icon-circle text-white shadow-sm mb-1" style="background-color: #25D366;">
+                            <i class="bi bi-whatsapp"></i>
+                        </div>
+                        <span class="small text-muted d-block text-truncate">WhatsApp</span>
+                    </a>
+                    {# Telegram #}
+                    <a href="#" id="share-link-telegram" target="_blank" rel="noopener noreferrer" class="share-icon-btn text-decoration-none">
+                        <div class="share-icon-circle text-white shadow-sm mb-1" style="background-color: #229ED9;">
+                            <i class="bi bi-telegram"></i>
+                        </div>
+                        <span class="small text-muted d-block text-truncate">Telegram</span>
+                    </a>
+                    {# Reddit #}
+                    <a href="#" id="share-link-reddit" target="_blank" rel="noopener noreferrer" class="share-icon-btn text-decoration-none">
+                        <div class="share-icon-circle text-white shadow-sm mb-1" style="background-color: #FF4500;">
+                            <i class="bi bi-reddit"></i>
+                        </div>
+                        <span class="small text-muted d-block text-truncate">Reddit</span>
+                    </a>
+                    {# X / Twitter #}
+                    <a href="#" id="share-link-twitter" target="_blank" rel="noopener noreferrer" class="share-icon-btn text-decoration-none">
+                        <div class="share-icon-circle bg-dark text-white shadow-sm mb-1">
+                            <i class="bi bi-twitter-x"></i>
+                        </div>
+                        <span class="small text-muted d-block text-truncate">X</span>
+                    </a>
+                    {# Facebook #}
+                    <a href="#" id="share-link-facebook" target="_blank" rel="noopener noreferrer" class="share-icon-btn text-decoration-none">
+                        <div class="share-icon-circle text-white shadow-sm mb-1" style="background-color: #1877F2;">
+                            <i class="bi bi-facebook"></i>
+                        </div>
+                        <span class="small text-muted d-block text-truncate">Facebook</span>
+                    </a>
+                    {# E-Mail #}
+                    <a href="#" id="share-link-email" class="share-icon-btn text-decoration-none">
+                        <div class="share-icon-circle bg-secondary text-white shadow-sm mb-1">
+                            <i class="bi bi-envelope-fill"></i>
+                        </div>
+                        <span class="small text-muted d-block text-truncate">E-Mail</span>
+                    </a>
+                </div>
+
+                {# Copy Link Field #}
+                <div class="mt-4 mb-3">
+                    <label for="share-modal-url-input" class="form-label small fw-semibold text-muted mb-1">
+                        {% trans "Page link" %}
+                    </label>
+                    <div class="input-group">
+                        <input type="text" class="form-control font-monospace small bg-light" id="share-modal-url-input" readonly>
+                        <button class="btn btn-primary d-inline-flex align-items-center gap-1 px-3" type="button" id="share-modal-copy-btn">
+                            <i class="bi bi-clipboard" id="share-modal-copy-icon"></i>
+                            <span id="share-modal-copy-text">{% trans "Copy" %}</span>
+                        </button>
+                    </div>
+                </div>
+
+                {# Helpful App Advice for Discord & Instagram #}
+                <div class="p-2 px-3 bg-body-tertiary rounded-3 border d-flex align-items-center gap-2 small text-muted">
+                    <i class="bi bi-chat-heart text-primary fs-5 flex-shrink-0"></i>
+                    <div>
+                        {% trans "For Discord, Instagram or other apps: copy the link above and paste it directly into your post or chat." %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.share-icon-btn {
+    width: 60px;
+    transition: transform 0.15s ease;
+}
+.share-icon-circle {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.share-icon-btn:hover .share-icon-circle {
+    transform: scale(1.12);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+.share-icon-btn:hover span {
+    color: var(--bs-primary) !important;
+}
+</style>
+
+<script>
+(function() {
+    function copyText(text, onSuccess, onError) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(onSuccess).catch(function() {
+                fallbackCopy(text, onSuccess, onError);
+            });
+        } else {
+            fallbackCopy(text, onSuccess, onError);
+        }
+    }
+
+    function fallbackCopy(text, onSuccess, onError) {
+        try {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            var success = document.execCommand("copy");
+            document.body.removeChild(textArea);
+            if (success && onSuccess) onSuccess();
+            else if (onError) onError();
+        } catch (e) {
+            if (onError) onError(e);
+        }
+    }
+
+    function triggerShare(url, title) {
+        var finalUrl = url || window.location.href;
+        var finalTitle = title || document.title;
+
+        // On mobile / supporting browsers: try native Web Share API first
+        if (navigator.share) {
+            navigator.share({
+                title: finalTitle,
+                url: finalUrl
+            }).catch(function(err) {
+                // If user didn't abort, fallback to modal
+                if (err.name !== "AbortError") {
+                    openModal(finalUrl, finalTitle);
+                }
+            });
+            return;
+        }
+
+        // On desktop / non-share browsers: open modal
+        openModal(finalUrl, finalTitle);
+    }
+
+    function openModal(url, title) {
+        var modalEl = document.getElementById("shareModal");
+        if (!modalEl) return;
+
+        var input = document.getElementById("share-modal-url-input");
+        if (input) input.value = url;
+
+        var encUrl = encodeURIComponent(url);
+        var encTitle = encodeURIComponent(title);
+
+        var wa = document.getElementById("share-link-whatsapp");
+        if (wa) wa.href = "https://api.whatsapp.com/send?text=" + encTitle + "%20" + encUrl;
+
+        var tg = document.getElementById("share-link-telegram");
+        if (tg) tg.href = "https://t.me/share/url?url=" + encUrl + "&text=" + encTitle;
+
+        var rd = document.getElementById("share-link-reddit");
+        if (rd) rd.href = "https://www.reddit.com/submit?url=" + encUrl + "&title=" + encTitle;
+
+        var tw = document.getElementById("share-link-twitter");
+        if (tw) tw.href = "https://twitter.com/intent/tweet?url=" + encUrl + "&text=" + encTitle;
+
+        var fb = document.getElementById("share-link-facebook");
+        if (fb) fb.href = "https://www.facebook.com/sharer/sharer.php?u=" + encUrl;
+
+        var em = document.getElementById("share-link-email");
+        if (em) em.href = "mailto:?subject=" + encTitle + "&body=" + encUrl;
+
+        // Reset copy button state
+        var copyBtn = document.getElementById("share-modal-copy-btn");
+        var copyText = document.getElementById("share-modal-copy-text");
+        var copyIcon = document.getElementById("share-modal-copy-icon");
+        if (copyBtn) {
+            copyBtn.classList.remove("btn-success");
+            copyBtn.classList.add("btn-primary");
+        }
+        if (copyText) copyText.textContent = '{% trans "Copy" %}';
+        if (copyIcon) copyIcon.className = "bi bi-clipboard";
+
+        if (window.bootstrap) {
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Delegated click handler for any .btn-share-trigger (including dynamic/HTMX content)
+        document.addEventListener("click", function(e) {
+            var btn = e.target.closest(".btn-share-trigger");
+            if (btn) {
+                e.preventDefault();
+                var url = btn.getAttribute("data-share-url") || window.location.href;
+                var title = btn.getAttribute("data-share-title") || document.title;
+                triggerShare(url, title);
+            }
+        });
+
+        // Copy button inside modal
+        var copyBtn = document.getElementById("share-modal-copy-btn");
+        if (copyBtn) {
+            copyBtn.addEventListener("click", function() {
+                var input = document.getElementById("share-modal-url-input");
+                if (!input) return;
+                var url = input.value;
+                copyText(url, function() {
+                    input.select();
+                    var copyTextEl = document.getElementById("share-modal-copy-text");
+                    var copyIconEl = document.getElementById("share-modal-copy-icon");
+                    if (copyBtn) {
+                        copyBtn.classList.remove("btn-primary");
+                        copyBtn.classList.add("btn-success");
+                    }
+                    if (copyTextEl) copyTextEl.textContent = '{% trans "Copied!" %}';
+                    if (copyIconEl) copyIconEl.className = "bi bi-check-lg";
+                    setTimeout(function() {
+                        if (copyBtn) {
+                            copyBtn.classList.remove("btn-success");
+                            copyBtn.classList.add("btn-primary");
+                        }
+                        if (copyTextEl) copyTextEl.textContent = '{% trans "Copy" %}';
+                        if (copyIconEl) copyIconEl.className = "bi bi-clipboard";
+                    }, 2500);
+                });
+            });
+        }
+    });
+})();
+</script>
