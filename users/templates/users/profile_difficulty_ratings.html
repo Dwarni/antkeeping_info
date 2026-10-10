@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% load i18n static %}
+{% block title %}{% trans "Your difficulty ratings" %} — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-9 col-xl-8">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'user_profile' %}">{% trans "Profile" %}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% trans "Difficulty Ratings" %}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h1 class="h3 mb-1 d-flex align-items-center gap-2">
+                    <span class="badge rounded-circle bg-warning-subtle text-warning-emphasis p-2 fs-5 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-bar-chart-steps"></i>
+                    </span>
+                    <span>{% trans "Your difficulty ratings" %}</span>
+                </h1>
+                <p class="text-muted mb-0 small">
+                    {% blocktrans count counter=total_count %}
+                    {{ counter }} species rated by you
+                    {% plural %}
+                    {{ counter }} species rated by you
+                    {% endblocktrans %}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'user_profile' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>{% trans "Back to Profile" %}
+                </a>
+                <a href="{% url 'species_filter' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-search me-1"></i>{% trans "Browse Ant Species" %}
+                </a>
+            </div>
+        </div>
+
+        {% if not difficulty_ratings %}
+        <div class="card text-center py-5 border-0 bg-body-tertiary shadow-sm">
+            <div class="card-body">
+                <i class="bi bi-bar-chart-steps fs-1 text-muted mb-3 d-block opacity-50"></i>
+                <h2 class="h5">{% trans "You haven't rated any species' keeping difficulty yet" %}</h2>
+                <p class="text-muted small">
+                    {% trans "Share your keeping experience to help other ant keepers choose the right species!" %}
+                </p>
+                <a href="{% url 'species_filter' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-search me-1"></i>{% trans "Browse Ant Species" %}
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="list-group shadow-sm mb-4">
+            {% for r in difficulty_ratings %}
+            <div class="list-group-item p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+                    <div>
+                        <a href="{% url 'ant_detail' r.species.slug %}#difficulty-rating-section" class="fw-bold text-reset text-decoration-none fs-6">
+                            <em>{{ r.species.name }}</em>
+                        </a>
+                        <span class="text-muted ms-2 small">{{ r.updated_at|date:"N j, Y" }}</span>
+                    </div>
+                    <div>
+                        <span class="badge {% if r.difficulty == 'BEGINNER' %}text-bg-success{% elif r.difficulty == 'INTERMEDIATE' %}text-bg-info{% elif r.difficulty == 'EXPERIENCED' %}text-bg-warning{% else %}text-bg-danger{% endif %} px-2 py-1">
+                            {{ r.get_difficulty_display }}
+                        </span>
+                    </div>
+                </div>
+                {% if r.comment %}
+                <p class="mb-0 text-muted small bg-body-tertiary p-2 rounded">
+                    <i class="bi bi-chat-left-quote me-1 text-secondary"></i>{{ r.comment }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

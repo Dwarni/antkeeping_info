@@ -23,7 +23,7 @@
         {% bs_icon "journal-richtext" "fs-3 flex-shrink-0 me-3 text-success" %}
         <div>
           {% if user.is_authenticated %}
-          <h3 class="h5 mb-1"><a href="{% url 'user_profile' %}#your-colonies" class="stretched-link">Your Colonies</a></h3>
+          <h3 class="h5 mb-1"><a href="{% url 'user_profile_colonies' %}" class="stretched-link">Your Colonies</a></h3>
           <p class="mb-0">Keep track of the colonies you're raising — species, status, and a running journal with photos.</p>
           {% else %}
           <h3 class="h5 mb-1"><a href="{% url 'colony_create' %}" class="stretched-link">Track Your Colonies</a></h3>

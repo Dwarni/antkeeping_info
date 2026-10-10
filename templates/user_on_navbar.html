@@ -6,8 +6,44 @@
             {{ user.username }}
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item" href="{% url "user_profile" %}">{% trans "Profile" %}</a></li>
-            <li><a class="dropdown-item" href="{% url "account_logout" %}">{% trans "Logout" %}</a></li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile" %}">
+                    <i class="bi bi-person-circle"></i>
+                    <span>{% trans "Profile" %}</span>
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile_colonies" %}">
+                    {% include "icons/ant_icon.html" with size="14" class="text-primary" %}
+                    <span>{% trans "My Colonies" %}</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile_journals" %}">
+                    <i class="bi bi-journal-richtext text-success"></i>
+                    <span>{% trans "My Journals" %}</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile_food_ratings" %}">
+                    {% include "icons/food_icon.html" with size="14" class="text-info" %}
+                    <span>{% trans "Food Ratings" %}</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile_difficulty_ratings" %}">
+                    <i class="bi bi-bar-chart-steps text-warning"></i>
+                    <span>{% trans "Difficulty Ratings" %}</span>
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url "account_logout" %}">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>{% trans "Logout" %}</span>
+                </a>
+            </li>
         </ul>
     </li>
 {% else %}

@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+{% load i18n static thumbnail %}
+{% block title %}{% trans "Your colonies" %} — Antkeeping.info{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-10 col-xl-9">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'user_profile' %}">{% trans "Profile" %}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% trans "Colonies" %}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h1 class="h3 mb-1 d-flex align-items-center gap-2">
+                    <span class="badge rounded-circle bg-primary-subtle text-primary p-2 fs-5 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        {% include "icons/ant_icon.html" with size="22" %}
+                    </span>
+                    <span>{% trans "Your colonies" %}</span>
+                </h1>
+                <p class="text-muted mb-0 small">
+                    {% blocktrans count counter=total_colonies %}
+                    {{ counter }} colony in total
+                    {% plural %}
+                    {{ counter }} colonies in total
+                    {% endblocktrans %}
+                    {% if active_colonies %}
+                    &bull; <span class="text-success">{{ active_colonies }} {% trans "active" %}</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'user_profile' %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>{% trans "Back to Profile" %}
+                </a>
+                <a href="{% url 'colony_create' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>{% trans "Add a colony" %}
+                </a>
+            </div>
+        </div>
+
+        {% if not colonies %}
+        <div class="card text-center py-5 border-0 bg-body-tertiary shadow-sm">
+            <div class="card-body">
+                <div class="text-muted opacity-50 mb-3 d-flex justify-content-center">
+                    {% include "icons/ant_icon.html" with size="52" %}
+                </div>
+                <h2 class="h5">{% trans "You haven't added any colonies yet" %}</h2>
+                <p class="text-muted small">
+                    {% trans "Track species, colony health, member counts, and running journals with photos." %}
+                </p>
+                <a href="{% url 'colony_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>{% trans "Add your first colony" %}
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="list-group shadow-sm mb-4">
+            {% for colony in colonies %}
+            <div class="list-group-item list-group-item-action p-3 p-md-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    {% if colony.title_image %}
+                        {% thumbnail colony.title_image.image_file "64x64" crop="center" as im %}
+                        <a href="{{ colony.get_absolute_url }}">
+                            <img class="rounded shadow-sm" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ colony.name }}">
+                        </a>
+                        {% endthumbnail %}
+                    {% else %}
+                        <a href="{{ colony.get_absolute_url }}" class="rounded bg-body-secondary d-flex align-items-center justify-content-center text-muted" style="width: 64px; height: 64px; text-decoration: none;">
+                            {% include "icons/ant_icon.html" with size="32" class="opacity-50" %}
+                        </a>
+                    {% endif %}
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <a href="{{ colony.get_absolute_url }}" class="fw-bold text-reset text-decoration-none fs-6">
+                                {{ colony.name }}
+                            </a>
+                            <span class="badge {% if colony.status == 'ACTIVE' %}text-bg-success{% elif colony.status == 'DEAD' %}text-bg-secondary{% else %}text-bg-info{% endif %}">
+                                {{ colony.get_status_display }}
+                            </span>
+                            {% if colony.is_public %}
+                            <span class="badge text-bg-light border" title="{% trans 'Visible to everyone' %}">
+                                <i class="bi bi-globe me-1"></i>{% trans "Public" %}
+                            </span>
+                            {% else %}
+                            <span class="badge text-bg-secondary" title="{% trans 'Only visible to you' %}">
+                                <i class="bi bi-lock me-1"></i>{% trans "Private" %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted mb-1">
+                            <a href="{% url 'ant_detail' colony.species.slug %}" class="text-reset fst-italic">
+                                {{ colony.species.name }}
+                            </a>
+                        </div>
+                        <div class="small text-muted d-flex align-items-center gap-3">
+                            <span>
+                                <i class="bi bi-journal-richtext me-1"></i>
+                                {% blocktrans count counter=colony.journal_entries_count %}
+                                {{ counter }} journal entry
+                                {% plural %}
+                                {{ counter }} journal entries
+                                {% endblocktrans %}
+                            </span>
+                            <span>&bull;</span>
+                            <span>{% trans "Created" %} {{ colony.created_at|date:"N j, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2 align-self-end align-self-md-center flex-wrap">
+                    <a href="{% url 'colony_journal' colony.user.username colony.slug %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-journal-richtext me-1"></i>{% trans "Journal" %}
+                    </a>
+                    <a href="{{ colony.get_absolute_url }}" class="btn btn-sm btn-outline-primary">
+                        {% trans "Overview" %} &rarr;
+                    </a>
+                    <a href="{% url 'colony_edit' colony.pk %}" class="btn btn-sm btn-light border text-muted" title="{% trans 'Edit colony' %}">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -50,7 +50,7 @@
                         <i class="bi bi-journal-richtext me-1"></i>{% trans "Colonies" %}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="coloniesDropdown">
-                        <li><a class="dropdown-item" href="{% url 'user_profile' %}#your-colonies">{% trans "My Colonies" %}</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'user_profile_colonies' %}">{% include "icons/ant_icon.html" with size="14" class="text-primary" %}<span>{% trans "My Colonies" %}</span></a></li>
                         <li><a class="dropdown-item" href="{% url 'community_journal' %}">{% trans "Community Journal" %}</a></li>
                     </ul>
                 </li>
