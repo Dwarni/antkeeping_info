@@ -1,9 +1,23 @@
 {% extends 'layout.html' %}
-{% load static thumbnail i18n crispy_forms_tags %}
+{% load static thumbnail i18n crispy_forms_tags ants %}
 
 {% block title %}{% blocktrans with colony_name=colony.name date=entry.date|date:"N j, Y" %}{{ colony_name }} ({{ date }}) | Ant Journal | Antkeeping.info{% endblocktrans %}{% endblock %}
 {% block og_title %}{% blocktrans with colony_name=colony.name date=entry.date|date:"N j, Y" %}{{ colony_name }} — Journal Entry ({{ date }}){% endblocktrans %}{% endblock %}
-{% block og_description %}{{ entry.note|truncatewords:30 }}{% endblock %}
+{% block og_description %}{{ entry.note|striptags|truncatewords:30 }}{% endblock %}
+
+{% block og_image %}
+{% if entry.first_image %}
+    {% absolute_url entry.first_image.image_file.url as img_url %}
+    <meta property="og:image" content="{{ img_url }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ img_url }}">
+{% elif colony.title_image %}
+    {% absolute_url colony.title_image.image_file.url as img_url %}
+    <meta property="og:image" content="{{ img_url }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ img_url }}">
+{% endif %}
+{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'ants/css/journal_image_lightbox.css' %}">

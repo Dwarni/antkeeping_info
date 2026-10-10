@@ -13,6 +13,21 @@ from ants.models import (
 )
 
 
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.template import Context, Template
+from ants.models import ColonyImage, ColonyJournalEntryImage
+
+_PNG_BYTES = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01"
+    b"\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def _png_upload(name="photo.png"):
+    return SimpleUploadedFile(name, _PNG_BYTES, content_type="image/png")
+
 class ColonyJournalFeaturesTestCase(TestCase):
     def setUp(self):
         self.genus = Genus.objects.create(name="Camponotus")
@@ -228,3 +243,90 @@ class ColonyJournalFeaturesTestCase(TestCase):
         self.assertContains(response, ">1</span>")
         self.assertContains(response, "Comment")
         self.assertNotContains(response, ">2</span>")
+
+
+    def test_social_cards_colony_detail_without_and_with_image(self):
+        colony_url = self.colony.get_absolute_url()
+
+        # 1. Without image: og:image and twitter:image should NOT be emitted
+        res_no_img = self.client.get(colony_url)
+        self.assertEqual(res_no_img.status_code, 200)
+        self.assertContains(res_no_img, 'property="og:title" content="My Wood Ants (Camponotus ligniperda)')
+        self.assertNotContains(res_no_img, 'property="og:image"')
+        self.assertNotContains(res_no_img, 'name="twitter:image"')
+
+        # 2. With image: og:image and twitter:image should point to the colony title image
+        colony_img = ColonyImage.objects.create(colony=self.colony, image_file=_png_upload("colony.png"))
+        res_with_img = self.client.get(colony_url)
+        self.assertEqual(res_with_img.status_code, 200)
+        self.assertContains(res_with_img, 'property="og:image"')
+        self.assertContains(res_with_img, colony_img.image_file.url)
+        self.assertContains(res_with_img, 'name="twitter:card" content="summary_large_image"')
+        self.assertContains(res_with_img, 'name="twitter:image"')
+
+    def test_social_cards_colony_journal_timeline(self):
+        journal_url = reverse("colony_journal", args=[self.alice.username, self.colony.slug])
+
+        # Without colony image: no og:image
+        res_no_img = self.client.get(journal_url)
+        self.assertEqual(res_no_img.status_code, 200)
+        self.assertNotContains(res_no_img, 'property="og:image"')
+
+        # With colony image: og:image present
+        colony_img = ColonyImage.objects.create(colony=self.colony, image_file=_png_upload("colony.png"))
+        res_with_img = self.client.get(journal_url)
+        self.assertEqual(res_with_img.status_code, 200)
+        self.assertContains(res_with_img, 'property="og:image"')
+        self.assertContains(res_with_img, colony_img.image_file.url)
+        self.assertContains(res_with_img, 'name="twitter:card" content="summary_large_image"')
+
+    def test_social_cards_journal_entry_with_entry_photos(self):
+        # Entry with 2 photos: should use the 1st photo
+        img1 = ColonyJournalEntryImage.objects.create(
+            journal_entry=self.entry, image_file=_png_upload("entry1.png"), ordering=0
+        )
+        img2 = ColonyJournalEntryImage.objects.create(
+            journal_entry=self.entry, image_file=_png_upload("entry2.png"), ordering=1
+        )
+        self.assertEqual(self.entry.first_image, img1)
+
+        detail_url = self.entry.get_absolute_url()
+        res = self.client.get(detail_url)
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'property="og:image"')
+        self.assertContains(res, img1.image_file.url)
+        self.assertNotContains(res, f'property="og:image" content="{img2.image_file.url}"')
+        self.assertContains(res, 'name="twitter:card" content="summary_large_image"')
+
+    def test_social_cards_journal_entry_fallback_and_no_image(self):
+        detail_url = self.entry.get_absolute_url()
+
+        # 1. Neither entry photo nor colony image: no og:image
+        res_no_img = self.client.get(detail_url)
+        self.assertEqual(res_no_img.status_code, 200)
+        self.assertNotContains(res_no_img, 'property="og:image"')
+        self.assertNotContains(res_no_img, 'name="twitter:image"')
+
+        # 2. Colony image exists, entry has no photo: falls back to colony image
+        colony_img = ColonyImage.objects.create(colony=self.colony, image_file=_png_upload("colony.png"))
+        res_fallback = self.client.get(detail_url)
+        self.assertEqual(res_fallback.status_code, 200)
+        self.assertContains(res_fallback, 'property="og:image"')
+        self.assertContains(res_fallback, colony_img.image_file.url)
+        self.assertContains(res_fallback, 'name="twitter:card" content="summary_large_image"')
+
+    def test_absolute_url_template_tag(self):
+        t = Template("{% load ants %}{% absolute_url rel_url as out %}{{ out }}")
+        rendered = t.render(Context({"rel_url": "/media/test.jpg"}))
+        self.assertEqual(rendered, "/media/test.jpg")
+
+        # When request is in context, builds full URI
+        from django.test import RequestFactory
+        factory = RequestFactory()
+        req = factory.get("/some-page/")
+        rendered_with_req = t.render(Context({"rel_url": "/media/test.jpg", "request": req}))
+        self.assertEqual(rendered_with_req, "http://testserver/media/test.jpg")
+
+        # When already absolute, returns unchanged
+        rendered_abs = t.render(Context({"rel_url": "https://cdn.example.com/pic.jpg", "request": req}))
+        self.assertEqual(rendered_abs, "https://cdn.example.com/pic.jpg")

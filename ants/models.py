@@ -1038,6 +1038,12 @@ class ColonyJournalEntry(models.Model):
         )
 
     @property
+    def first_image(self):
+        """Returns the first attached ColonyJournalEntryImage, or None."""
+        images = self.images.all()
+        return images[0] if images else None
+
+    @property
     def likes_count(self):
         if "likes_count" in self.__dict__:
             return self.__dict__["likes_count"]

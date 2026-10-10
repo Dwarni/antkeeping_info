@@ -75,3 +75,20 @@ def rank_entry(index: int, entry_name: str, entry_total: int, max_total: int):
         "entry_total": entry_total,
         "width": entry_total / max_total * 100,
     }
+
+
+@register.simple_tag(takes_context=True)
+def absolute_url(context, relative_or_absolute_url):
+    """Converts a relative URL to an absolute URL using request.build_absolute_uri.
+
+    If the URL is already absolute, it is returned unchanged.
+    """
+    if not relative_or_absolute_url:
+        return ""
+    url_str = str(relative_or_absolute_url)
+    if url_str.startswith("http://") or url_str.startswith("https://"):
+        return url_str
+    request = context.get("request")
+    if request:
+        return request.build_absolute_uri(url_str)
+    return url_str

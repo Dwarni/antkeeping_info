@@ -2101,8 +2101,9 @@ class ColonyJournalEntryDetailView(View):
 
     def get(self, request, username, slug, pk):
         entry = get_object_or_404(
-            ColonyJournalEntry.objects.select_related("colony", "colony__species", "colony__user")
-            .prefetch_related("images"),
+            ColonyJournalEntry.objects.select_related(
+                "colony", "colony__species", "colony__user", "colony__title_image"
+            ).prefetch_related("images"),
             pk=pk,
             colony__slug=slug,
             colony__user__username__iexact=username,
