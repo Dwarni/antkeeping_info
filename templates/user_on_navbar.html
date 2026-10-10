@@ -1,14 +1,15 @@
 {% load i18n %}
 {% if user.is_authenticated %}
     <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true"
+        <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true"
             aria-expanded="false">
-            {{ user.username }}
+            <i class="bi bi-person-circle"></i>
+            <span>{{ user.username }}</span>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile" %}">
-                    <i class="bi bi-person-circle"></i>
+                    <i class="bi bi-person-circle text-primary"></i>
                     <span>{% trans "Profile" %}</span>
                 </a>
             </li>
@@ -48,9 +49,9 @@
     </li>
 {% else %}
     <li class="nav-item">
-        <a class="nav-link" href="{% url "account_login" %}">{% trans "Login" %}</a>
+        <a class="nav-link text-white-50" href="{% url "account_login" %}">{% trans "Login" %}</a>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" href="{% url "account_signup" %}">{% trans "Register" %}</a>
+    <li class="nav-item ms-lg-1">
+        <a class="btn btn-sm btn-outline-light my-1 my-lg-0 px-3 rounded-pill fw-semibold" href="{% url "account_signup" %}">{% trans "Register" %}</a>
     </li>
 {% endif %}

@@ -1,192 +1,324 @@
-{% extends "layout.html" %}
+{% extends 'layout.html' %}
+{% load static %}
 {% load i18n %}
 {% load bootstraptags %}
-{% load static %}
-{% block meta %}
-<meta name="description" content="{% trans 'Information and tools related to ants and ant keeping for example detailed information for ant species, list of ants by country, nuptial flight map etc.' %}">
-{% endblock %}
-{% block og_title %}Antkeeping.info — Ant Species Database & Tools{% endblock %}
-{% block og_description %}A data-focused resource for ant enthusiasts and developers. Browse ant species by region, compare sizes, track nuptial flights, and access the REST API.{% endblock %}
+{% block title %}Antkeeping.info — Ant Database, Nuptial Flights & Colony Journals{% endblock %}
+{% block og_title %}Antkeeping.info — Ant Database, Nuptial Flights & Colony Journals{% endblock %}
+{% block og_description %}A data-focused resource for ant keepers and enthusiasts. Browse 14,800+ ant species, track nuptial flights, manage your colony journals with photos, and explore community ratings.{% endblock %}
 {% block css %}
   <link rel="stylesheet" href="{% static 'home/css/home.css' %}">
 {% endblock %}
 {% block content %}
 
-<h1 class="display-1">Welcome to Antkeeping.info</h1>
-<p class="lead pb-2">A data-focused resource for ant enthusiasts and developers. Browse tables and databases directly, or use the <a href="{% url 'api-doc' %}">REST API</a> to integrate ant data into your own projects.</p>
+<!-- Hero Section -->
+<section class="home-hero mb-5 text-center">
+  <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-success-subtle text-success border border-success-subtle mb-3 fw-semibold small">
+    <i class="bi bi-shield-check"></i>
+    <span>{% trans "The Platform for Ant Keepers & Enthusiasts" %}</span>
+  </div>
 
-<h2 class="pb-2 border-bottom">Colony management</h2>
-<div class="row g-4 py-5 row-cols-1 row-cols-lg-2">
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        {% bs_icon "journal-richtext" "fs-3 flex-shrink-0 me-3 text-success" %}
-        <div>
+  <h1 class="display-5 fw-bold hero-title mb-3">
+    {% trans "Explore Ant Species, Nuptial Flights & Colony Journals" %}
+  </h1>
+  <p class="lead text-muted mx-auto mb-4" style="max-width: 760px;">
+    {% trans "A comprehensive, community-driven resource for ant keepers and enthusiasts. Manage your colonies with photo logs and care notes, look up species distributions, or explore nuptial flights." %}
+  </p>
+
+  <!-- Prominent Search Bar -->
+  <div class="hero-search-wrapper mx-auto my-4">
+    <form action="{% url 'search' %}" method="get" class="hero-search-form" role="search">
+      <div class="input-group input-group-lg">
+        <span class="input-group-text bg-body ps-3 pe-2 text-muted">
+          <i class="bi bi-search text-primary"></i>
+        </span>
+        <input type="search" name="q" minlength="3" required
+               class="form-control bg-body ps-1"
+               placeholder="{% trans 'Search species, genera, regions (e.g. Lasius niger, Camponotus)...' %}"
+               aria-label="{% trans 'Search ant database' %}">
+        <button class="btn btn-primary px-4 fw-semibold" type="submit">
+          {% trans 'Search' %}
+        </button>
+      </div>
+    </form>
+    <!-- Quick Search Badges -->
+    <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-2 pt-1 small text-muted">
+      <span class="fw-medium"><i class="bi bi-stars me-1 text-warning"></i>{% trans "Popular:" %}</span>
+      <a href="{% url 'search' %}?q=Lasius+niger" class="badge bg-body-secondary text-body text-decoration-none border hover-badge">Lasius niger</a>
+      <a href="{% url 'search' %}?q=Messor+barbarus" class="badge bg-body-secondary text-body text-decoration-none border hover-badge">Messor barbarus</a>
+      <a href="{% url 'search' %}?q=Camponotus" class="badge bg-body-secondary text-body text-decoration-none border hover-badge">Camponotus</a>
+      <a href="{% url 'species_filter' %}" class="badge bg-primary-subtle text-primary text-decoration-none border border-primary-subtle hover-badge">
+        <i class="bi bi-sliders me-1"></i>{% trans "Advanced Filter" %}
+      </a>
+    </div>
+  </div>
+
+  <!-- Primary CTAs -->
+  <div class="d-flex flex-wrap justify-content-center gap-3 mb-4 pt-2">
+    {% if user.is_authenticated %}
+      <a href="{% url 'user_profile_colonies' %}" class="btn btn-primary btn-lg rounded-pill px-4 d-inline-flex align-items-center gap-2 shadow-sm">
+        {% include "icons/ant_icon.html" with size="18" class="text-white" %}
+        <span>{% trans "My Colonies & Journals" %}</span>
+      </a>
+      <a href="{% url 'community_journal' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4 d-inline-flex align-items-center gap-2">
+        <i class="bi bi-people-fill"></i>
+        <span>{% trans "Community Journal" %}</span>
+      </a>
+    {% else %}
+      <a href="{% url 'account_signup' %}" class="btn btn-primary btn-lg rounded-pill px-4 d-inline-flex align-items-center gap-2 shadow-sm">
+        <i class="bi bi-plus-circle-fill"></i>
+        <span>{% trans "Start Tracking Your Colonies" %}</span>
+      </a>
+      <a href="{% url 'community_journal' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4 d-inline-flex align-items-center gap-2">
+        <i class="bi bi-journal-richtext"></i>
+        <span>{% trans "Browse Community Journals" %}</span>
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="row g-2 g-md-3 justify-content-center pt-3 border-top mt-4">
+    <div class="col-6 col-md-3">
+      <div class="hero-stat-card p-3 rounded-3 border h-100">
+        <div class="fw-bold fs-4 text-primary">14.800+</div>
+        <div class="text-muted small">{% trans "Ant Species Documented" %}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="hero-stat-card p-3 rounded-3 border h-100">
+        <div class="fw-bold fs-4 text-success"><i class="bi bi-journal-check me-1"></i>{% trans "Journals" %}</div>
+        <div class="text-muted small">{% trans "Colony Logs & Photo Timelines" %}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="hero-stat-card p-3 rounded-3 border h-100">
+        <div class="fw-bold fs-4 text-info"><i class="bi bi-cloud-sun me-1"></i>{% trans "Flights" %}</div>
+        <div class="text-muted small">{% trans "Nuptial Flight Timing" %}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="hero-stat-card p-3 rounded-3 border h-100">
+        <div class="fw-bold fs-4 text-secondary"><i class="bi bi-braces me-1"></i>REST API</div>
+        <div class="text-muted small">{% trans "Free Open Data for Developers" %}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 1: Colony Management & Journals -->
+<section class="mb-5">
+  <div class="section-header">
+    <span class="badge bg-success-subtle text-success border border-success-subtle section-eyebrow mb-1">{% trans "Keeping & Community" %}</span>
+    <h2 class="h3 fw-bold mb-1">{% trans "Colony Management & Journals" %}</h2>
+    <p class="text-muted mb-0">{% trans "Document the growth of your colonies or follow journal timelines from keepers worldwide." %}</p>
+  </div>
+
+  <div class="row g-4 row-cols-1 row-cols-md-2">
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-success-subtle text-success">
+              <i class="bi bi-journal-richtext"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
           {% if user.is_authenticated %}
-          <h3 class="h5 mb-1"><a href="{% url 'user_profile_colonies' %}" class="stretched-link">Your Colonies</a></h3>
-          <p class="mb-0">Keep track of the colonies you're raising — species, status, and a running journal with photos.</p>
+            <h3 class="h5 mb-2"><a href="{% url 'user_profile_colonies' %}" class="stretched-link">{% trans "Your Colonies & Journals" %}</a></h3>
+            <p class="text-muted mb-0">{% trans "Keep track of all colonies you raise — census counter, feeding events, photo galleries, and private or public journals." %}</p>
           {% else %}
-          <h3 class="h5 mb-1"><a href="{% url 'colony_create' %}" class="stretched-link">Track Your Colonies</a></h3>
-          <p class="mb-0">Sign up to record species, status, and a running journal with photos for every colony you keep.</p>
+            <h3 class="h5 mb-2"><a href="{% url 'colony_create' %}" class="stretched-link">{% trans "Track Your Colonies" %}</a></h3>
+            <p class="text-muted mb-0">{% trans "Sign up for free to record species, colony status, worker census milestones, and running journals with photos." %}</p>
           {% endif %}
         </div>
       </div>
     </div>
-  </div>
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        {% bs_icon "people-fill" "fs-3 flex-shrink-0 me-3 text-info" %}
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'community_journal' %}" class="stretched-link">Community Journal</a></h3>
-          <p class="mb-0">Browse journal entries from colonies kept by the community — filter by species, genus, or keeper.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<h2 class="pb-2 border-bottom">Nuptial flights</h2>
-<div class="row g-4 py-5 row-cols-1 row-cols-lg-2">
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        {% bs_icon "table" "fs-3 flex-shrink-0 me-3 text-primary" %}
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'nuptial_flight_table' %}" class="stretched-link">Nuptial Flight Table</a></h3>
-          <p class="mb-0">See when ant species normally have their nuptial flights.</p>
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-info-subtle text-info">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'community_journal' %}" class="stretched-link">{% trans "Community Journal Stream" %}</a></h3>
+          <p class="text-muted mb-0">{% trans "Browse public journal updates from ant keepers around the globe. Filter by species, genus, or keeper, leave comments, and give likes." %}</p>
         </div>
       </div>
     </div>
   </div>
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        {% bs_icon "globe" "fs-3 flex-shrink-0 me-3 text-secondary" %}
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'flights_map' %}" class="stretched-link">Reports (archived)</a></h3>
-          {% include "snippets/historical_flight_reports_hint.html" %}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<p class="text-muted small">
-  {% include "snippets/flight_report_links.html" %}
-</p>
+</section>
 
-<h2 class="pb-2 border-bottom">Ant Database</h2>
-<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        <span class="feature-icon icon-ant flex-shrink-0 me-3 text-primary"></span>
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'taxonomic_ranks_by_region' 'species' %}" class="stretched-link">Ant species by region</a></h3>
-          <p class="mb-0">See which ant species occur in a selected region.</p>
-        </div>
-      </div>
-    </div>
+<!-- Section 2: Nuptial Flights -->
+<section class="mb-5">
+  <div class="section-header">
+    <span class="badge bg-primary-subtle text-primary border border-primary-subtle section-eyebrow mb-1">{% trans "Nature & Timing" %}</span>
+    <h2 class="h3 fw-bold mb-1">{% trans "Nuptial Flights" %}</h2>
+    <p class="text-muted mb-0">{% trans "Find out when queens take flight in your region and discover historical field reports." %}</p>
   </div>
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        <span class="feature-icon icon-ant flex-shrink-0 me-3 text-primary"></span>
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'taxonomic_ranks_by_region' 'genera' %}" class="stretched-link">Ant genera by region</a></h3>
-          <p class="mb-0">See which ant genera occur in a selected region.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        <span class="feature-icon icon-ant flex-shrink-0 me-3 text-primary"></span>
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'taxonomic_ranks_by_region' 'tribes' %}" class="stretched-link">Ant tribes by region</a></h3>
-          <p class="mb-0">See which ant tribes occur in a selected region.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        <span class="feature-icon icon-ant flex-shrink-0 me-3 text-primary"></span>
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'taxonomic_ranks_by_region' 'sub-families' %}" class="stretched-link">Ant subfamilies by region</a></h3>
-          <p class="mb-0">See which ant subfamilies occur in a selected region.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        {% bs_icon "exclamation-triangle" "fs-3 flex-shrink-0 me-3 text-danger" %}
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'forbidden_in_eu_species_list' %}" class="stretched-link">Forbidden Ant Species (EU)</a></h3>
-          <p class="mb-0">See which ant species are forbidden to keep in the European Union.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        {% bs_icon "rulers" "fs-3 flex-shrink-0 me-3 text-primary" %}
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'size_comparison' %}" class="stretched-link">Size Comparison</a></h3>
-          <p class="mb-0">Compare ant species at their real-world size and filter by region, caste, and more.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        {% bs_icon "bug-fill" "fs-3 flex-shrink-0 me-3 text-primary" %}
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'food_overview' %}" class="stretched-link">Ant Food Database</a></h3>
-          <p class="mb-0">What do ants eat? Find out which ant species accept a given food — community-rated by keepers.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<h2 class="pb-2 border-bottom">Rankings</h2>
-<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        <span class="feature-icon icon-top-list flex-shrink-0 me-3 text-primary"></span>
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'antdb_top_lists' %}" class="stretched-link">{% trans "Top Lists" %}</a></h3>
-          <p class="mb-0">Explore rankings of ant species, genera, countries, and authors.</p>
+  <div class="row g-4 row-cols-1 row-cols-md-2">
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-primary-subtle text-primary">
+              <i class="bi bi-calendar3-range"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'nuptial_flight_table' %}" class="stretched-link">{% trans "Nuptial Flight Table" %}</a></h3>
+          <p class="text-muted mb-0">{% trans "See when ant species normally have their mating flights throughout the year, filtered by month and country." %}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-secondary-subtle text-secondary">
+              <i class="bi bi-globe-americas"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'flights_map' %}" class="stretched-link">{% trans "Flight Reports (Archived Map)" %}</a></h3>
+          <p class="text-muted mb-0">{% trans "Interactive world map showing archived community flight sightings, weather records, and habitat observations." %}</p>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<h2 class="pb-2 border-bottom">API</h2>
-<div class="row g-4 py-5 row-cols-1 row-cols-lg-2">
-  <div class="col">
-    <div class="card h-100 feature-card">
-      <div class="card-body d-flex align-items-start">
-        {% bs_icon "braces" "fs-3 flex-shrink-0 me-3 text-primary" %}
-        <div>
-          <h3 class="h5 mb-1"><a href="{% url 'api-doc' %}" class="stretched-link">REST API</a></h3>
-          <p class="mb-0">Programmatic access to ant species, nuptial flight data, regions, and more. Powers third-party projects and tools.</p>
+  <p class="text-muted small mt-3">
+    {% include "snippets/flight_report_links.html" %}
+  </p>
+</section>
+
+<!-- Section 3: Ant Database & Tools -->
+<section class="mb-5">
+  <div class="section-header">
+    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle section-eyebrow mb-1">{% trans "Species & Care Knowledge" %}</span>
+    <h2 class="h3 fw-bold mb-1">{% trans "Ant Database & Tools" %}</h2>
+    <p class="text-muted mb-0">{% trans "Explore rich taxonomy distributions, community food ratings, size comparisons, and rankings." %}</p>
+  </div>
+
+  <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
+    <!-- Taxonomic Ranks by Region (Unified Smart Card) -->
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-success-subtle text-success">
+              <i class="bi bi-diagram-3"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'taxonomic_ranks_by_region' 'species' %}" class="stretched-link">{% trans "Taxonomy by Region" %}</a></h3>
+          <p class="text-muted small mb-3">{% trans "Browse which ant species, genera, tribes, and subfamilies naturally occur in any selected world region." %}</p>
+          <div class="mt-auto pt-2 border-top d-flex flex-wrap gap-1 small position-relative" style="z-index: 2;">
+            <a href="{% url 'taxonomic_ranks_by_region' 'species' %}" class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none">{% trans "Species" %}</a>
+            <a href="{% url 'taxonomic_ranks_by_region' 'genera' %}" class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none">{% trans "Genera" %}</a>
+            <a href="{% url 'taxonomic_ranks_by_region' 'tribes' %}" class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none">{% trans "Tribes" %}</a>
+            <a href="{% url 'taxonomic_ranks_by_region' 'sub-families' %}" class="badge bg-secondary-subtle text-secondary-emphasis text-decoration-none">{% trans "Subfamilies" %}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ant Food Database -->
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-info-subtle text-info">
+              {% include "icons/food_icon.html" with size="22" class="text-info" %}
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'food_overview' %}" class="stretched-link">{% trans "Ant Food Database" %}</a></h3>
+          <p class="text-muted small mb-0">{% trans "What do ants eat? Discover which foods are accepted by specific ant species — rated and reviewed by the community." %}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Size Comparison -->
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-primary-subtle text-primary">
+              <i class="bi bi-rulers"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'size_comparison' %}" class="stretched-link">{% trans "Size Comparison" %}</a></h3>
+          <p class="text-muted small mb-0">{% trans "Compare ant species at their true-to-life 1:1 scale side by side. Filter by region, caste (queen, worker, soldier), and size range." %}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forbidden in EU -->
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-danger-subtle text-danger">
+              <i class="bi bi-shield-exclamation"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'forbidden_in_eu_species_list' %}" class="stretched-link text-danger-emphasis">{% trans "Forbidden Ant Species (EU)" %}</a></h3>
+          <p class="text-muted small mb-0">{% trans "Overview of invasive alien species prohibited from keeping, breeding, transporting, or releasing in the European Union." %}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rankings & Top Lists -->
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-warning-subtle text-warning-emphasis">
+              <i class="bi bi-trophy"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'antdb_top_lists' %}" class="stretched-link">{% trans "Rankings & Top Lists" %}</a></h3>
+          <p class="text-muted small mb-0">{% trans "Rankings of countries with the highest ant biodiversity, largest ant genera, and historical taxonomic authors." %}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Developer REST API -->
+    <div class="col">
+      <div class="card h-100 feature-card p-3">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="icon-box bg-dark-subtle text-body">
+              <i class="bi bi-code-slash"></i>
+            </div>
+            <i class="bi bi-arrow-right card-arrow text-muted"></i>
+          </div>
+          <h3 class="h5 mb-2"><a href="{% url 'api-doc' %}" class="stretched-link">{% trans "Developer REST API" %}</a></h3>
+          <p class="text-muted small mb-0">{% trans "Programmatic access to species records, distributions, and flight data with OpenAPI / Swagger documentation." %}</p>
         </div>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<p>Species data is from <a href="https://antwiki.org" rel="noopener noreferrer" target="_blank">Antwiki</a>. Species distribution data is from Antwiki and <a href="https://antmaps.org/" rel="noopener noreferrer" target="_blank">Antmaps.</a>
-  Other data is from various sources (other websites, articles, forums etc.).
-</p>
+<!-- Data Sources & Attribution Card -->
+<section class="card border-0 bg-body-tertiary rounded-4 p-4 mb-4 text-center">
+  <div class="card-body py-2">
+    <div class="d-flex justify-content-center align-items-center gap-2 mb-2 text-muted">
+      <i class="bi bi-info-circle text-primary"></i>
+      <span class="fw-semibold">{% trans "Open Data & Attributions" %}</span>
+    </div>
+    <p class="text-muted small mb-0 mx-auto" style="max-width: 720px;">
+      {% blocktrans %}Species data is sourced from <a href="https://antwiki.org" rel="noopener noreferrer" target="_blank">Antwiki</a>. Species distribution data is provided by Antwiki and <a href="https://antmaps.org/" rel="noopener noreferrer" target="_blank">Antmaps</a>. Additional community observations, food ratings, and flight records are contributed under CC BY 4.0.{% endblocktrans %}
+    </p>
+  </div>
+</section>
+
 {% endblock %}

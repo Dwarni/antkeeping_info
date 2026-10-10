@@ -1,88 +1,170 @@
 {% load static %}
 {% load i18n %}
 {% load admin_urls %}
-<nav class="navbar navbar-expand-md navbar-dark navbar-forest d-print-none mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'home' %}">
-            <img src="{% static 'img/logo.png' %}" alt="Antkeeping.info logo" width="30" height="30" class="d-inline-block align-top">
+<nav class="navbar navbar-expand-lg navbar-dark navbar-forest d-print-none mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2 py-1 me-3" href="{% url 'home' %}">
+            <img src="{% static 'img/logo.png' %}" alt="Antkeeping.info" width="30" height="30" class="d-inline-block">
+            <span class="fw-bold tracking-tight text-white d-none d-sm-inline fs-6">Antkeeping.info</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="{% trans 'Toggle navigation' %}">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">{% trans "Home" %}</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %} href="{% url 'home' %}">{% trans "Home" %}</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="antDatabaseDropdown" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="antDatabaseDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         {% trans "Ant Database" %}
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="antDatabaseDropdown">
-                        <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'species' %}">{% trans "Ant species by Region" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'genera' %}">{% trans "Ant genera by Region" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'tribes' %}">{% trans "Ant tribes by Region" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'taxonomic_ranks_by_region' 'sub-families' %}">{% trans "Ant sub families by Region" %}</a></li>
+                    <ul class="dropdown-menu shadow-sm" aria-labelledby="antDatabaseDropdown">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'taxonomic_ranks_by_region' 'species' %}">
+                                <i class="bi bi-geo-alt text-success"></i>
+                                <span>{% trans "Ant species by Region" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'taxonomic_ranks_by_region' 'genera' %}">
+                                <i class="bi bi-diagram-3 text-success"></i>
+                                <span>{% trans "Ant genera by Region" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'taxonomic_ranks_by_region' 'tribes' %}">
+                                <i class="bi bi-diagram-2 text-success"></i>
+                                <span>{% trans "Ant tribes by Region" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'taxonomic_ranks_by_region' 'sub-families' %}">
+                                <i class="bi bi-layers text-success"></i>
+                                <span>{% trans "Ant sub families by Region" %}</span>
+                            </a>
+                        </li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'forbidden_in_eu_species_list' %}">{% trans "Forbidden Ant Species (EU)" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'size_comparison' %}">{% trans "Size Comparison" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'food_overview' %}">{% trans "Ant Food Database" %}</a></li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'food_overview' %}">
+                                {% include "icons/food_icon.html" with size="14" class="text-info" %}
+                                <span>{% trans "Ant Food Database" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'size_comparison' %}">
+                                <i class="bi bi-rulers text-primary"></i>
+                                <span>{% trans "Size Comparison" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'forbidden_in_eu_species_list' %}">
+                                <i class="bi bi-shield-exclamation text-danger"></i>
+                                <span>{% trans "Forbidden Ant Species (EU)" %}</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'antdb_top_lists' %}">{% trans "Rankings" %}</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'antdb_top_lists' %}active{% endif %}" href="{% url 'antdb_top_lists' %}">{% trans "Rankings" %}</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="nuptialFlightsDropdown" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="nuptialFlightsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         {% trans "Nuptial Flights" %}
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="nuptialFlightsDropdown">
-                        <li><a class="dropdown-item" href="{% url 'nuptial_flight_table' %}">{% trans "Nuptial Flight Table" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'flights_map' %}">{% trans "Reports (archived)" %}</a></li>
+                    <ul class="dropdown-menu shadow-sm" aria-labelledby="nuptialFlightsDropdown">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'nuptial_flight_table' %}">
+                                <i class="bi bi-calendar3-range text-primary"></i>
+                                <span>{% trans "Nuptial Flight Table" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'flights_map' %}">
+                                <i class="bi bi-globe text-secondary"></i>
+                                <span>{% trans "Reports (archived)" %}</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="coloniesDropdown" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="bi bi-journal-richtext me-1"></i>{% trans "Colonies" %}
+                    <a class="nav-link dropdown-toggle" href="#" id="coloniesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% trans "Colonies" %}
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="coloniesDropdown">
-                        <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'user_profile_colonies' %}">{% include "icons/ant_icon.html" with size="14" class="text-primary" %}<span>{% trans "My Colonies" %}</span></a></li>
-                        <li><a class="dropdown-item" href="{% url 'community_journal' %}">{% trans "Community Journal" %}</a></li>
+                    <ul class="dropdown-menu shadow-sm" aria-labelledby="coloniesDropdown">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'user_profile_colonies' %}">
+                                {% include "icons/ant_icon.html" with size="14" class="text-primary" %}
+                                <span>{% trans "My Colonies" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'community_journal' %}">
+                                <i class="bi bi-people-fill text-info"></i>
+                                <span>{% trans "Community Journal" %}</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 {% if user.is_staff %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="staffDropdown" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="staffDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {% trans "Staff" %}
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="staffDropdown">
-                            <li><a class="dropdown-item" href="{% url 'admin:index' %}">{% trans "Admin page" %}</a></li>
-                            <li><a class="dropdown-item" href="{% url 'flights_review_list' %}">{% trans "Review flights" %}</a></li>
+                        <ul class="dropdown-menu shadow-sm" aria-labelledby="staffDropdown">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'admin:index' %}">
+                                    <i class="bi bi-speedometer2 text-warning"></i>
+                                    <span>{% trans "Admin page" %}</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'flights_review_list' %}">
+                                    <i class="bi bi-check2-circle text-primary"></i>
+                                    <span>{% trans "Review flights" %}</span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 {% endif %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'contact' %}">Contact</a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" href="{% url 'contact' %}">{% trans "Contact" %}</a>
                 </li>
             </ul>
-            <form class="d-flex" action="{% url 'search' %}" method="get">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="q"
-                    minlength=3 required>
-                <a class="nav-link text-white-50 text-nowrap me-1 small align-self-center"
-                   href="{% url 'species_filter' %}">Advanced</a>
+
+            <!-- Search Form -->
+            <form class="d-flex align-items-center my-2 my-lg-0 me-lg-2" action="{% url 'search' %}" method="get" role="search">
+                <div class="input-group input-group-sm navbar-search-group">
+                    <input class="form-control text-white border-0 bg-transparent ps-3" 
+                           type="search" 
+                           placeholder="{% trans 'Search...' %}" 
+                           aria-label="{% trans 'Search' %}" 
+                           name="q" 
+                           minlength="3" 
+                           required>
+                    <button class="btn border-0 text-white-50 px-2 hover-white" type="submit" aria-label="{% trans 'Search' %}" title="{% trans 'Search' %}">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <a class="btn border-0 text-white-50 px-2 d-flex align-items-center hover-white" 
+                       href="{% url 'species_filter' %}" 
+                       title="{% trans 'Advanced species filter' %}" 
+                       aria-label="{% trans 'Advanced species filter' %}">
+                        <i class="bi bi-sliders"></i>
+                    </a>
+                </div>
             </form>
-            <button class="btn btn-link nav-link theme-toggle ms-2 px-2"
+
+            <!-- Theme Toggle -->
+            <button class="btn btn-link nav-link theme-toggle p-2 rounded-circle mx-1 d-inline-flex align-items-center justify-content-center"
                     type="button"
                     aria-label="Switch to dark mode"
                     title="Switch to dark mode">
                 <i class="bi bi-circle-half" aria-hidden="true"></i>
             </button>
-            <ul class="navbar-nav ml-3">
+
+            <!-- User Menu -->
+            <ul class="navbar-nav ms-lg-2 align-items-lg-center">
                 {% include "user_on_navbar.html" %}
             </ul>
         </div>

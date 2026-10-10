@@ -238,3 +238,45 @@ body.iframe {
     --bs-body-color: #212529;
   }
 }
+
+/* =============================================
+   NAVBAR ENHANCEMENTS
+   ============================================= */
+.navbar-search-group {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 2rem;
+  padding: 2px 4px;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.navbar-search-group:focus-within {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.15);
+}
+
+.navbar-search-group input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.navbar-search-group input:focus {
+  box-shadow: none;
+}
+
+.hover-white:hover {
+  color: #fff !important;
+}
+
+.navbar-forest .dropdown-menu {
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0.35rem;
+}
+
+.navbar-forest .dropdown-item {
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.92rem;
+  transition: background-color 0.15s ease;
+}
