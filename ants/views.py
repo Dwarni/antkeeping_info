@@ -18,15 +18,17 @@ from django.db import IntegrityError, transaction
 from django.db.models import (
     Avg,
     Count,
+    Exists,
     ExpressionWrapper,
     F,
     FloatField,
     Max,
     Min,
+    OuterRef,
     Q,
     Sum,
 )
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -47,6 +49,7 @@ from .forms import (
     ColonyCareEventForm,
     ColonyCensusForm,
     ColonyForm,
+    ColonyJournalCommentForm,
     ColonyJournalEntryForm,
     FoodItemCreateForm,
     NuptialFlightReportForm,
@@ -59,8 +62,10 @@ from .models import (
     ColonyCareEvent,
     ColonyCensus,
     ColonyImage,
+    ColonyJournalComment,
     ColonyJournalEntry,
     ColonyJournalEntryImage,
+    ColonyJournalEntryLike,
     FoodItem,
     Genus,
     SpeciesDifficultyRating,
@@ -1484,6 +1489,27 @@ def _save_title_image(request, colony):
     return None
 
 
+def _annotate_journal_entries(queryset, user):
+    """Annotates journal entries with like counts, non-removed comment counts, and user_has_liked flag."""
+    qs = queryset.annotate(
+        likes_count=Count("likes", distinct=True),
+        comments_count=Count(
+            "comments",
+            filter=Q(comments__is_removed=False),
+            distinct=True,
+        ),
+    )
+    if user.is_authenticated:
+        qs = qs.annotate(
+            user_has_liked=Exists(
+                ColonyJournalEntryLike.objects.filter(
+                    entry=OuterRef("pk"), user=user
+                )
+            )
+        )
+    return qs
+
+
 def _build_colony_detail_context(colony, request):
     is_owner = request.user.is_authenticated and request.user == colony.user
     censuses = colony.censuses.all()
@@ -1516,6 +1542,7 @@ def _build_colony_detail_context(colony, request):
         journal_entries = colony.journal_entries.prefetch_related("images").order_by(
             "-date", "-created_at"
         )
+    journal_entries = _annotate_journal_entries(journal_entries, request.user)
 
     context = {
         "colony": colony,
@@ -1915,6 +1942,7 @@ def _community_journal_queryset(request):
         .select_related("colony", "colony__species", "colony__user")
         .prefetch_related("images")
     )
+    qs = _annotate_journal_entries(qs, request.user)
 
     sort = request.GET.get("sort", "created").strip()
     if sort == "date":
@@ -1986,3 +2014,279 @@ class CommunityJournalResultsView(View):
             "ants/community_journal_results.html",
             {"page_obj": page_obj, "count": paginator.count},
         )
+
+
+@method_decorator(never_cache, name="dispatch")
+class UserColoniesView(View):
+    """Public list of colonies for a specific user (used in breadcrumbs / user colony feed)."""
+
+    def get(self, request, username):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        target_user = get_object_or_404(User, username__iexact=username)
+        is_owner = request.user.is_authenticated and request.user == target_user
+
+        if is_owner or request.user.is_staff:
+            colonies = target_user.colonies.all()
+        else:
+            colonies = target_user.colonies.filter(is_public=True, force_private_by_staff=False)
+
+        colonies = colonies.select_related("species", "title_image").order_by("-created_at")
+
+        return render(
+            request,
+            "ants/user_colonies.html",
+            {
+                "target_user": target_user,
+                "is_owner": is_owner,
+                "colonies": colonies,
+            },
+        )
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyJournalView(View):
+    """Dedicated journal chronology view for a single colony."""
+
+    RESULTS_PER_PAGE = 20
+
+    def get(self, request, username, slug):
+        colony = get_object_or_404(
+            Colony.objects.select_related("species", "user", "title_image"),
+            user__username__iexact=username,
+            slug=slug,
+        )
+        is_owner = request.user.is_authenticated and request.user == colony.user
+        if not colony.is_visible_publicly and not is_owner and not request.user.is_staff:
+            raise Http404
+
+        qs = colony.journal_entries.prefetch_related("images")
+        qs = _annotate_journal_entries(qs, request.user)
+
+        sort = request.GET.get("sort", "date").strip()
+        if sort == "created":
+            qs = qs.order_by("-created_at", "-date")
+        else:
+            qs = qs.order_by("-date", "-created_at")
+
+        event_type = request.GET.get("event_type", "").strip()
+        if event_type:
+            qs = qs.filter(event_type=event_type)
+
+        if request.GET.get("has_photos") == "1":
+            qs = qs.filter(images__isnull=False).distinct()
+
+        paginator = Paginator(qs, self.RESULTS_PER_PAGE)
+        page_obj = paginator.get_page(request.GET.get("page", 1))
+
+        return render(
+            request,
+            "ants/colony_journal.html",
+            {
+                "colony": colony,
+                "is_owner": is_owner,
+                "page_obj": page_obj,
+                "total_entries": paginator.count,
+                "event_types": ColonyJournalEntry.EVENT_TYPE_CHOICES,
+                "sort": sort,
+                "current_event_type": event_type,
+                "has_photos": request.GET.get("has_photos") == "1",
+            },
+        )
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyJournalEntryDetailView(View):
+    """Detail view for a single journal entry with likes and comments."""
+
+    def get(self, request, username, slug, pk):
+        entry = get_object_or_404(
+            ColonyJournalEntry.objects.select_related("colony", "colony__species", "colony__user")
+            .prefetch_related("images"),
+            pk=pk,
+            colony__slug=slug,
+            colony__user__username__iexact=username,
+        )
+        is_owner = request.user.is_authenticated and request.user == entry.colony.user
+        if not entry.colony.is_visible_publicly and not is_owner and not request.user.is_staff:
+            raise Http404
+
+        likes_count = entry.likes.count()
+        user_has_liked = (
+            request.user.is_authenticated and entry.likes.filter(user=request.user).exists()
+        )
+
+        if request.user.is_staff:
+            comments = entry.comments.select_related("user", "removed_by").order_by("created_at")
+        else:
+            comments = entry.comments.filter(is_removed=False).select_related("user").order_by("created_at")
+
+        active_comments_count = entry.comments.filter(is_removed=False).count()
+        comment_form = ColonyJournalCommentForm()
+
+        return render(
+            request,
+            "ants/colony_journal_detail.html",
+            {
+                "entry": entry,
+                "colony": entry.colony,
+                "is_owner": is_owner,
+                "likes_count": likes_count,
+                "user_has_liked": user_has_liked,
+                "comments": comments,
+                "comments_count": active_comments_count,
+                "comment_form": comment_form,
+            },
+        )
+
+
+class ColonyJournalEntryShortRedirectView(View):
+    """Short URL redirect: /colonies/journal/<pk>/ -> canonical colony journal entry detail."""
+
+    def get(self, request, pk):
+        entry = get_object_or_404(
+            ColonyJournalEntry.objects.select_related("colony", "colony__user"),
+            pk=pk,
+        )
+        return redirect(entry.get_absolute_url())
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyJournalEntryLikeToggleView(View):
+    """HTMX endpoint to toggle a heart/like on a journal entry."""
+
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return HttpResponse(status=401)
+
+        entry = get_object_or_404(ColonyJournalEntry.objects.select_related("colony"), pk=pk)
+        is_owner = request.user == entry.colony.user
+        if not entry.colony.is_visible_publicly and not is_owner and not request.user.is_staff:
+            raise Http404
+
+        like = ColonyJournalEntryLike.objects.filter(entry=entry, user=request.user).first()
+        if like:
+            like.delete()
+            user_has_liked = False
+        else:
+            ColonyJournalEntryLike.objects.create(entry=entry, user=request.user)
+            user_has_liked = True
+
+        likes_count = entry.likes.count()
+
+        return render(
+            request,
+            "ants/snippets/journal_like_button.html",
+            {
+                "entry": entry,
+                "likes_count": likes_count,
+                "user_has_liked": user_has_liked,
+            },
+        )
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyJournalCommentCreateView(View):
+    """Endpoint (HTMX or standard POST) to post a new comment on a journal entry."""
+
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return HttpResponse(status=401)
+
+        entry = get_object_or_404(ColonyJournalEntry.objects.select_related("colony", "colony__user"), pk=pk)
+        is_owner = request.user == entry.colony.user
+        if not entry.colony.is_visible_publicly and not is_owner and not request.user.is_staff:
+            raise Http404
+
+        comment_text = request.POST.get("comment", "").strip()
+        if not comment_text:
+            return HttpResponse(status=400)
+        if len(comment_text) > 1000:
+            comment_text = comment_text[:1000]
+
+        comment = ColonyJournalComment.objects.create(
+            entry=entry,
+            user=request.user,
+            comment=comment_text,
+        )
+
+        if request.headers.get("HX-Request"):
+            return render(
+                request,
+                "ants/snippets/journal_comment_item.html",
+                {
+                    "comment": comment,
+                    "entry": entry,
+                    "is_owner": is_owner,
+                },
+            )
+
+        return redirect(entry.get_absolute_url() + f"#comment-{comment.pk}")
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyJournalCommentModerateView(View):
+    """Staff-only moderation endpoint to mark comments as removed (spam/inappropriate) or restore them."""
+
+    def post(self, request, comment_pk):
+        if not request.user.is_staff:
+            return HttpResponseForbidden("Staff only")
+
+        comment = get_object_or_404(
+            ColonyJournalComment.objects.select_related("entry", "entry__colony", "user"),
+            pk=comment_pk,
+        )
+        action = request.GET.get("action", request.POST.get("action", "remove"))
+        reason = request.POST.get("reason", request.GET.get("reason", "Spam / Inappropriate")).strip()
+
+        if action == "restore":
+            comment.is_removed = False
+            comment.removed_at = None
+            comment.removed_by = None
+            comment.removal_reason = ""
+            comment.save()
+        else:
+            comment.is_removed = True
+            comment.removed_at = timezone.now()
+            comment.removed_by = request.user
+            comment.removal_reason = reason or "Spam / Inappropriate"
+            comment.save()
+
+        if request.headers.get("HX-Request"):
+            return render(
+                request,
+                "ants/snippets/journal_comment_item.html",
+                {
+                    "comment": comment,
+                    "entry": comment.entry,
+                    "is_owner": request.user == comment.entry.colony.user,
+                },
+            )
+
+        return redirect(comment.entry.get_absolute_url() + f"#comment-{comment.pk}")
+
+
+@method_decorator(never_cache, name="dispatch")
+class ColonyJournalCommentDeleteView(View):
+    """Hard delete for a comment by its author, colony owner, or staff."""
+
+    def post(self, request, comment_pk):
+        if not request.user.is_authenticated:
+            return HttpResponse(status=401)
+
+        comment = get_object_or_404(
+            ColonyJournalComment.objects.select_related("entry", "entry__colony", "user"),
+            pk=comment_pk,
+        )
+        is_comment_author = request.user == comment.user
+        is_colony_owner = request.user == comment.entry.colony.user
+        if not (is_comment_author or is_colony_owner or request.user.is_staff):
+            return HttpResponseForbidden("Permission denied")
+
+        entry_url = comment.entry.get_absolute_url()
+        comment.delete()
+
+        if request.headers.get("HX-Request"):
+            return HttpResponse("")
+
+        return redirect(entry_url + "#comments")

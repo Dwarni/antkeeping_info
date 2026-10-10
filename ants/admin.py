@@ -12,7 +12,9 @@ from ants.models import (
     Colony,
     ColonyCareEvent,
     ColonyCensus,
+    ColonyJournalComment,
     ColonyJournalEntry,
+    ColonyJournalEntryLike,
     CommonName,
     Distribution,
     Family,
@@ -294,6 +296,43 @@ class ColonyJournalEntryAdmin(admin.ModelAdmin):
     list_filter = ("event_type",)
     search_fields = ("colony__name", "note")
     readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ColonyJournalComment)
+class ColonyJournalCommentAdmin(admin.ModelAdmin):
+    list_display = ("user", "entry", "is_removed", "created_at", "removed_by", "removal_reason")
+    list_filter = ("is_removed", "created_at")
+    search_fields = ("comment", "user__username", "entry__colony__name")
+    readonly_fields = ("created_at", "updated_at")
+    actions = ["mark_as_spam", "restore_comments"]
+
+    @admin.action(description=_("Remove selected comments (moderation / spam)"))
+    def mark_as_spam(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(
+            is_removed=True,
+            removed_at=timezone.now(),
+            removed_by=request.user,
+            removal_reason="Spam",
+        )
+        self.message_user(request, _("%(n)d comment(s) marked as removed.") % {"n": updated})
+
+    @admin.action(description=_("Restore selected comments"))
+    def restore_comments(self, request, queryset):
+        updated = queryset.update(
+            is_removed=False,
+            removed_at=None,
+            removed_by=None,
+            removal_reason="",
+        )
+        self.message_user(request, _("%(n)d comment(s) restored.") % {"n": updated})
+
+
+@admin.register(ColonyJournalEntryLike)
+class ColonyJournalEntryLikeAdmin(admin.ModelAdmin):
+    list_display = ("user", "entry", "created_at")
+    search_fields = ("user__username", "entry__colony__name")
+    readonly_fields = ("created_at",)
 
 
 @admin.register(ColonyCensus)

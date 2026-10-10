@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from ants.models import AntSpecies, Colony, ColonyCareEvent, ColonyCensus, ColonyJournalEntry, FoodItem, Month
+from ants.models import AntSpecies, Colony, ColonyCareEvent, ColonyCensus, ColonyJournalComment, ColonyJournalEntry, FoodItem, Month
 from ants.utils.partial_date import PartialDateField
 
 
@@ -308,3 +308,21 @@ class ColonyCareEventForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["food_item"].queryset = FoodItem.objects.all().order_by("name")
         self.fields["food_item"].required = False
+
+
+class ColonyJournalCommentForm(forms.ModelForm):
+    """Form for posting a comment on a colony journal entry."""
+
+    class Meta:
+        model = ColonyJournalComment
+        fields = ["comment"]
+        widgets = {
+            "comment": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Write a comment...",
+                    "maxlength": 1000,
+                }
+            )
+        }

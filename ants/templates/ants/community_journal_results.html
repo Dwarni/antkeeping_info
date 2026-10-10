@@ -8,28 +8,30 @@
 <div class="list-group list-group-flush mb-3">
     {% for entry in page_obj %}
     <div class="list-group-item">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-1 mb-2">
             <div>
-                <a href="{{ entry.colony.get_absolute_url }}">{{ entry.colony.name }}</a>
+                <a href="{{ entry.colony.get_absolute_url }}" class="fw-bold">{{ entry.colony.name }}</a>
                 &mdash; <em>{{ entry.colony.species.name }}</em>
-                <span class="text-muted small ms-1">by {{ entry.colony.user.username }}</span>
+                <span class="text-muted small ms-1">by <a href="{% url 'user_colonies' entry.colony.user.username %}" class="text-reset text-decoration-none">@{{ entry.colony.user.username }}</a></span>
                 {% if entry.event_type and entry.event_type != 'GENERAL' %}
                 <span class="badge text-bg-info text-white ms-1">{{ entry.get_event_type_display }}</span>
                 {% endif %}
             </div>
             <div class="text-end text-muted small text-nowrap">
-                <span>{{ entry.date|date:"N j, Y" }}</span>
+                <a href="{% url 'colony_journal_entry_detail' entry.colony.user.username entry.colony.slug entry.pk %}" class="text-reset text-decoration-none fw-semibold">
+                    {{ entry.date|date:"N j, Y" }}
+                </a>
                 {% if entry.date_differs_from_created %}
                 <span class="d-block text-secondary small">({% trans "added" %} {{ entry.created_at|date:"N j, Y" }})</span>
                 {% endif %}
             </div>
         </div>
-        <p class="mb-1">{{ entry.note|truncatewords:40|linebreaksbr }}</p>
+        <p class="mb-2">{{ entry.note|truncatewords:40|linebreaksbr }}</p>
         {% if entry.note|wordcount > 40 %}
-        <a href="{{ entry.colony.get_absolute_url }}#entry-{{ entry.pk }}" class="small">Read full entry &rarr;</a>
+        <a href="{% url 'colony_journal_entry_detail' entry.colony.user.username entry.colony.slug entry.pk %}" class="small d-inline-block mb-2">{% trans "Read full entry" %} &rarr;</a>
         {% endif %}
         {% if entry.images.all %}
-        <div class="d-flex flex-wrap gap-2 mt-2">
+        <div class="d-flex flex-wrap gap-2 mt-2 mb-2">
             {% for img in entry.images.all|slice:":4" %}
             {% thumbnail img.image_file "100x100" crop="center" as im %}
             <a href="#" class="journal-photo-thumb" data-gallery="community-entry-{{ entry.pk }}"
@@ -40,6 +42,20 @@
             {% endfor %}
         </div>
         {% endif %}
+
+        <div class="d-flex align-items-center gap-3 pt-2 mt-2 border-top flex-wrap">
+            {% include "ants/snippets/journal_like_button.html" with entry=entry likes_count=entry.likes_count user_has_liked=entry.user_has_liked %}
+            <a href="{% url 'colony_journal_entry_detail' entry.colony.user.username entry.colony.slug entry.pk %}#comments"
+               class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm text-decoration-none">
+                <i class="bi bi-chat-left-text"></i>
+                <span class="fw-semibold">{{ entry.comments_count }}</span>
+                <span class="d-none d-sm-inline">{% blocktrans count counter=entry.comments_count %}Comment{% plural %}Comments{% endblocktrans %}</span>
+            </a>
+            <a href="{% url 'colony_journal' entry.colony.user.username entry.colony.slug %}"
+               class="btn btn-sm btn-link text-decoration-none ms-auto small">
+                <i class="bi bi-journal-richtext me-1"></i>{% trans "Colony journal" %} &rarr;
+            </a>
+        </div>
     </div>
     {% endfor %}
 </div>

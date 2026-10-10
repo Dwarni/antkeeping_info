@@ -143,6 +143,46 @@ urlpatterns = [
         name="colony_journal_entry_delete",
     ),
     path(
+        "colonies/journal/<int:pk>/",
+        views.ColonyJournalEntryShortRedirectView.as_view(),
+        name="colony_journal_entry_short",
+    ),
+    path(
+        "colonies/journal/<int:pk>/like/",
+        views.ColonyJournalEntryLikeToggleView.as_view(),
+        name="colony_journal_entry_like",
+    ),
+    path(
+        "colonies/journal/<int:pk>/comments/",
+        views.ColonyJournalCommentCreateView.as_view(),
+        name="colony_journal_comment_create",
+    ),
+    path(
+        "colonies/journal/comments/<int:comment_pk>/moderate/",
+        views.ColonyJournalCommentModerateView.as_view(),
+        name="colony_journal_comment_moderate",
+    ),
+    path(
+        "colonies/journal/comments/<int:comment_pk>/delete/",
+        views.ColonyJournalCommentDeleteView.as_view(),
+        name="colony_journal_comment_delete",
+    ),
+    path(
+        "colonies/<str:username>/",
+        views.UserColoniesView.as_view(),
+        name="user_colonies",
+    ),
+    path(
+        "colonies/<str:username>/<slug:slug>/journal/",
+        views.ColonyJournalView.as_view(),
+        name="colony_journal",
+    ),
+    path(
+        "colonies/<str:username>/<slug:slug>/journal/<int:pk>/",
+        views.ColonyJournalEntryDetailView.as_view(),
+        name="colony_journal_entry_detail",
+    ),
+    path(
         "colonies/<str:username>/<slug:slug>/",
         views.ColonyDetailView.as_view(),
         name="colony_detail",

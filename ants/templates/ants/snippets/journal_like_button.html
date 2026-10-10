@@ -1,0 +1,46 @@
+{% load i18n %}
+{% if user_has_liked is not None %}
+    {% with is_liked=user_has_liked total_likes=likes_count|default:0 %}
+    {% if request.user.is_authenticated %}
+    <button type="button"
+            id="like-btn-{{ entry.pk }}"
+            class="btn btn-sm {% if is_liked %}btn-danger text-white{% else %}btn-outline-secondary{% endif %} journal-like-btn d-inline-flex align-items-center gap-1 shadow-sm"
+            hx-post="{% url 'colony_journal_entry_like' entry.pk %}"
+            hx-swap="outerHTML"
+            title="{% if is_liked %}{% trans 'Remove heart' %}{% else %}{% trans 'Give a heart' %}{% endif %}">
+        <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+        <span class="like-count fw-semibold">{{ total_likes }}</span>
+    </button>
+    {% else %}
+    <a href="{% url 'account_login' %}?next={{ request.get_full_path }}"
+       id="like-btn-{{ entry.pk }}"
+       class="btn btn-sm btn-outline-secondary journal-like-btn d-inline-flex align-items-center gap-1 shadow-sm text-decoration-none"
+       title="{% trans 'Log in to give a heart' %}">
+        <i class="bi bi-heart"></i>
+        <span class="like-count fw-semibold">{{ total_likes }}</span>
+    </a>
+    {% endif %}
+    {% endwith %}
+{% else %}
+    {% with is_liked=entry.user_has_liked total_likes=entry.likes_count %}
+    {% if request.user.is_authenticated %}
+    <button type="button"
+            id="like-btn-{{ entry.pk }}"
+            class="btn btn-sm {% if is_liked %}btn-danger text-white{% else %}btn-outline-secondary{% endif %} journal-like-btn d-inline-flex align-items-center gap-1 shadow-sm"
+            hx-post="{% url 'colony_journal_entry_like' entry.pk %}"
+            hx-swap="outerHTML"
+            title="{% if is_liked %}{% trans 'Remove heart' %}{% else %}{% trans 'Give a heart' %}{% endif %}">
+        <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+        <span class="like-count fw-semibold">{{ total_likes }}</span>
+    </button>
+    {% else %}
+    <a href="{% url 'account_login' %}?next={{ request.get_full_path }}"
+       id="like-btn-{{ entry.pk }}"
+       class="btn btn-sm btn-outline-secondary journal-like-btn d-inline-flex align-items-center gap-1 shadow-sm text-decoration-none"
+       title="{% trans 'Log in to give a heart' %}">
+        <i class="bi bi-heart"></i>
+        <span class="like-count fw-semibold">{{ total_likes }}</span>
+    </a>
+    {% endif %}
+    {% endwith %}
+{% endif %}

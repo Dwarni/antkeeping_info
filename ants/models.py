@@ -1031,6 +1031,32 @@ class ColonyJournalEntry(models.Model):
         verbose_name_plural = _("Colony journal entries")
         ordering = ["-date", "-created_at"]
 
+    def get_absolute_url(self):
+        return reverse(
+            "colony_journal_entry_detail",
+            args=[self.colony.user.username, self.colony.slug, self.pk],
+        )
+
+    @property
+    def likes_count(self):
+        if "likes_count" in self.__dict__:
+            return self.__dict__["likes_count"]
+        return self.likes.count()
+
+    @likes_count.setter
+    def likes_count(self, value):
+        self.__dict__["likes_count"] = value
+
+    @property
+    def comments_count(self):
+        if "comments_count" in self.__dict__:
+            return self.__dict__["comments_count"]
+        return self.comments.filter(is_removed=False).count()
+
+    @comments_count.setter
+    def comments_count(self, value):
+        self.__dict__["comments_count"] = value
+
     @property
     def date_differs_from_created(self):
         """Returns True if the journal date differs from the creation date."""
@@ -1064,6 +1090,75 @@ class ColonyJournalEntryImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.journal_entry}"
+
+
+class ColonyJournalEntryLike(models.Model):
+    entry = models.ForeignKey(
+        ColonyJournalEntry, on_delete=models.CASCADE, related_name="likes"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="journal_entry_likes",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["entry", "user"],
+                name="unique_colony_journal_entry_like",
+            )
+        ]
+        verbose_name = _("Journal entry like")
+        verbose_name_plural = _("Journal entry likes")
+
+    def __str__(self):
+        return f"{self.user} liked entry {self.entry_id}"
+
+
+class ColonyJournalComment(models.Model):
+    entry = models.ForeignKey(
+        ColonyJournalEntry, on_delete=models.CASCADE, related_name="comments"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="journal_comments",
+    )
+    comment = models.TextField(_("Comment"), max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    is_removed = models.BooleanField(
+        _("Removed by moderator"),
+        default=False,
+        db_index=True,
+        help_text=_("If set, this comment is hidden from all regular users."),
+    )
+    removed_at = models.DateTimeField(null=True, blank=True)
+    removed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="moderated_journal_comments",
+    )
+    removal_reason = models.CharField(
+        _("Removal reason"),
+        max_length=255,
+        blank=True,
+        help_text=_("Internal note or reason (e.g. Spam, Inappropriate)"),
+    )
+
+    class Meta:
+        ordering = ["created_at"]
+        verbose_name = _("Journal comment")
+        verbose_name_plural = _("Journal comments")
+
+    def __str__(self):
+        status = " [REMOVED]" if self.is_removed else ""
+        return f"Comment by {self.user} on entry {self.entry_id}{status}"
 
 
 class ColonyCensus(models.Model):

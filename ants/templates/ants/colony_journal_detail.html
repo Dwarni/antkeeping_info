@@ -1,0 +1,246 @@
+{% extends 'layout.html' %}
+{% load static thumbnail i18n crispy_forms_tags %}
+
+{% block title %}{% blocktrans with colony_name=colony.name date=entry.date|date:"N j, Y" %}{{ colony_name }} ({{ date }}) | Ant Journal | Antkeeping.info{% endblocktrans %}{% endblock %}
+{% block og_title %}{% blocktrans with colony_name=colony.name date=entry.date|date:"N j, Y" %}{{ colony_name }} — Journal Entry ({{ date }}){% endblocktrans %}{% endblock %}
+{% block og_description %}{{ entry.note|truncatewords:30 }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/journal_image_lightbox.css' %}">
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'community_journal' %}">{% trans "Community Journal" %}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'user_colonies' colony.user.username %}">@{{ colony.user.username }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ colony.get_absolute_url }}">{{ colony.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'colony_journal' colony.user.username colony.slug %}">{% trans "Journal" %}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ entry.date|date:"N j, Y" }}</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        {# Main Journal Entry Card #}
+        <article class="card shadow-sm border-0 mb-4" id="journal-entry-{{ entry.pk }}">
+            <div class="card-body p-4">
+                {# Header #}
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h1 class="h3 mb-0 fw-bold">{{ entry.date|date:"N j, Y" }}</h1>
+                            {% if entry.event_type and entry.event_type != 'GENERAL' %}
+                            <span class="badge text-bg-info text-white fs-6">{{ entry.get_event_type_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small">
+                            <span>{% trans "From colony" %} <a href="{{ colony.get_absolute_url }}" class="fw-semibold text-reset">{{ colony.name }}</a> (<em>{{ colony.species.name }}</em>)</span>
+                            &bull;
+                            <span>{% trans "by" %} <a href="{% url 'user_colonies' colony.user.username %}" class="fw-semibold text-reset">@{{ colony.user.username }}</a></span>
+                            {% if entry.date_differs_from_created %}
+                            &bull;
+                            <span>{% trans "logged" %} {{ entry.created_at|date:"N j, Y" }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if is_owner %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'colony_journal_entry_edit' colony.pk entry.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil me-1"></i>{% trans "Edit" %}
+                        </a>
+                        <form method="post" action="{% url 'colony_journal_entry_delete' colony.pk entry.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% trans "Delete this journal entry permanently?" %}')">
+                                <i class="bi bi-trash me-1"></i>{% trans "Delete" %}
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <hr class="my-3 opacity-25">
+
+                {# Entry Note Content #}
+                <div class="fs-5 lh-base mb-4 entry-note-content text-break">
+                    {{ entry.note|linebreaksbr }}
+                </div>
+
+                {# Photos Gallery #}
+                {% if entry.images.all %}
+                <div class="mb-4">
+                    <h2 class="h6 text-muted mb-2 fw-bold text-uppercase" style="letter-spacing: 0.5px;">{% trans "Photos" %}</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for img in entry.images.all %}
+                        {% thumbnail img.image_file "240x240" crop="center" as im %}
+                        <a href="#" class="journal-photo-thumb" data-gallery="entry-detail-{{ entry.pk }}"
+                           data-full-src="{{ img.image_file.url }}" data-caption="{{ img.caption }}">
+                            <img class="rounded shadow-sm" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
+                        </a>
+                        {% endthumbnail %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {# Interactive Action Bar #}
+                <div class="d-flex align-items-center gap-3 pt-3 border-top flex-wrap">
+                    {# Like Button #}
+                    {% include "ants/snippets/journal_like_button.html" with entry=entry likes_count=likes_count user_has_liked=user_has_liked %}
+
+                    {# Comments Anchor #}
+                    <a href="#comments" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm text-decoration-none">
+                        <i class="bi bi-chat-left-text"></i>
+                        <span class="fw-semibold">{{ comments_count }}</span>
+                        <span>{% blocktrans count counter=comments_count %}Comment{% plural %}Comments{% endblocktrans %}</span>
+                    </a>
+
+                    {# Share Button #}
+                    <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm d-inline-flex align-items-center gap-1" id="btn-share-entry">
+                        <i class="bi bi-share"></i>
+                        <span id="share-btn-text">{% trans "Share" %}</span>
+                    </button>
+
+                    {# Back to Journal link #}
+                    <a href="{% url 'colony_journal' colony.user.username colony.slug %}" class="btn btn-sm btn-link text-decoration-none ms-auto">
+                        <i class="bi bi-arrow-left me-1"></i>{% trans "Colony journal" %}
+                    </a>
+                </div>
+            </div>
+        </article>
+
+        {# Comments Section #}
+        <section class="card shadow-sm border-0 mb-4" id="comments">
+            <div class="card-header bg-body-tertiary py-3 px-4 border-0">
+                <h2 class="h5 mb-0 fw-bold d-flex align-items-center gap-2">
+                    <i class="bi bi-chat-dots-fill text-primary"></i>
+                    <span>{% trans "Comments" %}</span>
+                    <span class="badge rounded-pill bg-secondary small" id="comments-badge">{{ comments_count }}</span>
+                </h2>
+            </div>
+            <div class="card-body p-4">
+                {# Comment List #}
+                <div id="comments-list" class="mb-4">
+                    {% for c in comments %}
+                        {% include "ants/snippets/journal_comment_item.html" with comment=c entry=entry is_owner=is_owner %}
+                    {% empty %}
+                        <p class="text-muted text-center py-4 mb-0" id="no-comments-msg">
+                            <i class="bi bi-chat-square-text fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                            {% trans "No comments yet. Be the first to share your thoughts!" %}
+                        </p>
+                    {% endfor %}
+                </div>
+
+                {# Add Comment Form #}
+                <div class="border-top pt-3">
+                    {% if request.user.is_authenticated %}
+                    <form method="post"
+                          action="{% url 'colony_journal_comment_create' entry.pk %}"
+                          id="comment-form"
+                          hx-post="{% url 'colony_journal_comment_create' entry.pk %}"
+                          hx-target="#comments-list"
+                          hx-swap="beforeend">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <label for="comment-textarea" class="form-label fw-semibold small">
+                                {% trans "Leave a comment as" %} <strong>@{{ request.user.username }}</strong>
+                            </label>
+                            <textarea name="comment"
+                                      id="comment-textarea"
+                                      class="form-control"
+                                      rows="3"
+                                      maxlength="1000"
+                                      placeholder="{% trans 'Write a friendly and helpful comment...' %}"
+                                      required></textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <span class="text-muted small" id="comment-char-counter">0 / 1000</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm" id="btn-submit-comment">
+                                <i class="bi bi-send me-1"></i>{% trans "Post comment" %}
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-secondary mb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <i class="bi bi-info-circle me-1"></i>
+                            {% trans "Want to join the conversation?" %}
+                        </div>
+                        <a href="{% url 'account_login' %}?next={{ request.get_full_path }}#comments" class="btn btn-sm btn-primary">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>{% trans "Log in to comment" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+{% include "ants/snippets/journal_image_lightbox.html" %}
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'ants/js/journal_image_lightbox.js' %}"></script>
+<script>
+(function() {
+    // Character counter for comment textarea
+    const textarea = document.getElementById("comment-textarea");
+    const counter = document.getElementById("comment-char-counter");
+    if (textarea && counter) {
+        textarea.addEventListener("input", function() {
+            const len = textarea.value.length;
+            counter.textContent = `${len} / 1000`;
+            if (len >= 950) {
+                counter.className = "text-danger fw-bold small";
+            } else {
+                counter.className = "text-muted small";
+            }
+        });
+    }
+
+    // Reset textarea on HTMX comment submission & hide "No comments yet" message
+    const commentForm = document.getElementById("comment-form");
+    if (commentForm) {
+        commentForm.addEventListener("htmx:afterRequest", function(evt) {
+            if (evt.detail.successful) {
+                if (textarea) {
+                    textarea.value = "";
+                    if (counter) counter.textContent = "0 / 1000";
+                }
+                const noComments = document.getElementById("no-comments-msg");
+                if (noComments) noComments.style.display = "none";
+
+                // Increment comments badge
+                const badge = document.getElementById("comments-badge");
+                if (badge) {
+                    const current = parseInt(badge.textContent.trim(), 10) || 0;
+                    badge.textContent = current + 1;
+                }
+            }
+        });
+    }
+
+    // Share Button: copy URL to clipboard
+    const shareBtn = document.getElementById("btn-share-entry");
+    const shareText = document.getElementById("share-btn-text");
+    if (shareBtn && shareText) {
+        shareBtn.addEventListener("click", function() {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href).then(function() {
+                    const original = shareText.textContent;
+                    shareText.textContent = '{% trans "Copied!" %}';
+                    setTimeout(function() {
+                        shareText.textContent = original;
+                    }, 2000);
+                });
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

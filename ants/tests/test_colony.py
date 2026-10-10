@@ -803,7 +803,7 @@ class CommunityJournalViewTest(TestCase):
         long_note = " ".join(f"word{i}" for i in range(50))
         entry = ColonyJournalEntry.objects.create(colony=self.public_colony, date="2026-03-01", note=long_note)
         response = self.client.get(reverse("community_journal_results"))
-        expected_link = f"{self.public_colony.get_absolute_url()}#entry-{entry.pk}"
+        expected_link = entry.get_absolute_url()
         self.assertContains(response, expected_link)
         self.assertContains(response, "Read full entry")
 

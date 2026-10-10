@@ -57,6 +57,14 @@
 {% block content %}
 <div class="row justify-content-center mt-3">
     <div class="col-lg-9 col-md-11">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'community_journal' %}">{% trans "Community Journal" %}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'user_colonies' colony.user.username %}">@{{ colony.user.username }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ colony.name }}</li>
+            </ol>
+        </nav>
 
         {% if is_owner and not colony.is_public %}
         <div class="alert alert-secondary py-2 small d-flex align-items-center gap-2">
@@ -582,10 +590,15 @@
                 {% endif %}
 
                 {% if journal_entries %}
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted small">
-                        {% blocktrans count counter=journal_entries|length %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktrans %}
-                    </span>
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">
+                            {% blocktrans count counter=journal_entries|length %}{{ counter }} entry{% plural %}{{ counter }} entries{% endblocktrans %}
+                        </span>
+                        <a href="{% url 'colony_journal' colony.user.username colony.slug %}" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.8rem;">
+                            <i class="bi bi-journal-richtext me-1"></i>{% trans "Dedicated journal view" %}
+                        </a>
+                    </div>
                     <div class="btn-group btn-group-sm" role="group" aria-label="{% trans "Sort journal entries" %}" id="journal-sort-group">
                         <a href="?journal_sort=date" class="btn btn-outline-secondary {% if journal_sort != "created" %}active{% endif %}" id="btn-sort-date" data-sort="date" title="{% trans "Sort by event date" %}">
                             <i class="bi bi-calendar3 me-1"></i>{% trans "Event date" %}
@@ -602,7 +615,9 @@
                     <li class="list-group-item shadow-sm mb-3 rounded" id="entry-{{ entry.pk }}" data-entry-date="{{ entry.date|date:'Y-m-d' }}" data-entry-created="{{ entry.created_at|date:'c' }}">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                                <span class="fw-bold">{{ entry.date|date:"N j, Y" }}</span>
+                                <a href="{% url 'colony_journal_entry_detail' colony.user.username colony.slug entry.pk %}" class="fw-bold text-reset text-decoration-none">
+                                    {{ entry.date|date:"N j, Y" }}
+                                </a>
                                 {% if entry.date_differs_from_created %}
                                 <span class="text-muted small ms-1">({% trans "added" %} {{ entry.created_at|date:"N j, Y" }})</span>
                                 {% endif %}
@@ -610,8 +625,11 @@
                                 <span class="badge text-bg-info text-white ms-1">{{ entry.get_event_type_display }}</span>
                                 {% endif %}
                             </div>
+                            <div class="d-flex align-items-center gap-2 ms-2">
+                                <a href="{% url 'colony_journal_entry_detail' colony.user.username colony.slug entry.pk %}" class="btn btn-sm btn-light border py-0 px-2 text-decoration-none" title="{% trans 'View single post' %}">
+                                    <i class="bi bi-link-45deg"></i>
+                                </a>
                             {% if is_owner %}
-                            <div class="d-flex gap-2 ms-2">
                                 <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none"
                                         data-bs-toggle="collapse" data-bs-target="#edit-entry-{{ entry.pk }}">
                                     {% trans "Edit" %}
@@ -623,8 +641,8 @@
                                         {% trans "Delete" %}
                                     </button>
                                 </form>
-                            </div>
                             {% endif %}
+                            </div>
                         </div>
 
                         <p class="mb-2">{{ entry.note|linebreaksbr }}</p>
@@ -641,6 +659,20 @@
                             {% endfor %}
                         </div>
                         {% endif %}
+
+                        <div class="d-flex align-items-center gap-3 pt-2 mt-2 border-top flex-wrap">
+                            {% include "ants/snippets/journal_like_button.html" with entry=entry likes_count=entry.likes_count user_has_liked=entry.user_has_liked %}
+                            <a href="{% url 'colony_journal_entry_detail' colony.user.username colony.slug entry.pk %}#comments"
+                               class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm text-decoration-none">
+                                <i class="bi bi-chat-left-text"></i>
+                                <span class="fw-semibold">{{ entry.comments_count }}</span>
+                                <span class="d-none d-sm-inline">{% blocktrans count counter=entry.comments_count %}Comment{% plural %}Comments{% endblocktrans %}</span>
+                            </a>
+                            <a href="{% url 'colony_journal_entry_detail' colony.user.username colony.slug entry.pk %}"
+                               class="btn btn-sm btn-link text-decoration-none ms-auto small">
+                                {% trans "Single post & discussion" %} &rarr;
+                            </a>
+                        </div>
 
                         {% if is_owner %}
                         <div class="collapse mt-3" id="edit-entry-{{ entry.pk }}">
