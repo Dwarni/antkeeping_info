@@ -1,0 +1,46 @@
+{% load i18n %}
+{# Unified action bar for a journal entry (Like button, Comment counter, Share button, and optional trailing link) #}
+<div class="d-flex align-items-center gap-3 pt-2 mt-2 border-top flex-wrap journal-entry-actions">
+    {# 1. Like Button #}
+    {% include "ants/snippets/journal_like_button.html" with entry=entry likes_count=entry.likes_count user_has_liked=entry.user_has_liked %}
+
+    {# 2. Comment Button / Count #}
+    <a href="{% if is_detail_view %}#comments{% else %}{% url 'colony_journal_entry_detail' entry.colony.user.username entry.colony.slug entry.pk %}#comments{% endif %}"
+       class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm text-decoration-none"
+       title="{% trans 'View comments' %}">
+        <i class="bi bi-chat-left-text"></i>
+        <span class="fw-semibold">{{ entry.comments_count }}</span>
+        <span class="d-none d-sm-inline">{% blocktrans count counter=entry.comments_count %}Comment{% plural %}Comments{% endblocktrans %}</span>
+    </a>
+
+    {# 3. Share Button #}
+    <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm btn-share-trigger"
+            id="{% if is_detail_view %}btn-share-entry{% else %}btn-share-entry-{{ entry.pk }}{% endif %}"
+            data-share-url="{{ request.scheme }}://{{ request.get_host }}{% url 'colony_journal_entry_detail' entry.colony.user.username entry.colony.slug entry.pk %}"
+            data-share-title="{{ entry.colony.name }} &mdash; {% trans 'Journal' %} ({{ entry.date|date:'N j, Y' }})"
+            title="{% trans 'Share entry' %}">
+        <i class="bi bi-share"></i>
+        <span class="d-none d-sm-inline">{% trans "Share" %}</span>
+    </button>
+
+    {# 4. Optional Trailing Link on the right #}
+    {% if trailing_action == "back_to_journal" %}
+        <a href="{% url 'colony_journal' entry.colony.user.username entry.colony.slug %}" class="btn btn-sm btn-link text-decoration-none ms-auto">
+            <i class="bi bi-arrow-left me-1"></i>{% trans "Colony journal" %}
+        </a>
+    {% elif trailing_action == "colony_journal" %}
+        <a href="{% url 'colony_journal' entry.colony.user.username entry.colony.slug %}" class="btn btn-sm btn-link text-decoration-none ms-auto small">
+            <i class="bi bi-journal-richtext me-1"></i>{% trans "Colony journal" %} &rarr;
+        </a>
+    {% elif trailing_action == "view_discussion" %}
+        <a href="{% url 'colony_journal_entry_detail' entry.colony.user.username entry.colony.slug entry.pk %}"
+           class="btn btn-sm btn-link text-decoration-none ms-auto">
+            {% trans "View full post & discussion" %} &rarr;
+        </a>
+    {% elif trailing_action == "single_post" %}
+        <a href="{% url 'colony_journal_entry_detail' entry.colony.user.username entry.colony.slug entry.pk %}"
+           class="btn btn-sm btn-link text-decoration-none ms-auto small">
+            {% trans "Single post & discussion" %} &rarr;
+        </a>
+    {% endif %}
+</div>

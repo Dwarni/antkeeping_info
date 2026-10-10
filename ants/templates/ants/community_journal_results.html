@@ -43,26 +43,7 @@
         </div>
         {% endif %}
 
-        <div class="d-flex align-items-center gap-3 pt-2 mt-2 border-top flex-wrap">
-            {% include "ants/snippets/journal_like_button.html" with entry=entry likes_count=entry.likes_count user_has_liked=entry.user_has_liked %}
-            <a href="{% url 'colony_journal_entry_detail' entry.colony.user.username entry.colony.slug entry.pk %}#comments"
-               class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm text-decoration-none">
-                <i class="bi bi-chat-left-text"></i>
-                <span class="fw-semibold">{{ entry.comments_count }}</span>
-                <span class="d-none d-sm-inline">{% blocktrans count counter=entry.comments_count %}Comment{% plural %}Comments{% endblocktrans %}</span>
-            </a>
-            <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm btn-share-trigger"
-                    data-share-url="{{ request.scheme }}://{{ request.get_host }}{{ entry.get_absolute_url }}"
-                    data-share-title="{{ entry.colony.name }} — {% trans 'Journal' %} ({{ entry.date|date:'N j, Y' }})"
-                    title="{% trans 'Share entry' %}">
-                <i class="bi bi-share"></i>
-                <span class="d-none d-sm-inline">{% trans "Share" %}</span>
-            </button>
-            <a href="{% url 'colony_journal' entry.colony.user.username entry.colony.slug %}"
-               class="btn btn-sm btn-link text-decoration-none ms-auto small">
-                <i class="bi bi-journal-richtext me-1"></i>{% trans "Colony journal" %} &rarr;
-            </a>
-        </div>
+        {% include "ants/snippets/journal_entry_actions.html" with entry=entry trailing_action="colony_journal" %}
     </div>
     {% endfor %}
 </div>

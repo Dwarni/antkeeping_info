@@ -86,32 +86,7 @@
                 {% endif %}
 
                 {# Interactive Action Bar #}
-                <div class="d-flex align-items-center gap-3 pt-3 border-top flex-wrap">
-                    {# Like Button #}
-                    {% include "ants/snippets/journal_like_button.html" with entry=entry likes_count=likes_count user_has_liked=user_has_liked %}
-
-                    {# Comments Anchor #}
-                    <a href="#comments" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm text-decoration-none">
-                        <i class="bi bi-chat-left-text"></i>
-                        <span class="fw-semibold">{{ comments_count }}</span>
-                        <span>{% blocktrans count counter=comments_count %}Comment{% plural %}Comments{% endblocktrans %}</span>
-                    </a>
-
-                    {# Share Button #}
-                    <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm d-inline-flex align-items-center gap-1 btn-share-trigger"
-                            id="btn-share-entry"
-                            data-share-url="{{ request.build_absolute_uri }}"
-                            data-share-title="{{ colony.name }} &mdash; {% trans 'Journal' %} ({{ entry.date|date:'N j, Y' }})"
-                            title="{% trans 'Share entry' %}">
-                        <i class="bi bi-share"></i>
-                        <span id="share-btn-text">{% trans "Share" %}</span>
-                    </button>
-
-                    {# Back to Journal link #}
-                    <a href="{% url 'colony_journal' colony.user.username colony.slug %}" class="btn btn-sm btn-link text-decoration-none ms-auto">
-                        <i class="bi bi-arrow-left me-1"></i>{% trans "Colony journal" %}
-                    </a>
-                </div>
+                {% include "ants/snippets/journal_entry_actions.html" with entry=entry is_detail_view=True trailing_action="back_to_journal" %}
             </div>
         </article>
 
