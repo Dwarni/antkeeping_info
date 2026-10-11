@@ -142,30 +142,46 @@
 }
 
 /* Current Month Highlight */
-.current-month-header {
-    background-color: rgba(45, 106, 79, 0.16) !important;
-    color: var(--bs-primary) !important;
+.current-month-header,
+.nuptial-flight-table th.current-month-header {
+    background-color: rgba(45, 106, 79, 0.18) !important;
+    color: #1b3a2d !important;
     font-weight: 700 !important;
+    border-bottom: 2px solid var(--bs-primary) !important;
 }
 
-[data-bs-theme="dark"] .current-month-header {
+[data-bs-theme="dark"] .current-month-header,
+[data-bs-theme="dark"] .nuptial-flight-table th.current-month-header {
     background-color: rgba(82, 183, 136, 0.22) !important;
     color: #74c69d !important;
+    border-bottom: 2px solid #52b788 !important;
 }
 
-.current-month-cell {
-    background-color: rgba(45, 106, 79, 0.04);
+.current-month-cell,
+.nuptial-flight-table td.current-month-cell {
+    --bs-table-bg: rgba(45, 106, 79, 0.08);
+    background-color: rgba(45, 106, 79, 0.08) !important;
 }
 
-[data-bs-theme="dark"] .current-month-cell {
-    background-color: rgba(82, 183, 136, 0.07);
+.nuptial-flight-table tr:hover td.current-month-cell {
+    background-color: rgba(45, 106, 79, 0.14) !important;
+}
+
+[data-bs-theme="dark"] .current-month-cell,
+[data-bs-theme="dark"] .nuptial-flight-table td.current-month-cell {
+    --bs-table-bg: rgba(82, 183, 136, 0.08);
+    background-color: rgba(82, 183, 136, 0.08) !important;
+}
+
+[data-bs-theme="dark"] .nuptial-flight-table tr:hover td.current-month-cell {
+    background-color: rgba(82, 183, 136, 0.14) !important;
 }
 
 .current-month-dot {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: var(--bs-primary);
-    vertical-align: super;
-    margin-left: 1px;
+    vertical-align: middle;
+    margin-left: 2px;
 }
 
 [data-bs-theme="dark"] .current-month-dot {
