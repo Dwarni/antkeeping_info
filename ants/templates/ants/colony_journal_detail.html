@@ -86,16 +86,7 @@
                 {% if entry.images.all %}
                 <div class="mb-4">
                     <h2 class="h6 text-muted mb-2 fw-bold text-uppercase" style="letter-spacing: 0.5px;">{% trans "Photos" %}</h2>
-                    <div class="d-flex flex-wrap gap-2">
-                        {% for img in entry.images.all %}
-                        {% thumbnail img.image_file "240x240" crop="center" as im %}
-                        <a href="#" class="journal-photo-thumb" data-gallery="entry-detail-{{ entry.pk }}"
-                           data-full-src="{{ img.image_file.url }}" data-caption="{{ img.caption }}">
-                            <img class="rounded shadow-sm" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
-                        </a>
-                        {% endthumbnail %}
-                        {% endfor %}
-                    </div>
+                    {% include "ants/snippets/journal_entry_photos.html" with entry=entry thumb_size="240x240" gallery_prefix="entry-detail" wrapper_class="mb-0" %}
                 </div>
                 {% endif %}
 
@@ -178,7 +169,7 @@
 {% include "ants/snippets/share_modal.html" %}
 {% endblock %}
 
-{% block js %}
+{% block script %}
 <script src="{% static 'ants/js/journal_image_lightbox.js' %}"></script>
 <script>
 (function() {

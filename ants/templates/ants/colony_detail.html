@@ -660,18 +660,7 @@
 
                         <p class="mb-2">{{ entry.note|linebreaksbr }}</p>
 
-                        {% if entry.images.all %}
-                        <div class="d-flex flex-wrap gap-2 mt-2">
-                            {% for img in entry.images.all %}
-                            {% thumbnail img.image_file "120x120" crop="center" as im %}
-                            <a href="#" class="journal-photo-thumb" data-gallery="colony-entry-{{ entry.pk }}"
-                               data-full-src="{{ img.image_file.url }}" data-caption="{{ img.caption }}">
-                                <img class="rounded shadow-sm" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
-                            </a>
-                            {% endthumbnail %}
-                            {% endfor %}
-                        </div>
-                        {% endif %}
+                        {% include "ants/snippets/journal_entry_photos.html" with entry=entry thumb_size="120x120" gallery_prefix="colony-entry" wrapper_class="mt-2" %}
 
                         {% include "ants/snippets/journal_entry_actions.html" with entry=entry trailing_action="single_post" %}
 

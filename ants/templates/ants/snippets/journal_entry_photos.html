@@ -1,0 +1,13 @@
+{% load thumbnail %}
+{% if entry.images.all %}
+<div class="d-flex flex-wrap gap-2 {{ wrapper_class|default:"mb-3" }}">
+    {% for img in entry.images.all %}
+    {% thumbnail img.image_file thumb_size|default:"140x140" crop="center" as im %}
+    <a href="#" class="journal-photo-thumb" data-gallery="{{ gallery_prefix|default:"entry" }}-{{ entry.pk }}"
+       data-full-src="{{ img.image_file.url }}" data-caption="{{ img.caption }}">
+        <img class="rounded shadow-sm" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ img.caption }}">
+    </a>
+    {% endthumbnail %}
+    {% endfor %}
+</div>
+{% endif %}

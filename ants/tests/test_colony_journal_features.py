@@ -89,6 +89,8 @@ class ColonyJournalFeaturesTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "First workers have emerged today!")
         self.assertContains(response, "My Wood Ants")
+        self.assertContains(response, "journal_image_lightbox")
+        self.assertContains(response, "id=\"journal-image-lightbox\"")
 
         # Private colony access check
         private_url = reverse("colony_journal", args=["alice", self.private_colony.slug])
@@ -118,6 +120,8 @@ class ColonyJournalFeaturesTestCase(TestCase):
         response = self.client.get(canonical_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "First workers have emerged today!")
+        self.assertContains(response, "journal_image_lightbox")
+        self.assertContains(response, "id=\"journal-image-lightbox\"")
         # Check breadcrumbs in HTML
         self.assertContains(response, "breadcrumb")
         self.assertContains(response, "@alice")

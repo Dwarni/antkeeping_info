@@ -136,6 +136,8 @@ class UserProfileJournalsViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Note for colony 1")
         self.assertContains(response, "Note for colony 2")
+        self.assertContains(response, "journal_image_lightbox")
+        self.assertContains(response, "id=\"journal-image-lightbox\"")
 
         # Filter by colony
         response_filtered = self.client.get(f"{self.url}?colony={self.colony1.pk}")
