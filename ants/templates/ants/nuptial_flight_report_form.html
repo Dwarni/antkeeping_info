@@ -19,7 +19,7 @@
                value="{{ species_name }}"
                autocomplete="off"
                hx-get="{% url 'nuptial_flight_species_suggest' %}"
-               hx-trigger="input changed delay:300ms[value.length >= 4]"
+               hx-trigger="input changed delay:300ms"
                hx-target="#species-suggestions"
                hx-swap="innerHTML">
         {# Populated by JS on suggestion click; the actual field submitted to Django #}
