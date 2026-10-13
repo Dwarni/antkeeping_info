@@ -598,7 +598,52 @@ class AntSpecies(Species):
 
     @property
     def main_image(self):
+        if hasattr(self, "_prefetched_objects_cache") and "images" in self._prefetched_objects_cache:
+            for img in self.images.all():
+                if img.main_image:
+                    return img
+            return None
         return self.images.filter(main_image=True).first()
+
+    @property
+    def worker_size(self):
+        """Returns the worker AntSize or None, using prefetch cache when available."""
+        if hasattr(self, "_prefetched_objects_cache") and "sizes" in self._prefetched_objects_cache:
+            for s in self.sizes.all():
+                if s.type == AntSize.WORKER:
+                    return s
+            return None
+        return self.sizes.filter(type=AntSize.WORKER).first()
+
+    @property
+    def average_difficulty(self):
+        """Returns the average difficulty rating (1.0 - 4.0) or None."""
+        if hasattr(self, "_prefetched_objects_cache") and "difficulty_ratings" in self._prefetched_objects_cache:
+            ratings = self.difficulty_ratings.all()
+            if not ratings:
+                return None
+            return round(sum(r.difficulty for r in ratings) / len(ratings), 1)
+        res = self.difficulty_ratings.aggregate(models.Avg("difficulty"))["difficulty__avg"]
+        return round(res, 1) if res is not None else None
+
+    @property
+    def dominant_difficulty_level(self):
+        """Returns the dominant difficulty choice integer (1-4) or None."""
+        if hasattr(self, "_prefetched_objects_cache") and "difficulty_ratings" in self._prefetched_objects_cache:
+            ratings = self.difficulty_ratings.all()
+            if not ratings:
+                return None
+            counts = {}
+            for r in ratings:
+                counts[r.difficulty] = counts.get(r.difficulty, 0) + 1
+            return max(counts, key=counts.get)
+        row = (
+            self.difficulty_ratings.values("difficulty")
+            .annotate(cnt=models.Count("id"))
+            .order_by("-cnt")
+            .first()
+        )
+        return row["difficulty"] if row else None
 
     def get_absolute_url(self):
         """Return the url to detail page."""

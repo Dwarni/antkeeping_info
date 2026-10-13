@@ -1,38 +1,153 @@
-{% load i18n %}{% load ants %}
-{# HTMX fragment: filtered species list + count + pagination #}
+{% load i18n %}{% load ants %}{% load thumbnail %}
+{# HTMX fragment: filtered species results (card/list) + count + pagination #}
 {# Target: #results-container #}
 
-<small class="text-muted d-block mb-2">{{ count }} species found</small>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom border-light-subtle">
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-secondary-subtle text-secondary-emphasis fs-6 fw-normal">
+            <strong>{{ count }}</strong> {% trans 'species found' %}
+        </span>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <div class="btn-group btn-group-sm" role="group" aria-label="{% trans 'View mode' %}">
+            <button type="button"
+                    class="btn {% if view_mode != 'list' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                    id="btn-view-card"
+                    title="{% trans 'Grid view' %}"
+                    aria-label="{% trans 'Grid view' %}">
+                <i class="bi bi-grid-fill"></i>
+            </button>
+            <button type="button"
+                    class="btn {% if view_mode == 'list' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                    id="btn-view-list"
+                    title="{% trans 'List view' %}"
+                    aria-label="{% trans 'List view' %}">
+                <i class="bi bi-list-ul"></i>
+            </button>
+        </div>
+    </div>
+</div>
 
 {% if page_obj %}
-<ul class="list-group list-group-flush">
-    {% for ant in page_obj %}
-    <li class="list-group-item">
-        <a class="fst-italic" href="{{ ant.get_absolute_url }}">{{ ant.name }}</a>
-    </li>
-    {% endfor %}
-</ul>
 
+{% if view_mode == 'list' %}
+{# List view #}
+<div class="table-responsive rounded-3 border border-secondary-subtle mb-4">
+    <table class="table table-hover align-middle mb-0 species-list-table">
+        <thead class="table-light">
+            <tr>
+                <th style="width: 50px;"></th>
+                <th>{% trans 'Species & Genus' %}</th>
+                <th>{% trans 'Difficulty' %}</th>
+                <th>{% trans 'Worker Size' %}</th>
+                <th>{% trans 'Hibernation' %}</th>
+                <th>{% trans 'Structure' %}</th>
+                <th class="text-end">{% trans 'Action' %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ant in page_obj %}
+            <tr>
+                <td>
+                    {% if ant.main_image %}
+                        {% thumbnail ant.main_image.image_file "44x44" crop="center" as im %}
+                        <img src="{{ im.url }}" width="44" height="44" class="species-list-thumb" alt="{{ ant.name }}" loading="lazy">
+                        {% endthumbnail %}
+                    {% else %}
+                        <div class="species-list-thumb d-flex align-items-center justify-content-center text-muted">
+                            <span class="opacity-50">
+                                {% include "icons/ant_icon.html" with size="22px" %}
+                            </span>
+                        </div>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ ant.get_absolute_url }}" class="fw-semibold fst-italic text-decoration-none text-body">
+                        {{ ant.name }}
+                    </a>
+                    {% if ant.forbidden_in_eu %}
+                    <span class="badge bg-danger ms-1" title="{% trans 'Forbidden Ant Species (EU)' %}">EU</span>
+                    {% endif %}
+                    <div class="small text-muted">
+                        {% if ant.genus.tribe.sub_family %}{{ ant.genus.tribe.sub_family.name }} &bull; {% endif %}{{ ant.genus.name }}
+                    </div>
+                </td>
+                <td>
+                    {% if ant.dominant_difficulty_level %}
+                        {% include "ants/snippets/species_difficulty_badge.html" with level=ant.dominant_difficulty_level avg=ant.average_difficulty only %}
+                    {% else %}
+                        <span class="text-muted small">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if ant.worker_size %}
+                        <span class="small">{{ ant.worker_size.minimum }}{% if ant.worker_size.maximum %}–{{ ant.worker_size.maximum }}{% endif %} mm</span>
+                    {% else %}
+                        <span class="text-muted small">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if ant.hibernation == "NO" %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">{% trans 'None' %}</span>
+                    {% elif ant.hibernation == "SHORT" %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle">{% trans 'Short' %}</span>
+                    {% elif ant.hibernation == "LONG" %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{% trans 'Long' %}</span>
+                    {% else %}
+                        <span class="text-muted small">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if ant.colony_structure %}
+                        <span class="small">{{ ant.colony_structure_str }}</span>
+                    {% else %}
+                        <span class="text-muted small">—</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <a href="{{ ant.get_absolute_url }}" class="btn btn-outline-primary btn-sm" title="{% trans 'View species profile' %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+{# Grid / Card view #}
+<div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
+    {% for ant in page_obj %}
+    <div class="col">
+        {% include "ants/snippets/species_card.html" with ant=ant only %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# Pagination #}
 {% if page_obj.paginator.num_pages > 1 %}
-<nav class="mt-3" aria-label="Pagination">
+<nav class="mt-4" aria-label="{% trans 'Pagination' %}">
     <ul class="pagination justify-content-center">
         <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
             <a class="page-link"
                {% if page_obj.has_previous %}
-               hx-get="{% url 'species_filter_results' %}?page={{ page_obj.previous_page_number }}"
+               hx-get="{% url 'species_filter_results' %}?page={{ page_obj.previous_page_number }}&view={{ view_mode }}"
                hx-target="#results-container"
                hx-include="#filter-form"
                {% endif %}
-               href="#">Previous</a>
+               href="#">&laquo; {% trans 'Previous' %}</a>
         </li>
         {% pagination_range page_obj as page_numbers %}
         {% for n in page_numbers %}
         {% if n is None %}
-        <li class="page-item disabled" aria-hidden="true"><span class="page-link">…</span></li>
+        <li class="page-item disabled" aria-hidden="true"><span class="page-link">&hellip;</span></li>
         {% else %}
         <li class="page-item {% if page_obj.number == n %}active{% endif %}">
             <a class="page-link"
-               hx-get="{% url 'species_filter_results' %}?page={{ n }}"
+               hx-get="{% url 'species_filter_results' %}?page={{ n }}&view={{ view_mode }}"
                hx-target="#results-container"
                hx-include="#filter-form"
                href="#">{{ n }}</a>
@@ -42,16 +157,28 @@
         <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
             <a class="page-link"
                {% if page_obj.has_next %}
-               hx-get="{% url 'species_filter_results' %}?page={{ page_obj.next_page_number }}"
+               hx-get="{% url 'species_filter_results' %}?page={{ page_obj.next_page_number }}&view={{ view_mode }}"
                hx-target="#results-container"
                hx-include="#filter-form"
                {% endif %}
-               href="#">Next</a>
+               href="#">{% trans 'Next' %} &raquo;</a>
         </li>
     </ul>
 </nav>
 {% endif %}
 
 {% else %}
-<div class="alert alert-info">No species match the selected filters.</div>
+{# Empty State #}
+<div class="card border border-secondary-subtle bg-body-tertiary text-center py-5 px-3 rounded-3 my-4">
+    <div class="card-body">
+        <i class="bi bi-search text-muted opacity-50 display-4 d-block mb-3"></i>
+        <h4 class="h5 fw-semibold mb-2">{% trans "No matching ant species found" %}</h4>
+        <p class="text-muted mb-3" style="max-width: 460px; margin: 0 auto;">
+            {% trans "No species match all the criteria you selected. Try clearing or relaxing some filters to broaden your search." %}
+        </p>
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('reset-btn').click();">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> {% trans "Reset all filters" %}
+        </button>
+    </div>
+</div>
 {% endif %}

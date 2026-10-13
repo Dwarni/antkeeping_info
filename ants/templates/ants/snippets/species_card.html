@@ -1,0 +1,77 @@
+{% load i18n %}
+{% load thumbnail %}
+<div class="card h-100 shadow-sm border border-secondary-subtle species-card">
+    <div class="species-card-img-wrapper position-relative bg-body-tertiary overflow-hidden" style="height: 180px;">
+        {% if ant.main_image %}
+            {% thumbnail ant.main_image.image_file "400x240" crop="center" as im %}
+            <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+                 class="w-100 h-100 object-fit-cover species-card-img"
+                 alt="{{ ant.name }}" loading="lazy">
+            {% endthumbnail %}
+        {% else %}
+            <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-muted">
+                <span class="opacity-50 mb-1">
+                    {% include "icons/ant_icon.html" with size="48px" %}
+                </span>
+                <span class="small opacity-75">{% trans 'No photo yet' %}</span>
+            </div>
+        {% endif %}
+
+        {% if ant.forbidden_in_eu %}
+        <span class="badge bg-danger position-absolute top-0 end-0 m-2 shadow-sm" title="{% trans 'Forbidden Ant Species (EU)' %}">
+            <i class="bi bi-shield-slash-fill me-1"></i>EU
+        </span>
+        {% endif %}
+    </div>
+
+    <div class="card-body d-flex flex-column p-3">
+        <div class="d-flex justify-content-between align-items-center gap-1 mb-1">
+            <small class="text-muted fw-semibold text-truncate" title="{% if ant.genus.tribe.sub_family %}{{ ant.genus.tribe.sub_family.name }} - {% endif %}{{ ant.genus.name }}">
+                {% if ant.genus.tribe.sub_family %}{{ ant.genus.tribe.sub_family.name }}{% else %}{{ ant.genus.name }}{% endif %}
+            </small>
+            {% if ant.dominant_difficulty_level %}
+                {% include "ants/snippets/species_difficulty_badge.html" with level=ant.dominant_difficulty_level avg=ant.average_difficulty only %}
+            {% endif %}
+        </div>
+
+        <h5 class="card-title h6 mb-2">
+            <a href="{{ ant.get_absolute_url }}" class="stretched-link text-decoration-none text-body fst-italic">
+                {{ ant.name }}
+            </a>
+        </h5>
+
+        <div class="d-flex flex-wrap gap-1 mt-auto pt-2 border-top border-light-subtle">
+            {% if ant.worker_size %}
+            <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle" title="{% trans 'Worker size' %}">
+                <i class="bi bi-rulers me-1"></i>{{ ant.worker_size.minimum }}{% if ant.worker_size.maximum %}–{{ ant.worker_size.maximum }}{% endif %} mm
+            </span>
+            {% endif %}
+
+            {% if ant.hibernation == "NO" %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle" title="{% trans 'No hibernation' %}">
+                <i class="bi bi-sun me-1"></i>{% trans 'No hib.' %}
+            </span>
+            {% elif ant.hibernation == "SHORT" %}
+            <span class="badge bg-info-subtle text-info border border-info-subtle" title="{% trans 'Short hibernation' %}">
+                <i class="bi bi-snow me-1"></i>{% trans 'Short hib.' %}
+            </span>
+            {% elif ant.hibernation == "LONG" %}
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" title="{% trans 'Long hibernation' %}">
+                <i class="bi bi-snow2 me-1"></i>{% trans 'Long hib.' %}
+            </span>
+            {% endif %}
+
+            {% if ant.colony_structure %}
+            <span class="badge bg-body-secondary text-body-secondary border border-secondary-subtle" title="{% trans 'Colony structure' %}">
+                {{ ant.colony_structure_str }}
+            </span>
+            {% endif %}
+
+            {% if ant.worker_polymorphism %}
+            <span class="badge bg-body-secondary text-body-secondary border border-secondary-subtle" title="{% trans 'Polymorphic workers' %}">
+                {% trans 'Polymorphic' %}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+</div>

@@ -1369,7 +1369,12 @@ def _species_filter_queryset(request):
     """Return a filtered AntSpecies queryset based on GET filter params."""
     from ants.filters import AntSpeciesFilter
 
-    qs = AntSpecies.objects.filter(valid=True).order_by("name")
+    qs = (
+        AntSpecies.objects.filter(valid=True)
+        .select_related("genus__tribe__sub_family")
+        .prefetch_related("images", "sizes", "difficulty_ratings")
+        .order_by("name")
+    )
     return AntSpeciesFilter(request.GET, queryset=qs).qs
 
 
@@ -1380,7 +1385,10 @@ class SpeciesFilterView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["genera"] = Genus.objects.all()
+        context["genera"] = Genus.objects.all().order_by("name")
+        context["subfamilies"] = SubFamily.objects.all().order_by("name")
+        context["regions"] = AntRegion.countries.filter(code__isnull=False).order_by("name")
+        context["difficulty_choices"] = SpeciesDifficultyRating.DIFFICULTY_CHOICES
         context["hibernation_choices"] = AntSpecies.HIBERNATION_CHOICES
         context["nutrition_choices"] = AntSpecies.NUTRITION_CHOICES
         context["colony_choices"] = AntSpecies.COLONY_STRUCTURE_CHOICES
@@ -1391,18 +1399,23 @@ class SpeciesFilterView(TemplateView):
 class SpeciesFilterResultsView(View):
     """HTMX partial view: returns the filtered species list fragment."""
 
-    RESULTS_PER_PAGE = 50
+    RESULTS_PER_PAGE = 24
 
     def get(self, request):
         qs = _species_filter_queryset(request)
         paginator = Paginator(qs, self.RESULTS_PER_PAGE)
         page_obj = paginator.get_page(request.GET.get("page", 1))
+        view_mode = request.GET.get("view", "card")
+        if view_mode not in ("card", "list"):
+            view_mode = "card"
+
         return render(
             request,
             "ants/species_filter_results.html",
             {
                 "page_obj": page_obj,
                 "count": paginator.count,
+                "view_mode": view_mode,
             },
         )
 

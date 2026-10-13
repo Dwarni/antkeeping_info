@@ -1,0 +1,69 @@
+/* Styles for Species Catalog & Filter */
+.species-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.species-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-bs-theme="dark"] .species-card:hover {
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.45) !important;
+}
+
+.species-card-img-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.species-card-img {
+    transition: transform 0.35s ease;
+}
+
+.species-card:hover .species-card-img {
+    transform: scale(1.04);
+}
+
+.species-list-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 0.375rem;
+    object-fit: cover;
+    background-color: var(--bs-secondary-bg);
+}
+
+.species-list-table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.filter-sidebar-sticky {
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for filter sidebar */
+.filter-sidebar-sticky::-webkit-scrollbar {
+    width: 4px;
+}
+.filter-sidebar-sticky::-webkit-scrollbar-thumb {
+    background-color: var(--bs-secondary-border-subtle);
+    border-radius: 4px;
+}
+
+/* Loading overlay */
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 200ms ease-in-out;
+}
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    opacity: 1;
+}

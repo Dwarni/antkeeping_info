@@ -1,4 +1,5 @@
 import django_filters
+from django.db.models import Avg
 from django_filters import BooleanFilter, CharFilter, NumberFilter
 
 from .models import AntSize, AntSpecies
@@ -14,12 +15,23 @@ class AntSpeciesFilter(django_filters.FilterSet):
         method="filter_by_region",
         label="Filter by region code (e.g. de, de-by) or region ID.",
     )
-    forbidden_in_eu = BooleanFilter(
-        label="Filter by EU import restriction status.",
+    subfamily = CharFilter(
+        method="filter_by_subfamily",
+        label="Filter by subfamily slug, name, or integer ID.",
     )
     genus = CharFilter(
         method="filter_by_genus",
         label="Filter by genus slug (e.g. lasius), name (e.g. Lasius), or integer ID.",
+    )
+    difficulty = NumberFilter(
+        method="filter_by_difficulty",
+        label=(
+            "Filter by community difficulty level "
+            "(1: Beginner, 2: Intermediate, 3: Advanced, 4: Expert)."
+        ),
+    )
+    forbidden_in_eu = BooleanFilter(
+        label="Filter by EU import restriction status.",
     )
     hibernation = CharFilter(
         method="filter_hibernation",
@@ -52,23 +64,32 @@ class AntSpeciesFilter(django_filters.FilterSet):
         method="filter_founding",
         label=(
             "Filter by founding type. Values: "
-            "c (claustral — queen needs no food), "
-            "sc (semi-claustral — queen needs to be fed), "
-            "sp (social parasitic — queen needs host workers), "
-            "spp (social parasitic — founding possible with host pupae)."
+            "c (claustral - queen needs no food), "
+            "sc (semi-claustral - queen needs to be fed), "
+            "sp (social parasitic - queen needs host workers), "
+            "spp (social parasitic - founding possible with host pupae)."
         ),
     )
     size_min = NumberFilter(
         method="filter_size_min",
-        label="Minimum worker size (mm). Returns species whose worker size range covers this value.",
+        label=(
+            "Minimum worker size (mm). Returns species whose worker size range "
+            "covers this value."
+        ),
     )
     size_max = NumberFilter(
         method="filter_size_max",
-        label="Maximum worker size (mm). Returns species whose worker size range covers this value.",
+        label=(
+            "Maximum worker size (mm). Returns species whose worker size range "
+            "covers this value."
+        ),
     )
     valid = BooleanFilter(
         method="filter_valid",
-        label="Filter by species validity (default: true). Set to false to include synonym/invalid species.",
+        label=(
+            "Filter by species validity (default: true). "
+            "Set to false to include synonym/invalid species."
+        ),
     )
 
     class Meta:
@@ -80,9 +101,16 @@ class AntSpeciesFilter(django_filters.FilterSet):
             int(value)
             return queryset.filter(distribution__region__pk=value).distinct()
         except ValueError:
+            return queryset.filter(distribution__region__code__iexact=value).distinct()
+
+    def filter_by_subfamily(self, queryset, name, value):
+        try:
+            int(value)
+            return queryset.filter(genus__tribe__sub_family__pk=value)
+        except ValueError:
             return queryset.filter(
-                distribution__region__code__iexact=value
-            ).distinct()
+                genus__tribe__sub_family__slug__iexact=value
+            ) | queryset.filter(genus__tribe__sub_family__name__iexact=value)
 
     def filter_by_genus(self, queryset, name, value):
         try:
@@ -93,6 +121,24 @@ class AntSpeciesFilter(django_filters.FilterSet):
             return queryset.filter(genus__slug__iexact=value) | queryset.filter(
                 genus__name__iexact=value
             )
+
+    def filter_by_difficulty(self, queryset, name, value):
+        try:
+            val = int(value)
+            annotated = queryset.annotate(
+                avg_diff=Avg("difficulty_ratings__difficulty")
+            )
+            if val == 1:
+                return annotated.filter(avg_diff__isnull=False, avg_diff__lte=1.5)
+            elif val == 2:
+                return annotated.filter(avg_diff__gt=1.5, avg_diff__lte=2.5)
+            elif val == 3:
+                return annotated.filter(avg_diff__gt=2.5, avg_diff__lte=3.5)
+            elif val == 4:
+                return annotated.filter(avg_diff__gt=3.5)
+            return queryset
+        except (ValueError, TypeError):
+            return queryset
 
     def filter_size_min(self, queryset, name, value):
         # Single filter() call so all conditions apply to the same related row,

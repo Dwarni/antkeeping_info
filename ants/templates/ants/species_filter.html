@@ -1,150 +1,268 @@
 {% extends 'layout.html' %}
 {% load static %}
 {% load i18n %}
-{% block title %}Advanced Species Search | Antkeeping.info{% endblock %}
-{% block og_title %}Advanced Ant Species Search — Antkeeping.info{% endblock %}
-{% block og_description %}Filter thousands of ant species by genus, region, worker size, colony structure, founding type, nutrition, and more. Find exactly the species you are looking for.{% endblock %}
-{% block content %}
-<h1 class="h3 mb-3">Advanced Species Search</h1>
 
-<div class="alert alert-info d-flex align-items-start gap-2 mb-4" role="alert">
-    <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+{% block title %}{% trans "Species Catalog & Filter" %} | Antkeeping.info{% endblock %}
+{% block og_title %}{% trans "Ant Species Catalog & Advanced Filter" %} - Antkeeping.info{% endblock %}
+{% block og_description %}{% trans "Filter thousands of ant species by genus, subfamily, region, difficulty, worker size, hibernation, and colony structure. Find the perfect ant species for your antkeeping journey." %}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'ants/css/species_filter.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <div>
-        For many species, keeping data such as hibernation requirements, nutrition, or size is still incomplete.
-        If you can help fill in the gaps, please <a href="{% url 'contact' %}" class="alert-link">get in touch via the contact form</a> — any contribution is very welcome!
+        <h1 class="h3 mb-1">{% trans "Species Catalog & Filter" %}</h1>
+        <p class="text-muted small mb-0">{% trans "Explore and filter ant species by biological attributes, regions, and community difficulty ratings." %}</p>
     </div>
 </div>
 
-<div class="row">
-    {# Filter panel #}
-    <div class="col-md-3 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-funnel me-1"></i> Filters
-                </h5>
-                <form id="filter-form"
-                      hx-get="{% url 'species_filter_results' %}"
-                      hx-target="#results-container"
-                      hx-trigger="change delay:300ms, input delay:400ms"
-                      hx-indicator="#htmx-spinner">
+<div class="alert alert-info d-flex align-items-start gap-2 mb-4 rounded-3 border-0 shadow-sm" role="alert">
+    <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+    <div class="small">
+        {% trans "For some species, biological parameters such as hibernation requirements or sizes are still being expanded." %}
+        {% trans "If you can contribute data or corrections, please" %} <a href="{% url 'contact' %}" class="alert-link">{% trans "get in touch via the contact form" %}</a> — {% trans "any contribution is warmly welcome!" %}
+    </div>
+</div>
 
-                    <div class="mb-3">
-                        <label for="genus-select" class="form-label fw-semibold">Genus</label>
-                        <select name="genus" id="genus-select" class="form-select form-select-sm">
-                            <option value="">Any</option>
-                            {% for genus in genera %}
-                            <option value="{{ genus.slug }}"{% if request.GET.genus == genus.slug %} selected{% endif %}>{{ genus.name }}</option>
-                            {% endfor %}
-                        </select>
+{# Mobile filter toggle #}
+<div class="d-md-none mb-3">
+    <button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center py-2"
+            type="button" data-bs-toggle="collapse" data-bs-target="#filter-collapse"
+            aria-expanded="false" aria-controls="filter-collapse" id="mobile-filter-toggle">
+        <span class="d-flex align-items-center gap-2">
+            <i class="bi bi-funnel-fill"></i>
+            <span class="fw-semibold">{% trans "Filters" %}</span>
+        </span>
+        <span class="badge bg-primary text-white d-none" id="active-filter-badge">0</span>
+    </button>
+</div>
+
+<div class="row g-4">
+    {# Filter sidebar #}
+    <div class="col-md-4 col-lg-3">
+        <div id="filter-collapse" class="collapse d-md-block">
+            <div class="card border border-secondary-subtle shadow-sm rounded-3 filter-sidebar-sticky">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-light-subtle">
+                        <span class="fw-bold small text-uppercase tracking-wider text-muted">
+                            <i class="bi bi-funnel text-primary me-1"></i> {% trans "Filter Criteria" %}
+                        </span>
+                        <button type="button" class="btn btn-link text-decoration-none p-0 text-muted small" id="reset-btn" title="{% trans 'Reset all filters' %}">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>{% trans "Reset" %}
+                        </button>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="hibernation-select" class="form-label fw-semibold">Hibernation</label>
-                        <select name="hibernation" id="hibernation-select" class="form-select form-select-sm">
-                            <option value="">Any</option>
-                            {% for value, label in hibernation_choices %}
-                            <option value="{{ value }}"{% if request.GET.hibernation == value %} selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                    <form id="filter-form"
+                          hx-get="{% url 'species_filter_results' %}"
+                          hx-target="#results-container"
+                          hx-trigger="change delay:250ms, input delay:350ms"
+                          hx-indicator="#htmx-spinner">
 
-                    <div class="mb-3">
-                        <label for="polymorphism-select" class="form-label fw-semibold">Worker Polymorphism</label>
-                        <select name="worker_polymorphism" id="polymorphism-select" class="form-select form-select-sm">
-                            <option value="">Any</option>
-                            <option value="true"{% if request.GET.worker_polymorphism == "true" %} selected{% endif %}>Yes</option>
-                            <option value="false"{% if request.GET.worker_polymorphism == "false" %} selected{% endif %}>No</option>
-                        </select>
-                    </div>
+                        <input type="hidden" name="view" id="filter-view-input" value="{{ request.GET.view|default:'card' }}">
 
-                    <div class="mb-3">
-                        <label for="colony-select" class="form-label fw-semibold">Colony Structure</label>
-                        <select name="colony_structure" id="colony-select" class="form-select form-select-sm">
-                            <option value="">Any</option>
-                            {% for value, label in colony_choices %}
-                            <option value="{{ value }}"{% if request.GET.colony_structure == value %} selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="nutrition-select" class="form-label fw-semibold">Nutrition</label>
-                        <select name="nutrition" id="nutrition-select" class="form-select form-select-sm">
-                            <option value="">Any</option>
-                            {% for value, label in nutrition_choices %}
-                            <option value="{{ value }}"{% if request.GET.nutrition == value %} selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="founding-select" class="form-label fw-semibold">Founding</label>
-                        <select name="founding" id="founding-select" class="form-select form-select-sm">
-                            <option value="">Any</option>
-                            {% for value, label in founding_choices %}
-                            <option value="{{ value }}"{% if request.GET.founding == value %} selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Worker Size (mm)</label>
-                        <div class="d-flex align-items-center gap-2">
-                            <input type="number" name="size_min" id="size-min"
-                                   class="form-control form-control-sm"
-                                   placeholder="Min" min="0.1" max="100" step="0.1"
-                                   value="{{ request.GET.size_min }}">
-                            <span class="text-muted">–</span>
-                            <input type="number" name="size_max" id="size-max"
-                                   class="form-control form-control-sm"
-                                   placeholder="Max" min="0.1" max="100" step="0.1"
-                                   value="{{ request.GET.size_max }}">
+                        {# Name Search #}
+                        <div class="mb-3">
+                            <label for="search-input" class="form-label small fw-semibold">{% trans "Search Species" %}</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="search" name="search" id="search-input"
+                                       class="form-control"
+                                       placeholder="{% trans 'e.g. niger, barbarus...' %}"
+                                       value="{{ request.GET.search }}">
+                            </div>
                         </div>
-                        <div id="size-range-warning" class="text-danger small mt-1 d-none">
-                            Min must be smaller than Max.
+
+                        {# Region / Country #}
+                        <div class="mb-3">
+                            <label for="region-select" class="form-label small fw-semibold">{% trans "Region / Country" %}</label>
+                            <select name="region" id="region-select" class="form-select form-select-sm">
+                                <option value="">{% trans "All Regions" %}</option>
+                                {% for region in regions %}
+                                <option value="{{ region.code }}"{% if request.GET.region == region.code %} selected{% endif %}>{{ region.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
 
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="reset-btn">
-                        <i class="bi bi-x-circle me-1"></i>Reset
-                    </button>
+                        {# Subfamily #}
+                        <div class="mb-3">
+                            <label for="subfamily-select" class="form-label small fw-semibold">{% trans "Subfamily" %}</label>
+                            <select name="subfamily" id="subfamily-select" class="form-select form-select-sm">
+                                <option value="">{% trans "Any Subfamily" %}</option>
+                                {% for sub in subfamilies %}
+                                <option value="{{ sub.slug }}"{% if request.GET.subfamily == sub.slug %} selected{% endif %}>{{ sub.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                </form>
+                        {# Genus #}
+                        <div class="mb-3">
+                            <label for="genus-select" class="form-label small fw-semibold">{% trans "Genus" %}</label>
+                            <select name="genus" id="genus-select" class="form-select form-select-sm">
+                                <option value="">{% trans "Any Genus" %}</option>
+                                {% for genus in genera %}
+                                <option value="{{ genus.slug }}"{% if request.GET.genus == genus.slug %} selected{% endif %}>{{ genus.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {# Keeping Difficulty #}
+                        <div class="mb-3">
+                            <label for="difficulty-select" class="form-label small fw-semibold">{% trans "Keeping Difficulty" %}</label>
+                            <select name="difficulty" id="difficulty-select" class="form-select form-select-sm">
+                                <option value="">{% trans "Any Difficulty" %}</option>
+                                {% for value, label in difficulty_choices %}
+                                <option value="{{ value }}"{% if request.GET.difficulty == value|stringformat:"i" %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {# Hibernation #}
+                        <div class="mb-3">
+                            <label for="hibernation-select" class="form-label small fw-semibold">{% trans "Hibernation" %}</label>
+                            <select name="hibernation" id="hibernation-select" class="form-select form-select-sm">
+                                <option value="">{% trans "Any Hibernation" %}</option>
+                                {% for value, label in hibernation_choices %}
+                                <option value="{{ value }}"{% if request.GET.hibernation == value %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {# Worker Polymorphism #}
+                        <div class="mb-3">
+                            <label for="polymorphism-select" class="form-label small fw-semibold">{% trans "Worker Polymorphism" %}</label>
+                            <select name="worker_polymorphism" id="polymorphism-select" class="form-select form-select-sm">
+                                <option value="">{% trans "Any" %}</option>
+                                <option value="true"{% if request.GET.worker_polymorphism == "true" %} selected{% endif %}>{% trans "Yes (Polymorphic)" %}</option>
+                                <option value="false"{% if request.GET.worker_polymorphism == "false" %} selected{% endif %}>{% trans "No (Monomorphic)" %}</option>
+                            </select>
+                        </div>
+
+                        {# Colony Structure #}
+                        <div class="mb-3">
+                            <label for="colony-select" class="form-label small fw-semibold">{% trans "Colony Structure" %}</label>
+                            <select name="colony_structure" id="colony-select" class="form-select form-select-sm">
+                                <option value="">{% trans "Any Structure" %}</option>
+                                {% for value, label in colony_choices %}
+                                <option value="{{ value }}"{% if request.GET.colony_structure == value %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {# Nutrition #}
+                        <div class="mb-3">
+                            <label for="nutrition-select" class="form-label small fw-semibold">{% trans "Nutrition" %}</label>
+                            <select name="nutrition" id="nutrition-select" class="form-select form-select-sm">
+                                <option value="">{% trans "Any Nutrition" %}</option>
+                                {% for value, label in nutrition_choices %}
+                                <option value="{{ value }}"{% if request.GET.nutrition == value %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {# Founding Type #}
+                        <div class="mb-3">
+                            <label for="founding-select" class="form-label small fw-semibold">{% trans "Founding Type" %}</label>
+                            <select name="founding" id="founding-select" class="form-select form-select-sm">
+                                <option value="">{% trans "Any Founding Type" %}</option>
+                                {% for value, label in founding_choices %}
+                                <option value="{{ value }}"{% if request.GET.founding == value %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {# Worker Size Min/Max #}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">{% trans "Worker Size (mm)" %}</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="number" name="size_min" id="size-min"
+                                       class="form-control form-control-sm"
+                                       placeholder="{% trans 'Min' %}" min="0.1" max="100" step="0.1"
+                                       value="{{ request.GET.size_min }}">
+                                <span class="text-muted">–</span>
+                                <input type="number" name="size_max" id="size-max"
+                                       class="form-control form-control-sm"
+                                       placeholder="{% trans 'Max' %}" min="0.1" max="100" step="0.1"
+                                       value="{{ request.GET.size_max }}">
+                            </div>
+                            <div id="size-range-warning" class="text-danger small mt-1 d-none">
+                                {% trans "Min size must be smaller than Max size." %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="reset-btn-bottom">
+                                <i class="bi bi-x-circle me-1"></i>{% trans "Clear all filters" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
 
-        <div id="htmx-spinner" class="htmx-indicator mt-2 text-center">
-            <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
+            <div id="htmx-spinner" class="htmx-indicator mt-3 text-center">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">{% trans "Loading..." %}</span>
+                </div>
+                <span class="small text-muted ms-2">{% trans "Filtering species..." %}</span>
+            </div>
         </div>
     </div>
 
     {# Results area #}
-    <div class="col-md-9">
+    <div class="col-md-8 col-lg-9">
         <div id="results-container"
              hx-get="{% url 'species_filter_results' %}"
              hx-trigger="load"
              hx-include="#filter-form"
              hx-indicator="#htmx-spinner">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">{% trans "Loading species..." %}</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
 {% block script %}
 <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
 <script>
 (function () {
     var form = document.getElementById('filter-form');
     var resetBtn = document.getElementById('reset-btn');
+    var resetBtnBottom = document.getElementById('reset-btn-bottom');
+    var viewInput = document.getElementById('filter-view-input');
+    var activeFilterBadge = document.getElementById('active-filter-badge');
+
+    function countActiveFilters() {
+        var count = 0;
+        var elements = form.elements;
+        for (var i = 0; i < elements.length; i++) {
+            var el = elements[i];
+            if (el.name && el.name !== 'view' && el.value && el.value.trim() !== '') {
+                count++;
+            }
+        }
+        if (activeFilterBadge) {
+            if (count > 0) {
+                activeFilterBadge.textContent = count;
+                activeFilterBadge.classList.remove('d-none');
+            } else {
+                activeFilterBadge.classList.add('d-none');
+            }
+        }
+    }
 
     function syncUrl() {
         var params = new URLSearchParams(new FormData(form));
-        // Remove empty values to keep the URL clean
         for (var key of [...params.keys()]) {
             if (!params.get(key)) { params.delete(key); }
         }
         var search = params.toString();
         history.replaceState(null, '', search ? location.pathname + '?' + search : location.pathname);
+        countActiveFilters();
     }
 
     var sizeMin = document.getElementById('size-min');
@@ -155,24 +273,52 @@
         var min = parseFloat(sizeMin.value);
         var max = parseFloat(sizeMax.value);
         var invalid = sizeMin.value && sizeMax.value && min > max;
-        sizeWarning.classList.toggle('d-none', !invalid);
+        if (sizeWarning) {
+            sizeWarning.classList.toggle('d-none', !invalid);
+        }
     }
+
+    sizeMin.addEventListener('input', checkSizeRange);
+    sizeMax.addEventListener('input', checkSizeRange);
 
     form.addEventListener('change', syncUrl);
     form.addEventListener('input', syncUrl);
-    form.addEventListener('change', checkSizeRange);
-    form.addEventListener('input', checkSizeRange);
 
-    checkSizeRange();
-
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function () {
-            form.querySelectorAll('select').forEach(function (sel) { sel.value = ''; });
-            form.querySelectorAll('input[type=number]').forEach(function (inp) { inp.value = ''; });
-            history.replaceState(null, '', location.pathname);
-            htmx.trigger(form, 'change');
-        });
+    function resetForm() {
+        var elements = form.elements;
+        for (var i = 0; i < elements.length; i++) {
+            var el = elements[i];
+            if (el.name === 'view') continue;
+            if (el.tagName === 'SELECT') {
+                el.value = '';
+            } else if (el.tagName === 'INPUT') {
+                el.value = '';
+            }
+        }
+        if (sizeWarning) sizeWarning.classList.add('d-none');
+        syncUrl();
+        htmx.trigger(form, 'change');
     }
+
+    if (resetBtn) resetBtn.addEventListener('click', resetForm);
+    if (resetBtnBottom) resetBtnBottom.addEventListener('click', resetForm);
+
+    // Event delegation for view switcher buttons
+    document.addEventListener('click', function (e) {
+        var cardBtn = e.target.closest('#btn-view-card');
+        var listBtn = e.target.closest('#btn-view-list');
+        if (cardBtn) {
+            viewInput.value = 'card';
+            syncUrl();
+            htmx.trigger(form, 'change');
+        } else if (listBtn) {
+            viewInput.value = 'list';
+            syncUrl();
+            htmx.trigger(form, 'change');
+        }
+    });
+
+    countActiveFilters();
 })();
 </script>
 {% endblock %}

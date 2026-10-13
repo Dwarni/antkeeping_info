@@ -1,0 +1,26 @@
+{% load i18n %}
+{% if level == 1 %}
+<span class="badge bg-success-subtle text-success border border-success-subtle d-inline-flex align-items-center gap-1" title="{% trans 'Beginner friendly' %}">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{% trans 'Beginner' %}</span>
+    {% if avg %}<span class="opacity-75">({{ avg }})</span>{% endif %}
+</span>
+{% elif level == 2 %}
+<span class="badge bg-info-subtle text-info border border-info-subtle d-inline-flex align-items-center gap-1" title="{% trans 'Intermediate experience required' %}">
+    <i class="bi bi-info-circle-fill"></i>
+    <span>{% trans 'Intermediate' %}</span>
+    {% if avg %}<span class="opacity-75">({{ avg }})</span>{% endif %}
+</span>
+{% elif level == 3 %}
+<span class="badge bg-warning-subtle text-warning border border-warning-subtle d-inline-flex align-items-center gap-1" title="{% trans 'Advanced ant keeper experience' %}">
+    <i class="bi bi-exclamation-circle-fill"></i>
+    <span>{% trans 'Advanced' %}</span>
+    {% if avg %}<span class="opacity-75">({{ avg }})</span>{% endif %}
+</span>
+{% elif level == 4 %}
+<span class="badge bg-danger-subtle text-danger border border-danger-subtle d-inline-flex align-items-center gap-1" title="{% trans 'Expert ant keeper only' %}">
+    <i class="bi bi-shield-fill-exclamation"></i>
+    <span>{% trans 'Expert' %}</span>
+    {% if avg %}<span class="opacity-75">({{ avg }})</span>{% endif %}
+</span>
+{% endif %}
