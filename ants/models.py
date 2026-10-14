@@ -683,7 +683,10 @@ class CommonName(models.Model):
         ordering = ["name"]
 
     def __str__(self):
-        return f"{self.name} ({dict(LANG_CHOICES)[self.language]})"
+        lang = dict(LANG_CHOICES).get(self.language)
+        if lang:
+            return f"{self.name} ({lang})"
+        return self.name
 
 
 class InvalidName(models.Model):

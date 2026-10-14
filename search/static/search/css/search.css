@@ -1,0 +1,229 @@
+/* Global Search Styles */
+
+.search-header-box {
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.search-category-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    padding-bottom: 0.75rem;
+}
+
+.search-tab-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    transition: all 0.15s ease;
+}
+
+.search-tab-pill:hover {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+    text-decoration: none;
+    border-color: var(--bs-primary);
+}
+
+.search-tab-pill.active {
+    background-color: var(--bs-primary);
+    color: #fff;
+    border-color: var(--bs-primary);
+}
+
+.search-tab-pill .badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.search-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.08));
+}
+
+.search-section-header h2,
+.search-section-header h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--bs-heading-color, var(--bs-body-color));
+}
+
+/* Journal Entry Search Card */
+.journal-search-card {
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.85rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.journal-search-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Food Item Search Card */
+.food-search-card {
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.food-search-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Region Tag */
+.search-region-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color);
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.search-region-tag:hover {
+    background-color: var(--bs-primary);
+    color: #fff;
+    border-color: var(--bs-primary);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+/* Empty State */
+.search-empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    margin: 1.5rem 0;
+}
+
+/* Navbar Search Autocomplete Dropdown */
+.navbar-search-group {
+    position: relative;
+}
+
+.navbar-autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    min-width: 320px;
+    max-width: 480px;
+    background-color: var(--bs-body-bg, #fff);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    margin-top: 0.35rem;
+    z-index: 1050;
+    overflow: hidden;
+    display: none;
+}
+
+.navbar-autocomplete-dropdown.show {
+    display: block;
+}
+
+.autocomplete-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.4rem 0.75rem;
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+    border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,0.05));
+}
+
+.autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--bs-body-color);
+    text-decoration: none;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,0.05));
+    transition: background-color 0.12s ease;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+    text-decoration: none;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.autocomplete-item-title {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.autocomplete-item-subtitle {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.autocomplete-footer {
+    padding: 0.5rem 0.75rem;
+    background-color: var(--bs-tertiary-bg);
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.autocomplete-footer a {
+    text-decoration: none;
+}

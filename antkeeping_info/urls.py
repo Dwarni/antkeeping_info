@@ -38,7 +38,7 @@ urlpatterns = [
         name="ants_by_country",
     ),
     path("flights/", include("flights.urls")),
-    path("search/", search_views.SearchView.as_view(), name="search"),
+    path("search/", include("search.urls")),
     path("staff/", include("staff.urls")),
     path("admin/", admin.site.urls),
     path("accounts/", include("allauth.urls")),

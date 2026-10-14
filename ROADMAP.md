@@ -29,13 +29,19 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Integrierter AntMaps.org-Direktlink und Live-Echtzeitfilter für weltweite Verbreitungsdaten.
   - Schwarmflugzeiten mit dynamischem, theme-adaptivem Chart.js-Diagramm (automatische Farbanpassung an Light- und Darkmode per Theme-Observer).
   - WCAG AA-konforme Futterakzeptanz- und Community-Schwierigkeitsbewertungen.
+- [x] **Globale Suche (`/search/`)**
+  - Schnelle Live-Autovervollständigung in der Navbar mit Tastaturnavigation (Pfeiltasten/Enter/Escape) und Kategorien-Vorschauen (Arten, Futter, Berichte, Regionen).
+  - Umfassende Multi-Kategorien-Suche über Ameisenarten (inkl. Synonyme & Trivialnamen), Haltungsberichte (nur öffentliche Kolonien), Futter-Datenbank und Regionen.
+  - Kategorie-Pills mit Zähler-Badges zur schnellen Filterung der Treffer.
+  - Tippfehler-Toleranz mit „Meintest du: ...?“-Vorschlägen für Gattungen und Arten.
+  - Leere-Zustände mit Vorschlägen beliebter Suchbegriffe und Hilfestellungen.
 
 ---
 
 ## 📋 Aufgabenübersicht: Weitere Seiten zur Usability-Prüfung
 
 ### 1. Artenverzeichnis & Suche
-- [ ] **Globale Suche (`/search/`)**
+- [x] **Globale Suche (`/search/`)**
   - Suchergebnisdarstellung (Kategorisierung nach Arten, Berichten, Futterdaten).
   - Autovervollständigung, Leere-Zustände und Tippfehler-Toleranz.
 

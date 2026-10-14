@@ -1,27 +1,379 @@
 {% extends "layout.html" %}
-{% load i18n %}
+{% load i18n static thumbnail %}
+
+{% block og_title %}{% if query_string %}{% trans "Search results for" %} "{{ query_string }}"{% else %}{% trans "Search" %}{% endif %} — Antkeeping.info{% endblock %}
+{% block og_description %}{% trans "Search ant species, keeping journals, food items, and global distribution data." %}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static "search/css/search.css" %}?v=1">
+    <link rel="stylesheet" href="{% static "ants/css/species_filter.css" %}?v=2">
+{% endblock %}
 
 {% block content %}
-<h1>Search results for: "{{ query_string }}"</h1>
-{% if ant_species %}
-    <h2>Ant species</h2>
-    <ul>
-    {% for ant in ant_species %}
-        <li><a href="{{ ant.get_absolute_url }}">{{ ant.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% endif %}
-{% if regions %}
-<h2>Regions</h2>
-    <ul>
-    {% for region in regions %}
-        <li><a href="{{ region.get_absolute_url }}">{{ region.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% endif %}
-{% if not ant_species and not regions %}
-    <div class="alert alert-warning" role="alert">
-        {% trans 'No results found!' %}
+<div class="search-page-container pb-5">
+    {# Breadcrumb #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="{% url "home" %}" class="text-decoration-none text-secondary">{% trans "Home" %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans "Search" %}</li>
+        </ol>
+    </nav>
+
+    {# Search Header & Input Box #}
+    <div class="search-header-box shadow-sm">
+        <form action="{% url "search" %}" method="get" class="row g-2 align-items-center">
+            <div class="col-12 col-md-9">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-body border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="search"
+                           name="q"
+                           value="{{ query_string }}"
+                           class="form-control border-start-0 ps-0"
+                           placeholder="{% trans "Search species, journals, food, countries..." %}"
+                           aria-label="{% trans "Search query" %}"
+                           required
+                           autofocus>
+                </div>
+            </div>
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">
+                    {% trans "Search" %}
+                </button>
+            </div>
+        </form>
+
+        {% if query_string %}
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-3 border-top border-secondary-subtle">
+            <div class="text-body-secondary small">
+                {% if total_results > 0 %}
+                    {% blocktrans with count=total_results query=query_string %}Found <strong>{{ count }}</strong> result{{ count|pluralize }} for "{{ query }}"{% endblocktrans %}
+                {% else %}
+                    {% blocktrans with query=query_string %}No results found for "{{ query }}"{% endblocktrans %}
+                {% endif %}
+            </div>
+            <a href="{% url "species_filter" %}" class="small text-decoration-none d-inline-flex align-items-center gap-1">
+                <i class="bi bi-sliders"></i> {% trans "Advanced species catalog filter" %} →
+            </a>
+        </div>
+        {% endif %}
     </div>
-{% endif %}
+
+    {# Did You Mean / Typo Suggestion Alert #}
+    {% if did_you_mean %}
+    <div class="alert alert-info py-2 px-3 mb-4 rounded-3 d-flex align-items-center gap-2 shadow-sm" role="alert">
+        <i class="bi bi-lightbulb-fill text-warning fs-5"></i>
+        <div>
+            <span>{% trans "Did you mean:" %}</span>
+            <a href="{% url "search" %}?q={{ did_you_mean|urlencode }}" class="fw-bold alert-link text-decoration-underline ms-1">
+                {{ did_you_mean }}
+            </a>?
+        </div>
+    </div>
+    {% endif %}
+
+    {# Empty Query State: Welcome / Popular Searches #}
+    {% if not query_string %}
+    <div class="search-empty-state shadow-sm">
+        <div class="text-muted opacity-50 mb-3">
+            {% include "icons/ant_icon.html" with size="64px" %}
+        </div>
+        <h2 class="h4 fw-bold mb-2">{% trans "What are you looking for?" %}</h2>
+        <p class="text-body-secondary mb-4" style="max-width: 500px; margin-inline: auto;">
+            {% trans "Search across 14,000+ ant species, colony journals, accepted food items, and global distribution data." %}
+        </p>
+
+        <div class="mb-3">
+            <span class="small fw-semibold text-secondary d-block mb-2">{% trans "Popular searches:" %}</span>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                {% for term in popular_searches %}
+                <a href="{% url "search" %}?q={{ term|urlencode }}" class="badge bg-body-secondary text-body border border-secondary-subtle py-2 px-3 text-decoration-none rounded-pill">
+                    <i class="bi bi-search me-1 text-muted"></i>{{ term }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+        {# Zero Results State #}
+        {% if total_results == 0 %}
+        <div class="search-empty-state shadow-sm">
+            <div class="text-muted opacity-50 mb-3">
+                {% include "icons/ant_icon.html" with size="64px" %}
+            </div>
+            <h2 class="h4 fw-bold mb-2">{% trans "No matching records found" %}</h2>
+            <p class="text-body-secondary mb-4" style="max-width: 500px; margin-inline: auto;">
+                {% blocktrans with query=query_string %}We couldn't find any species, journal entries, food items, or regions matching "<strong>{{ query }}</strong>".{% endblocktrans %}
+            </p>
+
+            <div class="card p-3 mx-auto mb-4 text-start bg-body-tertiary border-secondary-subtle" style="max-width: 480px;">
+                <h3 class="h6 fw-semibold mb-2">{% trans "Search tips:" %}</h3>
+                <ul class="small text-body-secondary mb-0 ps-3">
+                    <li>{% trans "Check for spelling or typo errors in the search query." %}</li>
+                    <li>{% trans "Try searching for only the genus name (e.g. <i>Camponotus</i> or <i>Lasius</i>)." %}</li>
+                    <li>{% trans "Use common names (e.g. <i>Black Garden Ant</i> or <i>Wegameise</i>)." %}</li>
+                    <li>
+                        <a href="{% url "species_filter" %}">{% trans "Explore the species catalog" %}</a>
+                        {% trans "with filter criteria for size, climate, and difficulty." %}
+                    </li>
+                </ul>
+            </div>
+
+            <div>
+                <span class="small fw-semibold text-secondary d-block mb-2">{% trans "Try a popular search:" %}</span>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    {% for term in popular_searches %}
+                    <a href="{% url "search" %}?q={{ term|urlencode }}" class="badge bg-body-secondary text-body border border-secondary-subtle py-2 px-3 text-decoration-none rounded-pill">
+                        <i class="bi bi-search me-1 text-muted"></i>{{ term }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+
+        {# Category Filter Tabs #}
+        <div class="search-category-nav" role="tablist" aria-label="{% trans "Search result categories" %}">
+            <a href="{% url "search" %}?q={{ query_string|urlencode }}&category=all"
+               class="search-tab-pill {% if selected_category == "all" %}active{% endif %}">
+                <i class="bi bi-grid-fill"></i>
+                <span>{% trans "All Results" %}</span>
+                <span class="badge {% if selected_category == "all" %}bg-light text-dark{% else %}bg-secondary-subtle text-body-secondary{% endif %}">
+                    {{ total_results }}
+                </span>
+            </a>
+
+            {% if species_count > 0 %}
+            <a href="{% url "search" %}?q={{ query_string|urlencode }}&category=species"
+               class="search-tab-pill {% if selected_category == "species" %}active{% endif %}">
+                <i class="bi bi-bug-fill"></i>
+                <span>{% trans "Ant Species" %}</span>
+                <span class="badge {% if selected_category == "species" %}bg-light text-dark{% else %}bg-secondary-subtle text-body-secondary{% endif %}">
+                    {{ species_count }}
+                </span>
+            </a>
+            {% endif %}
+
+            {% if journal_count > 0 %}
+            <a href="{% url "search" %}?q={{ query_string|urlencode }}&category=journals"
+               class="search-tab-pill {% if selected_category == "journals" %}active{% endif %}">
+                <i class="bi bi-journal-bookmark-fill"></i>
+                <span>{% trans "Journals & Colonies" %}</span>
+                <span class="badge {% if selected_category == "journals" %}bg-light text-dark{% else %}bg-secondary-subtle text-body-secondary{% endif %}">
+                    {{ journal_count }}
+                </span>
+            </a>
+            {% endif %}
+
+            {% if food_count > 0 %}
+            <a href="{% url "search" %}?q={{ query_string|urlencode }}&category=food"
+               class="search-tab-pill {% if selected_category == "food" %}active{% endif %}">
+                <i class="bi bi-egg-fried"></i>
+                <span>{% trans "Food Items" %}</span>
+                <span class="badge {% if selected_category == "food" %}bg-light text-dark{% else %}bg-secondary-subtle text-body-secondary{% endif %}">
+                    {{ food_count }}
+                </span>
+            </a>
+            {% endif %}
+
+            {% if region_count > 0 %}
+            <a href="{% url "search" %}?q={{ query_string|urlencode }}&category=regions"
+               class="search-tab-pill {% if selected_category == "regions" %}active{% endif %}">
+                <i class="bi bi-globe-americas"></i>
+                <span>{% trans "Regions" %}</span>
+                <span class="badge {% if selected_category == "regions" %}bg-light text-dark{% else %}bg-secondary-subtle text-body-secondary{% endif %}">
+                    {{ region_count }}
+                </span>
+            </a>
+            {% endif %}
+        </div>
+
+        {# 1. Ant Species Results #}
+        {% if selected_category == "all" or selected_category == "species" %}
+            {% if species_count > 0 %}
+            <section class="mb-5">
+                <div class="search-section-header">
+                    <h2>
+                        <i class="bi bi-bug-fill text-primary"></i>
+                        <span>{% trans "Ant Species" %}</span>
+                        <span class="badge bg-secondary-subtle text-body-secondary fs-6 fw-normal ms-1">{{ species_count }}</span>
+                    </h2>
+                    {% if selected_category == "all" and species_count > 6 %}
+                    <a href="{% url "search" %}?q={{ query_string|urlencode }}&category=species" class="small text-decoration-none">
+                        {% trans "View all" %} {{ species_count }} {% trans "species" %} →
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 g-3">
+                    {% for ant in ant_species %}
+                        {% if selected_category != "all" or forloop.counter <= 6 %}
+                        <div class="col">
+                            {% include "ants/snippets/species_card.html" with ant=ant only %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        {% endif %}
+
+        {# 2. Community Journal Entries Results #}
+        {% if selected_category == "all" or selected_category == "journals" %}
+            {% if journal_count > 0 %}
+            <section class="mb-5">
+                <div class="search-section-header">
+                    <h2>
+                        <i class="bi bi-journal-bookmark-fill text-info"></i>
+                        <span>{% trans "Colony Journals & Keeper Logs" %}</span>
+                        <span class="badge bg-secondary-subtle text-body-secondary fs-6 fw-normal ms-1">{{ journal_count }}</span>
+                    </h2>
+                    {% if selected_category == "all" and journal_count > 4 %}
+                    <a href="{% url "search" %}?q={{ query_string|urlencode }}&category=journals" class="small text-decoration-none">
+                        {% trans "View all" %} {{ journal_count }} {% trans "journals" %} →
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="row g-3">
+                    {% for entry in journal_entries %}
+                        {% if selected_category != "all" or forloop.counter <= 4 %}
+                        <div class="col-12 col-md-6">
+                            <div class="journal-search-card h-100 shadow-sm d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                    <div>
+                                        <h3 class="h6 mb-1 fw-bold">
+                                            <a href="{{ entry.get_absolute_url }}" class="text-decoration-none text-body">
+                                                {{ entry.colony.name }}
+                                            </a>
+                                        </h3>
+                                        <small class="text-body-secondary">
+                                            <i class="bi bi-person me-1"></i>{{ entry.colony.user.username }}
+                                            <span class="mx-1">·</span>
+                                            <i class="bi bi-calendar3 me-1"></i>{{ entry.date }}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                        {{ entry.get_event_type_display }}
+                                    </span>
+                                </div>
+
+                                <p class="text-body-secondary small mb-3 flex-grow-1" style="max-height: 4.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                                    {{ entry.note|linebreaksbr }}
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary-subtle small mt-auto">
+                                    <span class="text-body-secondary fst-italic">
+                                        {{ entry.colony.species.name }}
+                                    </span>
+                                    <div class="d-flex gap-3 text-muted">
+                                        {% if entry.images.exists %}
+                                        <span><i class="bi bi-camera me-1"></i>{{ entry.images.count }}</span>
+                                        {% endif %}
+                                        <span><i class="bi bi-heart me-1"></i>{{ entry.likes.count }}</span>
+                                        <span><i class="bi bi-chat me-1"></i>{{ entry.comments.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        {% endif %}
+
+        {# 3. Food Database Results #}
+        {% if selected_category == "all" or selected_category == "food" %}
+            {% if food_count > 0 %}
+            <section class="mb-5">
+                <div class="search-section-header">
+                    <h2>
+                        <i class="bi bi-egg-fried text-warning"></i>
+                        <span>{% trans "Ant Food Database" %}</span>
+                        <span class="badge bg-secondary-subtle text-body-secondary fs-6 fw-normal ms-1">{{ food_count }}</span>
+                    </h2>
+                    {% if selected_category == "all" and food_count > 6 %}
+                    <a href="{% url "search" %}?q={{ query_string|urlencode }}&category=food" class="small text-decoration-none">
+                        {% trans "View all" %} {{ food_count }} {% trans "food items" %} →
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                    {% for food in food_items %}
+                        {% if selected_category != "all" or forloop.counter <= 6 %}
+                        <div class="col">
+                            <div class="food-search-card shadow-sm h-100">
+                                {% if food.image %}
+                                    {% thumbnail food.image "48x48" crop="center" as im %}
+                                    <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+                                         class="rounded flex-shrink-0 border border-secondary-subtle" alt="{{ food.name }}">
+                                    {% endthumbnail %}
+                                {% else %}
+                                    <span class="rounded bg-body-secondary text-body-secondary border border-secondary-subtle d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                                          style="width: 48px; height: 48px; font-size: 1.25rem;">
+                                      {% if food.category == "SUGAR" %}<i class="bi bi-cup-straw text-warning"></i>
+                                      {% elif food.category == "PROTEIN" %}<i class="bi bi-bug text-danger"></i>
+                                      {% else %}<i class="bi bi-tree text-success"></i>{% endif %}
+                                    </span>
+                                {% endif %}
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex align-items-center gap-1 mb-1">
+                                        <span class="badge bg-body-secondary text-body-secondary border border-secondary-subtle" style="font-size: 0.65rem;">
+                                            {{ food.get_category_display }}
+                                        </span>
+                                    </div>
+                                    <h3 class="h6 mb-1 text-truncate fw-bold">
+                                        <a href="{% url "food_overview" %}?category={{ food.category }}" class="text-decoration-none text-body">
+                                            {{ food.name }}
+                                        </a>
+                                    </h3>
+                                    {% if food.description %}
+                                    <div class="text-body-secondary small text-truncate" style="max-width: 220px;">
+                                        {{ food.description }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        {% endif %}
+
+        {# 4. Regions Results #}
+        {% if selected_category == "all" or selected_category == "regions" %}
+            {% if region_count > 0 %}
+            <section class="mb-4">
+                <div class="search-section-header">
+                    <h2>
+                        <i class="bi bi-globe-americas text-primary"></i>
+                        <span>{% trans "Countries & Geographic Regions" %}</span>
+                        <span class="badge bg-secondary-subtle text-body-secondary fs-6 fw-normal ms-1">{{ region_count }}</span>
+                    </h2>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    {% for region in regions %}
+                    <a href="{{ region.get_absolute_url }}" class="search-region-tag shadow-sm">
+                        <i class="bi bi-geo-alt-fill text-primary"></i>
+                        <span class="fw-medium">{{ region.name }}</span>
+                        {% if region.code %}
+                        <span class="badge bg-body-tertiary text-muted border border-secondary-subtle">{{ region.code }}</span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        {% endif %}
+
+        {% endif %}
+    {% endif %}
+</div>
 {% endblock %}
