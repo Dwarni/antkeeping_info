@@ -763,7 +763,13 @@ class AntSpeciesDetail(DetailView):
             super()
             .get_queryset()
             .select_related("genus", "genus__tribe", "genus__tribe__sub_family")
-            .prefetch_related("commonname_set", "invalid_names", "sizes", "images")
+            .prefetch_related(
+                "commonname_set",
+                "invalid_names",
+                "sizes",
+                "images",
+                "speciesdescription_set",
+            )
         )
 
     def __get_flight_frequency(self, ant_species):
@@ -817,6 +823,9 @@ class AntSpeciesDetail(DetailView):
         context["community_journal_entries_count"] = ColonyJournalEntry.objects.filter(
             colony__in=public_colonies_qs
         ).count()
+        context["species_images"] = list(ant.images.all())
+        context["descriptions"] = ant.speciesdescription_set.all()
+        context["antmaps_species_name"] = ant.name.replace(" ", ".")
 
         return context
 

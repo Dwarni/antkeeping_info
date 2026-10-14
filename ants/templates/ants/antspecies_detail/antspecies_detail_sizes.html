@@ -1,8 +1,11 @@
-{% load i18n %}
-{% load static %}
-<h3>{% trans 'Sizes' %}</h3>
-<div class="ant-sizes-container">
-    {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=worker_size header="Worker" only %}
-    {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=queen_size header="Queen" only %}
-    {% include 'ants/antspecies_detail/antspecies_detail_size.html' with size=male_size header="Male" only %}
+{% load i18n static %}
+<div class="ant-detail-card">
+    <div class="ant-detail-card-header">
+        <h2><i class="bi bi-rulers text-primary"></i> {% trans "Sizes & Scale Comparison" %}</h2>
+    </div>
+    <div class="ant-sizes-grid">
+        {% include "ants/antspecies_detail/antspecies_detail_size.html" with size=worker_size header="Worker" caste_icon="bi-person-standing" only %}
+        {% include "ants/antspecies_detail/antspecies_detail_size.html" with size=queen_size header="Queen" caste_icon="bi-gem" only %}
+        {% include "ants/antspecies_detail/antspecies_detail_size.html" with size=male_size header="Male" caste_icon="bi-gender-male" only %}
+    </div>
 </div>

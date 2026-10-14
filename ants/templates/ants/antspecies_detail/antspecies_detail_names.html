@@ -1,6 +1,41 @@
 {% load i18n %}
-<h3>{% trans 'Names' %}</h3>
-<h4>{% trans 'Invalid names' %}</h4>
-<p>{{ object.invalid_names_str }}</p>
-<h4>{% trans 'Common names' %}</h4>
-<p>{{ object.common_names_str }}</p>
+<div class="ant-detail-card">
+    <div class="ant-detail-card-header">
+        <h2><i class="bi bi-translate text-primary"></i> {% trans "Names & Synonyms" %}</h2>
+    </div>
+
+    <div class="mb-3">
+        <h3 class="h6 fw-semibold text-secondary mb-1">{% trans "Common names" %}</h3>
+        {% if object.common_names.exists %}
+            <div class="d-flex flex-wrap gap-1 mt-1">
+                {% for cname in object.common_names %}
+                    <span class="badge bg-body-secondary text-body-secondary border border-secondary-subtle">
+                        {{ cname.name }}
+                    </span>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted small mb-0">{{ object.common_names_str }}</p>
+        {% endif %}
+    </div>
+
+    {% if object.invalid_names.exists %}
+    <div class="mb-3">
+        <h3 class="h6 fw-semibold text-secondary mb-1">{% trans "Synonyms & Historical Names" %}</h3>
+        <p class="small text-muted fst-italic mb-0">
+            {{ object.invalid_names_str }}
+        </p>
+    </div>
+    {% endif %}
+
+    {% if descriptions %}
+    <div class="border-top pt-3 mt-3">
+        <h3 class="h6 fw-semibold text-secondary mb-2">{% trans "Species Description" %}</h3>
+        {% for desc in descriptions %}
+            <div class="small text-body bg-body-tertiary p-3 rounded-3 mb-2 border border-secondary-subtle">
+                {{ desc.description|safe }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>

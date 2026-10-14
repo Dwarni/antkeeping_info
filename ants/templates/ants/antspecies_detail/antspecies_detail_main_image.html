@@ -1,22 +1,57 @@
-{% load thumbnail %}
-{% if main_image is not None %}
-    <figure class="figure">
-    {% thumbnail main_image.image_file "1280" crop="center" as im %}
-        <a href="{{ main_image.image_file.url }}">
-            <img class="figure-image img-fluid rounded" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ main_image.alt }}">
-        </a>
-    {% endthumbnail %}
-        <figcaption class="figure-caption">
-            {{ main_image.caption }}
-            {% if main_image.source_url %}
-                Source: <a href="{{ main_image.source_url }}" target="blank_" rel="noopener">
-                    {% if main_image.source_caption %}
-                        {{ main_image.source_caption }}
-                    {% else %}
-                        {{ main_image.source_url }}
+{% load i18n thumbnail %}
+{% if main_image or species_images %}
+    <div class="species-main-image-wrapper shadow-sm mb-3 position-relative">
+        {% with active_img=main_image|default:species_images.0 %}
+            {% thumbnail active_img.image_file "1280x800" crop="center" as im %}
+            <a href="{{ active_img.image_file.url }}" id="speciesMainImgLink" target="_blank" rel="noopener" title="{% trans "Open full-size image" %}">
+                <img id="speciesMainImg" class="species-main-image" src="{{ im.url }}" alt="{{ active_img.alt|default:object.name }}" loading="eager">
+            </a>
+            {% endthumbnail %}
+            <div class="p-2 bg-body-tertiary border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <small id="speciesImgCaption" class="text-body-secondary">
+                    {% if active_img.caption %}{{ active_img.caption }}{% else %}<i>{{ object.name }}</i>{% endif %}
+                </small>
+                <div id="speciesImgSource" class="small">
+                    {% if active_img.source_url %}
+                        <a href="{{ active_img.source_url }}" target="_blank" rel="noopener" class="text-decoration-none text-muted">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>{% if active_img.source_caption %}{{ active_img.source_caption }}{% else %}{% trans "Image source" %}{% endif %}
+                        </a>
                     {% endif %}
-                </a>
-            {% endif %}
-        </figcaption>
-    </figure>
+                </div>
+            </div>
+        {% endwith %}
+
+        {% if species_images|length > 1 %}
+        <div class="p-2 bg-body border-top">
+            <div class="species-gallery-thumbs" role="tablist" aria-label="{% trans "Species photos gallery" %}">
+                {% for img in species_images %}
+                    {% thumbnail img.image_file "160x160" crop="center" as thumb %}
+                    {% thumbnail img.image_file "1280x800" crop="center" as full %}
+                    <img src="{{ thumb.url }}"
+                         class="species-gallery-thumb {% if forloop.first %}active{% endif %}"
+                         alt="{{ img.alt|default:object.name }}"
+                         data-full-src="{{ full.url }}"
+                         data-full-url="{{ img.image_file.url }}"
+                         data-caption="{{ img.caption|default:object.name }}"
+                         data-source-url="{{ img.source_url }}"
+                         data-source-caption="{{ img.source_caption }}"
+                         onclick="selectSpeciesGalleryImage(this)"
+                         loading="lazy">
+                    {% endthumbnail %}
+                    {% endthumbnail %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="species-placeholder-card shadow-sm mb-3">
+        <div class="text-muted opacity-50 mb-2">
+            {% include "icons/ant_icon.html" with size="56px" %}
+        </div>
+        <h5 class="h6 text-body-secondary mb-1">{% trans "No photos for this species yet" %}</h5>
+        <p class="small text-muted mb-0">
+            {% trans "Keep this species? Share your photos by recording entries in your colony journal!" %}
+        </p>
+    </div>
 {% endif %}

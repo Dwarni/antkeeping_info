@@ -1,52 +1,98 @@
-{% load i18n %}
-<h3>{% trans 'Keeping parameters' %}</h3>
-<table class="table table-hover">
-    <tr>
-        <th>
-            {% trans 'Nutrition' %}:
-        </th>
-        <td>
-            {{ object.get_nutrition_display|format_value }}
-        </td>
-    </tr>
-    <tr>
-        <th>
-            {% trans 'Nest temperature' %}:
-        </th>
-        <td>
-            {{ object.nest_temperature|format_int_range:"℃" }}
-        </td>
-    </tr>
-    <tr>
-        <th>
-            {% trans 'Nest humidity' %}:
-        </th>
-        <td>
-            {{ object.nest_humidity|format_int_range:"%" }}
-        </td>
-    </tr>
-    <tr>
-        <th>
-            {% trans 'Outworld temperature' %}:
-        </th>
-        <td>
-            {{ object.outworld_temperature|format_int_range:"℃" }}
-        </td>
-    </tr>
-    <tr>
-        <th>
-            {% trans 'Outworld humidity' %}:
-        </th>
-        <td>
-            {{ object.outworld_humidity|format_int_range:"%" }}
-        </td>
-    </tr>
-    <tr>
-        <th>
-            {% trans 'Hibernation required' %}:
-        </th>
-        <td>
-            {{ object.get_hibernation_display|format_value }}
-        </td>
-    </tr>
-</table>
+{% load i18n ants %}
+<div class="ant-detail-card">
+    <div class="ant-detail-card-header">
+        <h2><i class="bi bi-sliders text-primary"></i> {% trans "Keeping parameters" %}</h2>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover keeping-params-table mb-0 align-middle">
+            <tbody>
+                <tr>
+                    <th>
+                        <i class="bi bi-egg-fried text-warning me-2"></i>{% trans "Nutrition" %}:
+                    </th>
+                    <td>
+                        {% if object.nutrition %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold me-1">
+                                {{ object.get_nutrition_display }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">{{ None|format_value }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <i class="bi bi-thermometer-high text-danger me-2"></i>{% trans "Nest temperature" %}:
+                    </th>
+                    <td>
+                        {{ object.nest_temperature|format_int_range:"℃" }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <i class="bi bi-droplet-half text-primary me-2"></i>{% trans "Nest humidity" %}:
+                    </th>
+                    <td>
+                        {{ object.nest_humidity|format_int_range:"%" }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <i class="bi bi-sun text-warning me-2"></i>{% trans "Outworld temperature" %}:
+                    </th>
+                    <td>
+                        {{ object.outworld_temperature|format_int_range:"℃" }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <i class="bi bi-wind text-info me-2"></i>{% trans "Outworld humidity" %}:
+                    </th>
+                    <td>
+                        {{ object.outworld_humidity|format_int_range:"%" }}
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <i class="bi bi-snow text-info me-2"></i>{% trans "Hibernation required" %}:
+                    </th>
+                    <td>
+                        {% if object.hibernation == "NO" %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle me-1"></i>{{ object.get_hibernation_display }}
+                            </span>
+                        {% elif object.hibernation == "SHORT" %}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                <i class="bi bi-snow me-1"></i>{{ object.get_hibernation_display }}
+                            </span>
+                        {% elif object.hibernation == "LONG" %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                <i class="bi bi-snow2 me-1"></i>{{ object.get_hibernation_display }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">{{ object.get_hibernation_display|format_value }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        <i class="bi bi-people text-secondary me-2"></i>{% trans "Worker polymorphism" %}:
+                    </th>
+                    <td>
+                        {% if object.worker_polymorphism is True %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                {% trans "Yes (Polymorphic)" %}
+                            </span>
+                        {% elif object.worker_polymorphism is False %}
+                            <span class="badge bg-body-secondary text-body-secondary border border-secondary-subtle">
+                                {% trans "No (Monomorphic)" %}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">{% trans "No information." %}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

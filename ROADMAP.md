@@ -22,16 +22,19 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Einklappbarer mobiler Filter mit Live-Zähler aktiver Filter.
   - WCAG AA-konforme Badges für Haltungsschwierigkeit & Status im Light- und Darkmode.
   - Ansprechender Leere-Zustand (Empty State) mit Reset-Option.
+- [x] **Art-Detailseite / Haltungsbericht (`/ants/<slug>/`)**
+  - Schnelle Übersicht der Kernparameter auf einen Blick („Quick Parameters“-Grid: Nest- und Arenaklima, Winterruhe, Gründung, Kolonieform, Kasten-Größen).
+  - Modernes 2-Spalten-Layout (Desktop) mit ansprechender Thumbnail-Fotogalerie, Quellennachweisen und ansprechendem Placeholder für unbebilderte Arten.
+  - Interaktive Größenvergleichs-Karten mit Darkmode-Kontrastfilter für Ameisensilhouetten (`ant.svg`).
+  - Integrierter AntMaps.org-Direktlink und Live-Echtzeitfilter für weltweite Verbreitungsdaten.
+  - Schwarmflugzeiten mit dynamischem, theme-adaptivem Chart.js-Diagramm (automatische Farbanpassung an Light- und Darkmode per Theme-Observer).
+  - WCAG AA-konforme Futterakzeptanz- und Community-Schwierigkeitsbewertungen.
 
 ---
 
 ## 📋 Aufgabenübersicht: Weitere Seiten zur Usability-Prüfung
 
 ### 1. Artenverzeichnis & Suche
-- [ ] **Art-Detailseite / Haltungsbericht (`/ants/<slug>/`)**
-  - Schnelle Übersicht der Kernparameter (Temperatur, Luftfeuchte, Winterruhe, Koloniegröße).
-  - Übersichtlichkeit von Verbreitungskarten, Futterpräferenzen und Schwarmflugzeiten.
-  - Lesbarkeit langer Texte, Tabellen und Bildergallerien im Darkmode.
 - [ ] **Globale Suche (`/search/`)**
   - Suchergebnisdarstellung (Kategorisierung nach Arten, Berichten, Futterdaten).
   - Autovervollständigung, Leere-Zustände und Tippfehler-Toleranz.

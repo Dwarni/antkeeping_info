@@ -92,3 +92,12 @@ def absolute_url(context, relative_or_absolute_url):
     if request:
         return request.build_absolute_uri(url_str)
     return url_str
+
+
+@register.filter
+def antmaps_species_url(species_name: str) -> str:
+    """Returns the direct antmaps URL for a species."""
+    if not species_name:
+        return "https://antmaps.org/"
+    formatted_name = str(species_name).strip().replace(" ", ".")
+    return f"https://antmaps.org/?mode=species&species={formatted_name}"

@@ -1,48 +1,59 @@
 {% load i18n thumbnail %}
-<div class="food-item mb-3" id="food-acceptance-item-{{ food_item.pk }}">
-    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-        {% if food_item.image %}
-        {% thumbnail food_item.image "32x32" crop="center" as im %}
-        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
-             class="rounded flex-shrink-0" alt="{{ food_item.name }}">
-        {% endthumbnail %}
-        {% else %}
-        <span class="rounded bg-light text-muted d-inline-flex align-items-center justify-content-center flex-shrink-0"
-              style="width: 32px; height: 32px; font-size: 0.875rem;">
-          <i class="bi bi-bug-fill"></i>
-        </span>
-        {% endif %}
-        <span class="food-item-name">{{ food_item.name }}</span>
-        {% if up_count or down_count %}
-        <a href="{% url 'food_item_species_ratings' food_item.pk species.slug %}"
-           class="text-muted small text-decoration-none">
-            <i class="bi bi-hand-thumbs-up-fill text-success"></i> {{ up_count }}
-            <i class="bi bi-hand-thumbs-down-fill text-danger ms-1"></i> {{ down_count }}
-        </a>
-        {% else %}
-        <span class="text-muted small">{% trans 'No votes yet' %}</span>
-        {% endif %}
+<div class="food-acceptance-item" id="food-acceptance-item-{{ food_item.pk }}">
+    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+        <div class="d-flex align-items-center gap-2">
+            {% if food_item.image %}
+                {% thumbnail food_item.image "36x36" crop="center" as im %}
+                <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+                     class="rounded flex-shrink-0 border border-secondary-subtle" alt="{{ food_item.name }}">
+                {% endthumbnail %}
+            {% else %}
+                <span class="rounded bg-body-secondary text-body-secondary border border-secondary-subtle d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                      style="width: 36px; height: 36px; font-size: 0.9rem;">
+                  <i class="bi bi-bug-fill"></i>
+                </span>
+            {% endif %}
+            <div>
+                <span class="food-item-name">{{ food_item.name }}</span>
+                {% if food_item.description %}
+                <div class="text-body-secondary small" style="max-width: 320px;">{{ food_item.description }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            {% if up_count or down_count %}
+            <a href="{% url "food_item_species_ratings" food_item.pk species.slug %}"
+               class="badge bg-body-tertiary text-body border border-secondary-subtle text-decoration-none py-1 px-2"
+               title="{% trans "Detailed rating feedback" %}">
+                <span class="text-success fw-bold"><i class="bi bi-hand-thumbs-up-fill me-1"></i>{{ up_count }}</span>
+                <span class="text-body-tertiary mx-1">·</span>
+                <span class="text-danger fw-bold"><i class="bi bi-hand-thumbs-down-fill me-1"></i>{{ down_count }}</span>
+            </a>
+            {% else %}
+            <span class="text-muted small">{% trans "No votes yet" %}</span>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <form hx-post="{% url "vote_food" species.slug food_item.pk %}"
+                  hx-target="#food-acceptance-item-{{ food_item.pk }}"
+                  hx-swap="outerHTML"
+                  class="d-inline-flex gap-1 ms-1">
+                {% csrf_token %}
+                <button type="submit" name="vote" value="1"
+                        class="btn btn-sm {% if user_vote.vote == 1 %}btn-success{% else %}btn-outline-success{% endif %}"
+                        aria-label="{% trans "Accepts it" %}"
+                        title="{% trans "Accepted by colony" %}">
+                    <i class="bi bi-hand-thumbs-up{% if user_vote.vote == 1 %}-fill{% endif %}"></i>
+                </button>
+                <button type="submit" name="vote" value="-1"
+                        class="btn btn-sm {% if user_vote.vote == -1 %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                        aria-label="{% trans "Doesn't accept it" %}"
+                        title="{% trans "Rejected by colony" %}">
+                    <i class="bi bi-hand-thumbs-down{% if user_vote.vote == -1 %}-fill{% endif %}"></i>
+                </button>
+            </form>
+            {% endif %}
+        </div>
     </div>
-
-    {% if food_item.description %}
-    <p class="text-muted small mb-1">{{ food_item.description }}</p>
-    {% endif %}
-
-    {% if user.is_authenticated %}
-    <form hx-post="{% url 'vote_food' species.slug food_item.pk %}"
-          hx-target="#food-acceptance-item-{{ food_item.pk }}" hx-swap="outerHTML"
-          class="d-inline-flex gap-1">
-        {% csrf_token %}
-        <button type="submit" name="vote" value="1"
-                class="btn btn-sm {% if user_vote.vote == 1 %}btn-success{% else %}btn-outline-success{% endif %}"
-                aria-label="{% trans 'Accepts it' %}">
-            <i class="bi bi-hand-thumbs-up{% if user_vote.vote == 1 %}-fill{% endif %}"></i>
-        </button>
-        <button type="submit" name="vote" value="-1"
-                class="btn btn-sm {% if user_vote.vote == -1 %}btn-danger{% else %}btn-outline-danger{% endif %}"
-                aria-label="{% trans "Doesn't accept it" %}">
-            <i class="bi bi-hand-thumbs-down{% if user_vote.vote == -1 %}-fill{% endif %}"></i>
-        </button>
-    </form>
-    {% endif %}
 </div>

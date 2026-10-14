@@ -1,15 +1,45 @@
-{% load i18n %}
-{% load static %}
-{% load ants %}
-<h3>{% trans 'Distribution' %}</h3>
-{% if countries %}
-    <ul id="distribution-list">
-        {% for country in countries %}
-            <li>   
-                <a class="btn btn-primary mb-1 active" role="button" aria-pressed="true" href="{% url 'taxonomic_ranks_by_region' 'species' %}?country={{ country.code }}">{{ country.name }}</a>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>{{ DEFAULT_NONE_STR }}</p>
-{% endif %}
+{% load i18n static ants %}
+<div class="ant-detail-card">
+    <div class="ant-detail-card-header">
+        <h2><i class="bi bi-globe-americas text-primary"></i> {% trans "Distribution" %}</h2>
+        {% if countries %}
+            <span class="badge bg-body-secondary text-body-secondary border border-secondary-subtle">
+                {{ countries|length }} {% trans "Countries" %}
+            </span>
+        {% endif %}
+    </div>
+
+    <a href="{{ object.name|antmaps_species_url }}" target="_blank" rel="noopener noreferrer"
+       class="btn btn-sm btn-outline-primary rounded-pill mb-3 w-100 d-inline-flex align-items-center justify-content-center gap-1 shadow-sm">
+        <i class="bi bi-map-fill"></i>
+        <span>{% trans "View on AntMaps.org" %}</span>
+        <i class="bi bi-box-arrow-up-right small ms-1"></i>
+    </a>
+
+    {% if countries %}
+        {% if countries|length > 6 %}
+        <div class="mb-2">
+            <input type="search"
+                   id="countrySearchInput"
+                   class="form-control form-control-sm country-search-input"
+                   placeholder="{% trans "Filter countries..." %}"
+                   aria-label="{% trans "Filter countries" %}">
+        </div>
+        {% endif %}
+
+        <div class="distribution-tags-container" id="distributionTagsList">
+            {% for country in countries %}
+                <a class="country-tag"
+                   href="{% url "taxonomic_ranks_by_region" "species" %}?country={{ country.code }}"
+                   data-country="{{ country.name|lower }}">
+                    {{ country.name }}
+                </a>
+            {% endfor %}
+        </div>
+        <p id="noCountryMatchMsg" class="text-muted small mt-2 d-none">
+            {% trans "No matching countries found." %}
+        </p>
+    {% else %}
+        <p class="text-muted small mb-0">{% trans "No distribution records found." %}</p>
+    {% endif %}
+</div>

@@ -1,0 +1,126 @@
+{% load i18n ants %}
+<div class="species-quick-params mb-4" aria-label="{% trans "Quick Parameters Overview" %}">
+    <div class="quick-param-card" title="{% trans "Nest temperature" %}">
+        <div class="quick-param-icon text-danger">
+            <i class="bi bi-thermometer-high"></i>
+        </div>
+        <div class="quick-param-label">{% trans "Nest Temp." %}</div>
+        <div class="quick-param-value">
+            {% if object.nest_temperature %}
+                {{ object.nest_temperature|format_int_range:"℃" }}
+            {% else %}
+                <span class="text-muted">–</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="quick-param-card" title="{% trans "Nest relative humidity" %}">
+        <div class="quick-param-icon text-primary">
+            <i class="bi bi-droplet-half"></i>
+        </div>
+        <div class="quick-param-label">{% trans "Nest Moisture" %}</div>
+        <div class="quick-param-value">
+            {% if object.nest_humidity %}
+                {{ object.nest_humidity|format_int_range:"%" }}
+            {% else %}
+                <span class="text-muted">–</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="quick-param-card" title="{% trans "Outworld temperature" %}">
+        <div class="quick-param-icon text-warning">
+            <i class="bi bi-sun"></i>
+        </div>
+        <div class="quick-param-label">{% trans "Outworld Temp." %}</div>
+        <div class="quick-param-value">
+            {% if object.outworld_temperature %}
+                {{ object.outworld_temperature|format_int_range:"℃" }}
+            {% else %}
+                <span class="text-muted">–</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="quick-param-card" title="{% trans "Hibernation required" %}">
+        <div class="quick-param-icon {% if object.hibernation == "NO" %}text-success{% else %}text-info{% endif %}">
+            {% if object.hibernation == "NO" %}
+                <i class="bi bi-sun-fill"></i>
+            {% else %}
+                <i class="bi bi-snow"></i>
+            {% endif %}
+        </div>
+        <div class="quick-param-label">{% trans "Hibernation" %}</div>
+        <div class="quick-param-value">
+            {% if object.hibernation == "NO" %}
+                {% trans "None" %}
+            {% elif object.hibernation == "SHORT" %}
+                {% trans "Short" %}
+            {% elif object.hibernation == "LONG" %}
+                {% trans "Long" %}
+            {% else %}
+                <span class="text-muted">–</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="quick-param-card" title="{% trans "Colony founding" %}">
+        <div class="quick-param-icon text-success">
+            <i class="bi bi-shield-check"></i>
+        </div>
+        <div class="quick-param-label">{% trans "Founding" %}</div>
+        <div class="quick-param-value">
+            {% if object.founding == "c" %}
+                {% trans "Claustral" %}
+            {% elif object.founding == "sc" %}
+                {% trans "Semi-claustral" %}
+            {% elif object.founding == "sp" or object.founding == "spp" %}
+                {% trans "Parasitic" %}
+            {% else %}
+                <span class="text-muted">–</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="quick-param-card" title="{% trans "Colony structure" %}">
+        <div class="quick-param-icon text-secondary">
+            <i class="bi bi-diagram-3"></i>
+        </div>
+        <div class="quick-param-label">{% trans "Colony Form" %}</div>
+        <div class="quick-param-value">
+            {% if object.colony_structure %}
+                {{ object.colony_structure_str }}
+            {% else %}
+                <span class="text-muted">–</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="quick-param-card" title="{% trans "Worker size" %}">
+        <div class="quick-param-icon text-primary">
+            <i class="bi bi-rulers"></i>
+        </div>
+        <div class="quick-param-label">{% trans "Worker Size" %}</div>
+        <div class="quick-param-value">
+            {% if worker_size %}
+                {{ worker_size.minimum }}{% if worker_size.maximum and worker_size.maximum != worker_size.minimum %}–{{ worker_size.maximum }}{% endif %}&nbsp;mm
+            {% else %}
+                <span class="text-muted">–</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="quick-param-card" title="{% trans "Queen size" %}">
+        <div class="quick-param-icon text-warning">
+            <i class="bi bi-gem"></i>
+        </div>
+        <div class="quick-param-label">{% trans "Queen Size" %}</div>
+        <div class="quick-param-value">
+            {% if queen_size %}
+                {{ queen_size.minimum }}{% if queen_size.maximum and queen_size.maximum != queen_size.minimum %}–{{ queen_size.maximum }}{% endif %}&nbsp;mm
+            {% else %}
+                <span class="text-muted">–</span>
+            {% endif %}
+        </div>
+    </div>
+</div>

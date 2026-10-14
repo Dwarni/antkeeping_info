@@ -1,11 +1,11 @@
-{% extends 'layout.html' %}
-{% load i18n %}
-{% load static %}
-{% load ants %}
+{% extends "layout.html" %}
+{% load i18n static ants %}
+
 {% block og_title %}{{ object.name }} — Antkeeping.info{% endblock %}
-{% block og_description %}Detailed information for {{ object.name }}: keeping parameters, worker and queen size, distribution, nuptial flight season, and more.{% endblock %}
+{% block og_description %}Detailed care guide and information for {{ object.name }}: keeping parameters, nest temperature, worker and queen size, distribution, nuptial flight season, and food preferences.{% endblock %}
+
 {% block meta %}
-    <meta name="description" content="{% trans 'Detailed information for ant species ' %}{{ object.name }}">
+    <meta name="description" content="{% trans "Detailed information and care guide for ant species " %}{{ object.name }}">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -22,197 +22,409 @@
     }
     </script>
 {% endblock %}
+
 {% block css %}
-    <link rel="stylesheet" href="{% static 'ants/css/antspecies_detail.css' %}?v=7">
+    <link rel="stylesheet" href="{% static "ants/css/antspecies_detail.css" %}?v=8">
 {% endblock %}
+
 {% block content %}
-<h2 class="fst-italic">{{ object.name }} ({{ object.author }}, {{ object.year }})
-    {% if user.is_staff %}
-    <small><a title="{% trans 'Edit species' %}" href="{% url 'admin:ants_antspecies_change' object.id %}"><i class="bi bi-pencil-fill"></i></a></small>
+<div class="species-detail-container">
+    {# Breadcrumb Navigation #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb species-breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url "home" %}" class="text-decoration-none text-secondary">{% trans "Home" %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url "species_filter" %}" class="text-decoration-none text-secondary">{% trans "Species Catalog" %}</a></li>
+            {% if object.genus %}
+            <li class="breadcrumb-item">
+                <a href="{% url "species_filter" %}?genus={{ object.genus.id }}" class="text-decoration-none text-secondary fst-italic">
+                    {{ object.genus.name }}
+                </a>
+            </li>
+            {% endif %}
+            <li class="breadcrumb-item active fst-italic text-body-emphasis" aria-current="page">{{ object.name }}</li>
+        </ol>
+    </nav>
+
+    {# Species Hero Header #}
+    <div class="species-hero pb-2 mb-3 border-bottom border-secondary-subtle">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <small class="text-secondary fw-semibold text-uppercase species-taxa-badge d-block mb-1">
+                    {% if object.genus.tribe.sub_family %}{{ object.genus.tribe.sub_family.name }} · {% endif %}
+                    {{ object.genus.name }}
+                </small>
+                <h1 class="h2 fst-italic mb-1 text-primary-emphasis d-flex align-items-baseline flex-wrap gap-2">
+                    <span>{{ object.name }}</span>
+                    {% if object.author or object.year %}
+                    <small class="text-body-secondary fs-5 fw-normal">
+                        ({{ object.author }}{% if object.author and object.year %}, {% endif %}{{ object.year }})
+                    </small>
+                    {% endif %}
+                    {% if user.is_staff %}
+                    <a class="fs-6 text-muted ms-1" title="{% trans "Edit species in admin" %}" href="{% url "admin:ants_antspecies_change" object.id %}">
+                        <i class="bi bi-pencil-fill"></i>
+                    </a>
+                    {% endif %}
+                </h1>
+
+                {% if object.common_names.exists %}
+                <p class="text-body-secondary small mb-2">
+                    <i class="bi bi-tag me-1 text-primary"></i>{{ object.common_names_str }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                {% if dominant_difficulty_level %}
+                <a href="#difficulty-rating-section" class="text-decoration-none" title="{% trans "Jump to community difficulty ratings" %}">
+                    {% include "ants/snippets/species_difficulty_badge.html" with level=dominant_difficulty_level avg=difficulty_avg only %}
+                </a>
+                {% endif %}
+
+                {% if community_colonies_count %}
+                <a href="{% url "community_journal" %}?species={{ object.slug }}" class="btn btn-sm btn-outline-primary rounded-pill shadow-sm">
+                    <i class="bi bi-journal-bookmark-fill me-1"></i>
+                    {% blocktrans with col_count=community_colonies_count entry_count=community_journal_entries_count %}{{ col_count }} community colon{{ col_count|pluralize:"y,ies" }} ({{ entry_count }} journal entr{{ entry_count|pluralize:"y,ies" }}){% endblocktrans %}
+                </a>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                <a href="{% url "colony_create" %}?species={{ object.id }}" class="btn btn-sm btn-success rounded-pill shadow-sm">
+                    <i class="bi bi-plus-circle me-1"></i> {% trans "Add to my colonies" %}
+                </a>
+                {% endif %}
+
+                <a target="_blank" rel="noopener" href="https://www.antwiki.org/wiki/{{ object.name_underscore }}" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>AntWiki
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Warnings and notices #}
+    {% if object.forbidden_in_eu %}
+        <div class="alert alert-danger shadow-sm mb-4 rounded-3" role="alert">
+            <h4 class="alert-heading h6 fw-bold mb-1">
+                <i class="bi bi-shield-slash-fill me-1"></i> {% trans "Invasive Alien Species Warning (EU)" %}
+            </h4>
+            <p class="mb-1 small">
+                {% trans "This species is listed as an invasive alien species of Union concern. Keeping, breeding, transporting, or releasing this species within the European Union is strictly forbidden by law." %}
+            </p>
+            <a href="https://environment.ec.europa.eu/topics/nature-and-biodiversity/invasive-alien-species_en" target="_blank" rel="noopener noreferrer" class="alert-link small">
+                {% trans "Read more on the official EU regulations website" %} <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+        </div>
     {% endif %}
-</h2>
-{% if dominant_difficulty_level %}
-<p class="mb-1">
-    <a href="#difficulty-rating-section" class="text-decoration-none">
-        <span class="badge rounded-pill fs-6
-            {% if dominant_difficulty_level == 1 %}bg-success
-            {% elif dominant_difficulty_level == 2 %}bg-info text-dark
-            {% elif dominant_difficulty_level == 3 %}bg-warning text-dark
-            {% else %}bg-danger{% endif %}">
-            {% trans 'Keeping difficulty' %}: {{ dominant_difficulty_label }}
-        </span>
-        <small class="text-muted ms-1">{% blocktrans with count=difficulty_total %}{{ count }} rating{{ count|pluralize }}{% endblocktrans %}</small>
-    </a>
-</p>
-{% endif %}
-<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-    {% if community_colonies_count %}
-    <a href="{% url 'community_journal' %}?species={{ object.slug }}" class="btn btn-sm btn-outline-primary">
-        <i class="bi bi-journal-bookmark-fill me-1"></i>
-        {% blocktrans with col_count=community_colonies_count entry_count=community_journal_entries_count %}{{ col_count }} community colon{{ col_count|pluralize:"y,ies" }} ({{ entry_count }} journal entr{{ entry_count|pluralize:"y,ies" }}){% endblocktrans %}
-    </a>
+
+    {% if object.information_complete == False %}
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm mb-4 rounded-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            {% trans "Species information is not complete yet! Some care parameters or distribution details are still being verified." %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     {% endif %}
-    {% if user.is_authenticated %}
-    <a href="{% url 'colony_create' %}?species={{ object.id }}" class="btn btn-sm btn-outline-success">
-        <i class="bi bi-plus-circle me-1"></i> {% trans 'Add to my colonies' %}
-    </a>
-    {% endif %}
+
+    {# Quick Parameters Bar ("Auf einen Blick") #}
+    {% include "ants/antspecies_detail/antspecies_detail_quick_parameters.html" %}
+
+    {# Two-Column Responsive Layout #}
+    <div class="row g-4">
+        {# Left / Main Column #}
+        <div class="col-lg-8">
+            {# Main Photo & Gallery #}
+            {% include "ants/antspecies_detail/antspecies_detail_main_image.html" with main_image=object.main_image %}
+
+            {# Keeping Parameters #}
+            {% include "ants/antspecies_detail/antspecies_detail_keeping_parameters.html" %}
+
+            {# Sizes Scale Comparison #}
+            {% include "ants/antspecies_detail/antspecies_detail_sizes.html" %}
+
+            {# Nuptial Flight Activity & Chart #}
+            {% include "ants/antspecies_detail/antspecies_detail_flight_frequency.html" %}
+
+            {# Food Acceptance #}
+            {% include "ants/antspecies_detail/antspecies_detail_food_ratings.html" %}
+
+            {# Difficulty Rating #}
+            {% include "ants/antspecies_detail/antspecies_detail_difficulty_rating.html" %}
+        </div>
+
+        {# Right / Sidebar Column #}
+        <div class="col-lg-4">
+            {# Scientific Classification Card #}
+            <div class="ant-detail-card">
+                <div class="ant-detail-card-header">
+                    <h2><i class="bi bi-diagram-2 text-primary"></i> {% trans "Scientific classification" %}</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm classification-table mb-0 align-middle">
+                        <tbody>
+                            <tr>
+                                <th>{% trans "Kingdom" %}:</th>
+                                <td><a href="{{ "Animalia"|wikipedia_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i>Animalia</i></a></td>
+                            </tr>
+                            <tr>
+                                <th>{% trans "Phylum" %}:</th>
+                                <td><a href="{{ "Arthropoda"|wikipedia_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i>Arthropoda</i></a></td>
+                            </tr>
+                            <tr>
+                                <th>{% trans "Class" %}:</th>
+                                <td><a href="{{ "Insecta"|wikipedia_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i>Insecta</i></a></td>
+                            </tr>
+                            <tr>
+                                <th>{% trans "Order" %}:</th>
+                                <td><a href="{{ "Hymenoptera"|wikipedia_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i>Hymenoptera</i></a></td>
+                            </tr>
+                            <tr>
+                                <th>{% trans "Family" %}:</th>
+                                <td><a href="{{ "Formicidae"|antwiki_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i>Formicidae</i></a></td>
+                            </tr>
+                            {% if object.genus.tribe.sub_family %}
+                            <tr>
+                                <th>{% trans "Subfamily" %}:</th>
+                                <td><a href="{{ object.genus.tribe.sub_family|antwiki_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i>{{ object.genus.tribe.sub_family }}</i></a></td>
+                            </tr>
+                            {% endif %}
+                            {% if object.genus.tribe %}
+                            <tr>
+                                <th>{% trans "Tribe" %}:</th>
+                                <td><a href="{{ object.genus.tribe|antwiki_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i>{{ object.genus.tribe }}</i></a></td>
+                            </tr>
+                            {% endif %}
+                            {% if object.genus %}
+                            <tr>
+                                <th>{% trans "Genus" %}:</th>
+                                <td><a href="{{ object.genus|antwiki_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i>{{ object.genus }}</i></a></td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <th>{% trans "Species" %}:</th>
+                                <td class="fw-bold"><i>{{ object.name }}</i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {# General Information Card #}
+            <div class="ant-detail-card">
+                <div class="ant-detail-card-header">
+                    <h2><i class="bi bi-info-circle text-primary"></i> {% trans "General information" %}</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm classification-table mb-0 align-middle">
+                        <tbody>
+                            <tr>
+                                <th>{% trans "Colony structure" %}:</th>
+                                <td>{{ object.colony_structure_str }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% trans "Worker polymorphism" %}:</th>
+                                <td>{{ object.worker_polymorphism|yesno:"Yes,No,No information." }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% trans "Nuptial flight" %}:</th>
+                                <td>{{ object.flight_months_str }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% trans "Colony founding" %}:</th>
+                                <td>{{ object.get_founding_display|format_value }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% trans "External links" %}:</th>
+                                <td>
+                                    <a target="_blank" rel="noopener" href="https://www.antwiki.org/wiki/{{ object.name_underscore }}" class="text-decoration-none">
+                                        AntWiki <i class="bi bi-box-arrow-up-right small"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {# Distribution Card #}
+            {% include "ants/antspecies_detail/antspecies_detail_distribution.html" %}
+
+            {# Names & Synonyms Card #}
+            {% include "ants/antspecies_detail/antspecies_detail_names.html" %}
+        </div>
+    </div>
 </div>
-{% if not user.is_authenticated %}
-<p class="mb-2 small text-muted">
-    <a href="{% url 'account_login' %}">{% trans 'Log in' %}</a>
-    {% trans 'or' %}
-    <a href="{% url 'account_signup' %}">{% trans 'register' %}</a>
-    {% trans 'to rate the keeping difficulty of this species.' %}
-</p>
-{% endif %}
-{% if object.information_complete == False %}
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        {% trans 'Species information is not complete yet!' %}
-    </div>
-{% endif %}
-{% if object.forbidden_in_eu %}
-    <div class="alert alert-danger" role="alert">
-        <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> {% trans 'Warning' %}</h4>
-        <p class="mb-0">{% trans 'This species is on the EU list of invasive alien species of Union concern. It is strictly forbidden to keep, breed, transport, or sell this species within the European Union.' %}
-        <br>
-        <a href="https://environment.ec.europa.eu/topics/nature-and-biodiversity/invasive-alien-species_en" target="_blank" rel="noopener noreferrer">{% trans 'Read more on the official EU website' %}</a>
-        </p>
-    </div>
-{% endif %}
-<section class="ant-detail-section">
-    {% include 'ants/antspecies_detail/antspecies_detail_main_image.html' with main_image=object.main_image %}
-    <h3>{% trans 'Scientific classification' %}</h3>
-    <table class="table table-hover">
-        <tbody>
-            <tr><th>{% trans 'Kingdom' %}:</th><td><a href="{{ 'Animalia' | wikipedia_url }}" target="_blank"><i>Animalia</i></a></td></tr>
-            <tr><th>{% trans 'Phylum' %}:</th><td><a href="{{ 'Arthropoda' | wikipedia_url }}" target="_blank"><i>Arthropoda</i></a></td></tr>
-            <tr><th>{% trans 'Class' %}:</th><td><a href="{{ 'Insecta' | wikipedia_url }}" target="_blank"><i>Insecta</i></a></td></tr>
-            <tr><th>{% trans 'Order' %}:</th><td><a href="{{ 'Hymenoptera' | wikipedia_url }}" target="_blank"><i>Hymenoptera</i></a></td></tr>
-            <tr><th>{% trans 'Family' %}:</th><td><a href="{{ 'Formicidae' | antwiki_url }}" target="_blank"><i>Formicidae</i></a></td></tr>
-            <tr><th>{% trans 'Subfamily' %}:</th><td><a href="{{ object.genus.tribe.sub_family | antwiki_url }}" target="_blank"><i>{{ object.genus.tribe.sub_family }}</i></a></td></tr>
-        {% if not object.genus.tribe %}
-            <tr><th>{% trans 'Tribe' %}:</th><td><a href="{{ object.genus.tribe | antwiki_url }}" target="_blank"><i>{{ object.genus.tribe }}</i></a></td></tr>
-        {% endif %}
-            <tr><th>{% trans 'Genus' %}:</th><td><a href="{{ object.genus | antwiki_url }}" target="_blank"><i>{{ object.genus }}</i></a></td></tr>
-            <tr><th>{% trans 'Species' %}:</th><td><i>{{ object.name }}</i></td></tr>
-        </tbody>
-    </table>
-</section>
-<section class="ant-detail-section">
-    <h3>{% trans 'General information' %}</h3>
-    <table class="table table-hover">
-        <tbody>
-            <tr>
-                <th>
-                    {% trans 'Colony structure' %}:
-                </th>
-                <td>
-                    {{ object.colony_structure_str }}
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    {% trans 'Worker polymorphism' %}:
-                </th>
-                <td>
-                    {{ object.worker_polymorphism|yesno:"Yes,No,No information." }}
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    {% trans 'Nuptial flight months' %}:
-                </th>
-                <td>
-                    {{ object.flight_months_str }}
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    {% trans 'Colony founding' %}:
-                </th>
-                <td>
-                    {{ object.get_founding_display|format_value }}
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    Links:
-                </th>
-                <td>
-                    <a target="_blank" rel="noopener" href="https://www.antwiki.org/wiki/{{ object.name_underscore }}">AntWiki</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</section>
-<section class="ant-detail-section">
-    {% include 'ants/antspecies_detail/antspecies_detail_keeping_parameters.html' %}
-</section>
-<section class="ant-detail-section">
-    {% include 'ants/antspecies_detail/antspecies_detail_difficulty_rating.html' %}
-</section>
-<section class="ant-detail-section">
-    {% include 'ants/antspecies_detail/antspecies_detail_food_ratings.html' %}
-</section>
-<section class="ant-detail-section">
-    {% include 'ants/antspecies_detail/antspecies_detail_distribution.html' %}
-</section>
-<section class="ant-detail-section">
-    {% include 'ants/antspecies_detail/antspecies_detail_names.html' %}
-</section>
-<section class="ant-detail-section">
-    {% include 'ants/antspecies_detail/antspecies_detail_sizes.html' %}
-</section>
-<section class="ant-detail-section">
-    {% include 'ants/antspecies_detail/antspecies_detail_flight_frequency.html' %}
-</section>
 {% endblock %}
+
 {% block script %}
-    <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
-    <script src="{% static 'ants/js/vendor/Chart.bundle.min.js' %}"></script>
+    <script src="{% static "js/htmx.min.js" %}?v=2.0.4"></script>
+    <script src="{% static "ants/js/vendor/Chart.bundle.min.js" %}"></script>
     <script>
-        var chartData = {% if flight_frequency %}{{ flight_frequency|safe }}{% else %}null{% endif %};
-        if(chartData) {
-            window.onload = function() {
-                chartCtx = document.getElementById("flightFrequencyChart").getContext("2d"); 
-                var myBarChart = new Chart(chartCtx, {
-                    type: 'bar',
-                    "data":{
-                        "labels":[
-                            "January",
-                            "February",
-                            "March",
-                            "April",
-                            "May",
-                            "June",
-                            "July",
-                            "August",
-                            "September",
-                            "October",
-                            "November",
-                            "December"],
-                        "datasets":[{
-                            "label": "Flight frequency",
-                            "data": chartData,
-                            "fill":false,
-                            "backgroundColor":"#4169E1",
-                        }]},
-                    "options":{
-                        "scales":{
-                            "yAxes":[{
-                                "ticks":{
-                                    "beginAtZero":true,
-                                    "stepSize": 10
-                                }
-                            }]
-                        },
-                        "legend": {
-                            display: false
+        function selectSpeciesGalleryImage(thumbEl) {
+            var fullSrc = thumbEl.getAttribute("data-full-src");
+            var fullUrl = thumbEl.getAttribute("data-full-url");
+            var caption = thumbEl.getAttribute("data-caption");
+            var sourceUrl = thumbEl.getAttribute("data-source-url");
+            var sourceCaption = thumbEl.getAttribute("data-source-caption");
+
+            var mainImg = document.getElementById("speciesMainImg");
+            var mainLink = document.getElementById("speciesMainImgLink");
+            var captionEl = document.getElementById("speciesImgCaption");
+            var sourceEl = document.getElementById("speciesImgSource");
+
+            if (mainImg && fullSrc) {
+                mainImg.style.opacity = "0.5";
+                setTimeout(function() {
+                    mainImg.src = fullSrc;
+                    mainImg.style.opacity = "1";
+                }, 100);
+            }
+            if (mainLink && fullUrl) {
+                mainLink.href = fullUrl;
+            }
+            if (captionEl) {
+                captionEl.textContent = caption || "";
+            }
+            if (sourceEl) {
+                if (sourceUrl) {
+                    var linkHtml = document.createElement("a");
+                    linkHtml.href = sourceUrl;
+                    linkHtml.target = "_blank";
+                    linkHtml.rel = "noopener";
+                    linkHtml.className = "text-decoration-none text-muted";
+                    linkHtml.innerHTML = "<i class="bi bi-box-arrow-up-right me-1"></i>" + (sourceCaption || "{% trans "Image source" %}");
+                    sourceEl.innerHTML = "";
+                    sourceEl.appendChild(linkHtml);
+                } else {
+                    sourceEl.innerHTML = "";
+                }
+            }
+
+            document.querySelectorAll(".species-gallery-thumb").forEach(function(el) {
+                el.classList.remove("active");
+            });
+            thumbEl.classList.add("active");
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var countrySearch = document.getElementById("countrySearchInput");
+            if (countrySearch) {
+                countrySearch.addEventListener("input", function() {
+                    var q = this.value.toLowerCase().trim();
+                    var tags = document.querySelectorAll("#distributionTagsList .country-tag");
+                    var matchCount = 0;
+                    tags.forEach(function(tag) {
+                        var country = tag.getAttribute("data-country") || "";
+                        if (country.indexOf(q) !== -1) {
+                            tag.style.display = "inline-flex";
+                            matchCount++;
+                        } else {
+                            tag.style.display = "none";
                         }
+                    });
+                    var noMatch = document.getElementById("noCountryMatchMsg");
+                    if (noMatch) {
+                        noMatch.classList.toggle("d-none", matchCount > 0);
                     }
                 });
             }
+        });
+
+        var chartData = {% if flight_frequency %}{{ flight_frequency|safe }}{% else %}null{% endif %};
+        var myBarChart = null;
+
+        function getChartColors() {
+            var isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+            return {
+                barColor: isDark ? "#52b788" : "#2d6a4f",
+                hoverColor: isDark ? "#74c69d" : "#1b3a2d",
+                gridColor: isDark ? "rgba(216, 228, 222, 0.12)" : "rgba(0, 0, 0, 0.08)",
+                textColor: isDark ? "#d8e4de" : "#555555"
+            };
+        }
+
+        function renderFlightChart() {
+            var canvas = document.getElementById("flightFrequencyChart");
+            if (!canvas || !chartData) return;
+
+            var colors = getChartColors();
+            var ctx = canvas.getContext("2d");
+
+            if (myBarChart) {
+                myBarChart.destroy();
+            }
+
+            myBarChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: [
+                        "{% trans "January" %}",
+                        "{% trans "February" %}",
+                        "{% trans "March" %}",
+                        "{% trans "April" %}",
+                        "{% trans "May" %}",
+                        "{% trans "June" %}",
+                        "{% trans "July" %}",
+                        "{% trans "August" %}",
+                        "{% trans "September" %}",
+                        "{% trans "October" %}",
+                        "{% trans "November" %}",
+                        "{% trans "December" %}"
+                    ],
+                    datasets: [{
+                        label: "{% trans "Flight frequency" %}",
+                        data: chartData,
+                        backgroundColor: colors.barColor,
+                        hoverBackgroundColor: colors.hoverColor,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    legend: {
+                        display: false
+                    },
+                    scales: {
+                        xAxes: [{
+                            gridLines: {
+                                color: colors.gridColor,
+                                zeroLineColor: colors.gridColor
+                            },
+                            ticks: {
+                                fontColor: colors.textColor,
+                                fontSize: 11
+                            }
+                        }],
+                        yAxes: [{
+                            gridLines: {
+                                color: colors.gridColor,
+                                zeroLineColor: colors.gridColor
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                fontColor: colors.textColor,
+                                fontSize: 11
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        cornerRadius: 6,
+                        backgroundColor: "rgba(0, 0, 0, 0.85)"
+                    }
+                }
+            });
+        }
+
+        if (chartData) {
+            window.addEventListener("load", renderFlightChart);
+
+            var themeObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === "data-bs-theme") {
+                        renderFlightChart();
+                    }
+                });
+            });
+            themeObserver.observe(document.documentElement, { attributes: true });
         }
     </script>
 {% endblock %}

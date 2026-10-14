@@ -1,33 +1,40 @@
-{% load i18n %}
-{% load static %}
-<div class="ant-size-container">
-    <h5>{% trans header %}</h5>
+{% load i18n static ants %}
+<div class="ant-size-card">
+    <div class="ant-size-card-title">
+        <span class="d-inline-flex align-items-center gap-1">
+            {% if caste_icon %}<i class="bi {{ caste_icon }} text-primary"></i>{% endif %}
+            <span>{% trans header %}</span>
+        </span>
+        {% if size %}
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                {{ size.minimum }}{% if size.maximum and size.maximum != size.minimum %}–{{ size.maximum }}{% endif %}&nbsp;mm
+            </span>
+        {% endif %}
+    </div>
+
     {% if size %}
-    <div class="ant-size-body-container">
-        <div class="min-max-container">
-            <div class="size-th">
-                Min
+    <div class="ant-size-scale-container">
+        <div class="ant-size-col">
+            <span class="ant-size-col-label">{% trans "Min" %}</span>
+            <div class="ant-size-box ant-size-img">
+                <img src="{% static "ants/img/ant.svg" %}" style="width: {{ size.minimum_img }}mm;" alt="{% trans header %} Min" loading="lazy">
             </div>
-            <div class="size-img">
-                <img src="{% static 'ants/img/ant.svg' %}" style="width: {{ size.minimum_img  }}mm;">
-            </div>
-            <div class="size-footer">
-                {{ size.minimum }} mm
-            </div>
+            <span class="ant-size-value">{{ size.minimum }}&nbsp;mm</span>
         </div>
-         <div class="min-max-container">
-            <div class="size-th">
-                Max
+
+        {% if size.maximum and size.maximum != size.minimum %}
+        <div class="ant-size-col">
+            <span class="ant-size-col-label">{% trans "Max" %}</span>
+            <div class="ant-size-box ant-size-img">
+                <img src="{% static "ants/img/ant.svg" %}" style="width: {{ size.maximum_img }}mm;" alt="{% trans header %} Max" loading="lazy">
             </div>
-            <div class="size-img">
-                <img src="{% static 'ants/img/ant.svg' %}" style="width: {{ size.maximum_img  }}mm;">
-            </div>
-            <div class="size-footer">
-                {{ size.maximum }} mm
-            </div>
+            <span class="ant-size-value">{{ size.maximum }}&nbsp;mm</span>
         </div>
+        {% endif %}
     </div>
     {% else %}
-    <p>{{ None | format_value }}</p>
+    <div class="text-center py-4 my-auto text-muted">
+        <small class="fst-italic">{% trans "No size information" %}</small>
+    </div>
     {% endif %}
 </div>
