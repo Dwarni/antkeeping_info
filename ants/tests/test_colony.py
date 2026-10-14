@@ -276,6 +276,50 @@ class ColonyStatusAndVisibilityViewTest(TestCase):
         self.colony.refresh_from_db()
         self.assertEqual(self.colony.status, Colony.GIVEN_AWAY)
 
+    
+    def test_founding_and_hibernating_status_updates(self):
+        # Update to FOUNDING
+        resp = self.client.post(
+            reverse("colony_status_update", args=[self.colony.pk]), {"status": Colony.FOUNDING}
+        )
+        self.assertRedirects(resp, self.colony.get_absolute_url())
+        self.colony.refresh_from_db()
+        self.assertEqual(self.colony.status, Colony.FOUNDING)
+        self.assertIn("bg-warning-subtle", self.colony.status_badge_class)
+        self.assertEqual(self.colony.status_icon, "bi-egg")
+
+        # Update to HIBERNATING
+        resp2 = self.client.post(
+            reverse("colony_status_update", args=[self.colony.pk]), {"status": Colony.HIBERNATING}
+        )
+        self.assertRedirects(resp2, self.colony.get_absolute_url())
+        self.colony.refresh_from_db()
+        self.assertEqual(self.colony.status, Colony.HIBERNATING)
+        self.assertIn("bg-info-subtle", self.colony.status_badge_class)
+        self.assertEqual(self.colony.status_icon, "bi-snow")
+
+    def test_create_colony_with_initial_volksstaerke(self):
+        url = reverse("colony_create")
+        resp = self.client.post(
+            url,
+            {
+                "species": self.species.pk,
+                "name": "New Colony With Workers",
+                "status": Colony.ACTIVE,
+                "initial_queens": 1,
+                "initial_workers": 25,
+                "initial_estimated": "on",
+            },
+        )
+        colony = Colony.objects.get(name="New Colony With Workers")
+        self.assertRedirects(resp, colony.get_absolute_url())
+        self.assertEqual(colony.censuses.count(), 1)
+        census = colony.latest_census
+        self.assertEqual(census.queens, 1)
+        self.assertEqual(census.workers, 25)
+        self.assertTrue(census.workers_is_estimated)
+        self.assertEqual(colony.strength_summary, "~1 👑 • ~25 🐜")
+
     def test_invalid_status_returns_400(self):
         response = self.client.post(
             reverse("colony_status_update", args=[self.colony.pk]), {"status": "NOT_A_STATUS"}

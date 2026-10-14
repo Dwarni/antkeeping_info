@@ -46,7 +46,7 @@
                         <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                             <h1 class="h3 mb-0 fw-bold">{{ entry.date|date:"N j, Y" }}</h1>
                             {% if entry.event_type and entry.event_type != 'GENERAL' %}
-                            <span class="badge text-bg-info text-white fs-6">{{ entry.get_event_type_display }}</span>
+                            <span class="badge {{ entry.event_badge_class }} fs-6"><i class="bi {{ entry.event_icon }} me-1"></i>{{ entry.get_event_type_display }}</span>
                             {% endif %}
                         </div>
                         <div class="text-muted small">

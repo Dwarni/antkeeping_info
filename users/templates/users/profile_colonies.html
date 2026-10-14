@@ -12,7 +12,7 @@
             </ol>
         </nav>
 
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <div>
                 <h1 class="h3 mb-1 d-flex align-items-center gap-2">
                     <span class="badge rounded-circle bg-primary-subtle text-primary p-2 fs-5 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
@@ -27,7 +27,13 @@
                     {{ counter }} colonies in total
                     {% endblocktrans %}
                     {% if active_colonies %}
-                    &bull; <span class="text-success">{{ active_colonies }} {% trans "active" %}</span>
+                    &bull; <span class="text-success fw-semibold">{{ active_colonies }} {% trans "active" %}</span>
+                    {% endif %}
+                    {% if founding_colonies %}
+                    &bull; <span class="text-warning-emphasis fw-semibold">{{ founding_colonies }} {% trans "founding" %}</span>
+                    {% endif %}
+                    {% if hibernating_colonies %}
+                    &bull; <span class="text-info fw-semibold">{{ hibernating_colonies }} {% trans "hibernating" %}</span>
                     {% endif %}
                 </p>
             </div>
@@ -41,7 +47,37 @@
             </div>
         </div>
 
-        {% if not colonies %}
+        {# Filter pills #}
+        {% if total_colonies > 0 %}
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-3 pb-2 border-bottom">
+            <span class="small text-muted fw-semibold me-1"><i class="bi bi-funnel me-1"></i>{% trans "Status" %}:</span>
+            <a href="{% url 'user_profile_colonies' %}" class="badge rounded-pill text-decoration-none {% if not current_status_filter %}bg-primary text-white{% else %}bg-body-secondary text-body border{% endif %} px-3 py-2">
+                {% trans "All" %} <span class="opacity-75 ms-1">({{ total_colonies }})</span>
+            </a>
+            {% if active_colonies > 0 %}
+            <a href="{% url 'user_profile_colonies' %}?status=active" class="badge rounded-pill text-decoration-none {% if current_status_filter == 'active' %}bg-success text-white{% else %}bg-success-subtle text-success-emphasis border border-success-subtle{% endif %} px-3 py-2">
+                <i class="bi bi-check-circle-fill me-1"></i>{% trans "Active" %} <span class="opacity-75 ms-1">({{ active_colonies }})</span>
+            </a>
+            {% endif %}
+            {% if founding_colonies > 0 %}
+            <a href="{% url 'user_profile_colonies' %}?status=founding" class="badge rounded-pill text-decoration-none {% if current_status_filter == 'founding' %}bg-warning text-dark{% else %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% endif %} px-3 py-2">
+                <i class="bi bi-egg me-1"></i>{% trans "Founding" %} <span class="opacity-75 ms-1">({{ founding_colonies }})</span>
+            </a>
+            {% endif %}
+            {% if hibernating_colonies > 0 %}
+            <a href="{% url 'user_profile_colonies' %}?status=hibernating" class="badge rounded-pill text-decoration-none {% if current_status_filter == 'hibernating' %}bg-info text-dark{% else %}bg-info-subtle text-info-emphasis border border-info-subtle{% endif %} px-3 py-2">
+                <i class="bi bi-snow me-1"></i>{% trans "Hibernating" %} <span class="opacity-75 ms-1">({{ hibernating_colonies }})</span>
+            </a>
+            {% endif %}
+            {% if archived_colonies > 0 %}
+            <a href="{% url 'user_profile_colonies' %}?status=archived" class="badge rounded-pill text-decoration-none {% if current_status_filter == 'archived' %}bg-secondary text-white{% else %}bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle{% endif %} px-3 py-2">
+                <i class="bi bi-archive me-1"></i>{% trans "Archived" %} <span class="opacity-75 ms-1">({{ archived_colonies }})</span>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if total_colonies == 0 %}
         <div class="card text-center py-5 border-0 bg-body-tertiary shadow-sm">
             <div class="card-body">
                 <div class="text-muted opacity-50 mb-3 d-flex justify-content-center">
@@ -56,19 +92,32 @@
                 </a>
             </div>
         </div>
+        {% elif not colonies %}
+        <div class="card text-center py-5 border-0 bg-body-tertiary shadow-sm">
+            <div class="card-body">
+                <i class="bi bi-funnel text-muted fs-1 mb-2 d-block opacity-50"></i>
+                <h2 class="h5">{% trans "No colonies match this status filter" %}</h2>
+                <p class="text-muted small">
+                    {% trans "None of your colonies currently have this status." %}
+                </p>
+                <a href="{% url 'user_profile_colonies' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-x-circle me-1"></i>{% trans "Show all colonies" %}
+                </a>
+            </div>
+        </div>
         {% else %}
         <div class="list-group shadow-sm mb-4">
             {% for colony in colonies %}
             <div class="list-group-item list-group-item-action p-3 p-md-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3">
                     {% if colony.title_image %}
-                        {% thumbnail colony.title_image.image_file "64x64" crop="center" as im %}
-                        <a href="{{ colony.get_absolute_url }}">
+                        {% thumbnail colony.title_image.image_file "72x72" crop="center" as im %}
+                        <a href="{{ colony.get_absolute_url }}" class="flex-shrink-0">
                             <img class="rounded shadow-sm" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="{{ colony.name }}">
                         </a>
                         {% endthumbnail %}
                     {% else %}
-                        <a href="{{ colony.get_absolute_url }}" class="rounded bg-body-secondary d-flex align-items-center justify-content-center text-muted" style="width: 64px; height: 64px; text-decoration: none;">
+                        <a href="{{ colony.get_absolute_url }}" class="rounded bg-body-secondary d-flex align-items-center justify-content-center text-muted flex-shrink-0" style="width: 72px; height: 72px; text-decoration: none;">
                             {% include "icons/ant_icon.html" with size="32" class="opacity-50" %}
                         </a>
                     {% endif %}
@@ -77,9 +126,18 @@
                             <a href="{{ colony.get_absolute_url }}" class="fw-bold text-reset text-decoration-none fs-6">
                                 {{ colony.name }}
                             </a>
-                            <span class="badge {% if colony.status == 'ACTIVE' %}text-bg-success{% elif colony.status == 'DEAD' %}text-bg-secondary{% else %}text-bg-info{% endif %}">
-                                {{ colony.get_status_display }}
+                            <span class="badge {{ colony.status_badge_class }}">
+                                <i class="bi {{ colony.status_icon }} me-1"></i>{{ colony.get_status_display }}
                             </span>
+                            {% if colony.strength_summary %}
+                            <span class="badge bg-body-secondary text-body border" title="{% trans 'Current recorded population' %}">
+                                <i class="bi bi-people-fill text-primary me-1"></i>{{ colony.strength_summary }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-body-tertiary text-muted border border-dashed" title="{% trans 'No count recorded yet' %}">
+                                <i class="bi bi-people me-1"></i>{% trans "No count yet" %}
+                            </span>
+                            {% endif %}
                             {% if colony.is_public %}
                             <span class="badge text-bg-light border" title="{% trans 'Visible to everyone' %}">
                                 <i class="bi bi-globe me-1"></i>{% trans "Public" %}
@@ -95,7 +153,7 @@
                                 {{ colony.species.name }}
                             </a>
                         </div>
-                        <div class="small text-muted d-flex align-items-center gap-3">
+                        <div class="small text-muted d-flex align-items-center gap-3 flex-wrap">
                             <span>
                                 <i class="bi bi-journal-richtext me-1"></i>
                                 {% blocktrans count counter=colony.journal_entries_count %}
@@ -106,10 +164,20 @@
                             </span>
                             <span>&bull;</span>
                             <span>{% trans "Created" %} {{ colony.created_at|date:"N j, Y" }}</span>
+                            {% if colony.found_date %}
+                            <span>&bull;</span>
+                            <span><i class="bi bi-compass me-1"></i>{% trans "Found" %} {{ colony.found_date_display }}</span>
+                            {% elif colony.purchase_date %}
+                            <span>&bull;</span>
+                            <span><i class="bi bi-cart me-1"></i>{% trans "Purchased" %} {{ colony.purchase_date_display }}</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 align-self-end align-self-md-center flex-wrap">
+                    <a href="{{ colony.get_absolute_url }}#collapse-add-journal" class="btn btn-sm btn-outline-success" title="{% trans 'Add a quick journal entry' %}">
+                        <i class="bi bi-pencil-square me-1"></i>{% trans "+ Entry" %}
+                    </a>
                     <a href="{% url 'colony_journal' colony.user.username colony.slug %}" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-journal-richtext me-1"></i>{% trans "Journal" %}
                     </a>

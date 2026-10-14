@@ -1788,6 +1788,20 @@ class ColonyCreateView(LoginRequiredMixin, FormView):
         try:
             with transaction.atomic():
                 colony.save()
+                queens = form.cleaned_data.get("initial_queens")
+                workers = form.cleaned_data.get("initial_workers")
+                estimated = bool(form.cleaned_data.get("initial_estimated"))
+                if queens is not None or workers is not None:
+                    census_date = colony.found_date or colony.purchase_date or timezone.now().date()
+                    ColonyCensus.objects.create(
+                        colony=colony,
+                        date=census_date,
+                        queens=queens,
+                        queens_is_estimated=estimated,
+                        workers=workers,
+                        workers_is_estimated=estimated,
+                        note="Initial count upon adding colony",
+                    )
         except IntegrityError:
             form.add_error("name", "You already have a colony with this name.")
             return self.form_invalid(form)
@@ -2167,7 +2181,7 @@ class UserColoniesView(View):
         else:
             colonies = target_user.colonies.filter(is_public=True, force_private_by_staff=False)
 
-        colonies = colonies.select_related("species", "title_image").order_by("-created_at")
+        colonies = colonies.select_related("species", "title_image").prefetch_related("censuses").order_by("-created_at")
 
         return render(
             request,

@@ -62,13 +62,20 @@
                             {{ colony.name }}
                         </a>
                     </h2>
-                    <span class="badge {% if colony.status == 'ACTIVE' %}text-bg-success{% elif colony.status == 'DEAD' %}text-bg-secondary{% else %}text-bg-info{% endif %} ms-2">
-                        {{ colony.get_status_display }}
+                    <span class="badge {{ colony.status_badge_class }} ms-2">
+                        <i class="bi {{ colony.status_icon }} me-1"></i>{{ colony.get_status_display }}
                     </span>
                 </div>
-                <p class="card-text text-muted small fst-italic mb-3">
+                <p class="card-text text-muted small fst-italic mb-2">
                     {{ colony.species.name }}
                 </p>
+                {% if colony.strength_summary %}
+                <div class="mb-3">
+                    <span class="badge bg-body-secondary text-body border small">
+                        <i class="bi bi-people-fill text-primary me-1"></i>{{ colony.strength_summary }}
+                    </span>
+                </div>
+                {% endif %}
                 <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
                     <a href="{% url 'colony_journal' colony.user.username colony.slug %}" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-journal-richtext me-1"></i>{% trans "Journal" %}

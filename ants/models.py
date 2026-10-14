@@ -898,11 +898,15 @@ class SpeciesFoodRating(models.Model):
 class Colony(models.Model):
     """An ant colony kept by a user."""
 
+    FOUNDING = "FOUNDING"
     ACTIVE = "ACTIVE"
+    HIBERNATING = "HIBERNATING"
     DEAD = "DEAD"
     GIVEN_AWAY = "GIVEN_AWAY"
     STATUS_CHOICES = [
+        (FOUNDING, _("Founding")),
         (ACTIVE, _("Active")),
+        (HIBERNATING, _("Hibernating")),
         (DEAD, _("Dead")),
         (GIVEN_AWAY, _("Given away")),
     ]
@@ -1011,6 +1015,66 @@ class Colony(models.Model):
     @property
     def purchase_date_display(self):
         return format_partial_date(self.purchase_date, self.purchase_date_precision)
+    @property
+    def latest_census(self):
+        """Returns the most recent census for the colony, or None."""
+        return self.censuses.first()
+
+    @property
+    def strength_summary(self):
+        """Short readable summary of current worker/queen counts."""
+        census = self.latest_census
+        if not census:
+            return None
+        parts = []
+        if census.queens is not None:
+            prefix = "~" if census.queens_is_estimated else ""
+            parts.append(f"{prefix}{census.queens} 👑")
+        if census.workers is not None:
+            prefix = "~" if census.workers_is_estimated else ""
+            parts.append(f"{prefix}{census.workers} 🐜")
+        if not parts and census.has_brood_counts:
+            parts.append(_("Brood only"))
+        return " • ".join(parts) if parts else None
+
+    @property
+    def workers_count_display(self):
+        census = self.latest_census
+        if not census or census.workers is None:
+            return None
+        prefix = "ca. " if census.workers_is_estimated else ""
+        return f"{prefix}{census.workers}"
+
+    @property
+    def queens_count_display(self):
+        census = self.latest_census
+        if not census or census.queens is None:
+            return None
+        prefix = "ca. " if census.queens_is_estimated else ""
+        return f"{prefix}{census.queens}"
+
+    @property
+    def status_badge_class(self):
+        mapping = {
+            self.FOUNDING: "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+            self.ACTIVE: "bg-success-subtle text-success-emphasis border border-success-subtle",
+            self.HIBERNATING: "bg-info-subtle text-info-emphasis border border-info-subtle",
+            self.DEAD: "bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle",
+            self.GIVEN_AWAY: "bg-primary-subtle text-primary-emphasis border border-primary-subtle",
+        }
+        return mapping.get(self.status, "bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle")
+
+    @property
+    def status_icon(self):
+        mapping = {
+            self.FOUNDING: "bi-egg",
+            self.ACTIVE: "bi-check-circle-fill",
+            self.HIBERNATING: "bi-snow",
+            self.DEAD: "bi-x-circle",
+            self.GIVEN_AWAY: "bi-box-arrow-right",
+        }
+        return mapping.get(self.status, "bi-circle")
+
 
 
 class ColonyImage(models.Model):
@@ -1120,6 +1184,42 @@ class ColonyJournalEntry(models.Model):
         if not self.created_at or not self.date:
             return False
         return self.date != timezone.localdate(self.created_at)
+    @property
+    def event_badge_class(self):
+        mapping = {
+            self.EVENT_GENERAL: "bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle",
+            self.EVENT_FOUNDING: "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+            self.EVENT_FIRST_WORKER: "bg-success-subtle text-success-emphasis border border-success-subtle",
+            self.EVENT_NEST_MOVE: "bg-info-subtle text-info-emphasis border border-info-subtle",
+            self.EVENT_HIBERNATION_START: "bg-primary-subtle text-primary-emphasis border border-primary-subtle",
+            self.EVENT_HIBERNATION_END: "bg-primary-subtle text-primary-emphasis border border-primary-subtle",
+            self.EVENT_FEEDING: "bg-success-subtle text-success-emphasis border border-success-subtle",
+            self.EVENT_ALATES: "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+            self.EVENT_NUPTIAL_FLIGHT: "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+            self.EVENT_ESCAPE: "bg-danger-subtle text-danger-emphasis border border-danger-subtle",
+            self.EVENT_ISSUE: "bg-danger-subtle text-danger-emphasis border border-danger-subtle",
+            self.EVENT_QUEEN_DIED: "bg-danger-subtle text-danger-emphasis border border-danger-subtle",
+        }
+        return mapping.get(self.event_type, "bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle")
+
+    @property
+    def event_icon(self):
+        mapping = {
+            self.EVENT_GENERAL: "bi-chat-left-text",
+            self.EVENT_FOUNDING: "bi-egg",
+            self.EVENT_FIRST_WORKER: "bi-check2-circle",
+            self.EVENT_NEST_MOVE: "bi-box-seam",
+            self.EVENT_HIBERNATION_START: "bi-snow",
+            self.EVENT_HIBERNATION_END: "bi-brightness-high",
+            self.EVENT_FEEDING: "bi-cup-hot",
+            self.EVENT_ALATES: "bi-feather",
+            self.EVENT_NUPTIAL_FLIGHT: "bi-wind",
+            self.EVENT_ESCAPE: "bi-exclamation-octagon",
+            self.EVENT_ISSUE: "bi-exclamation-triangle",
+            self.EVENT_QUEEN_DIED: "bi-heartbreak",
+        }
+        return mapping.get(self.event_type, "bi-journal-text")
+
 
     def __str__(self):
         return f"{self.colony} — {self.date}"

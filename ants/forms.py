@@ -1,5 +1,7 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Field, Layout, Submit
+from crispy_forms.layout import HTML, Column, Div, Field, Layout, Row, Submit
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from django import forms
 from django.urls import reverse_lazy
 from django.utils.html import format_html
@@ -115,6 +117,43 @@ class ColonyForm(forms.ModelForm):
         },
     )
 
+    status = forms.ChoiceField(
+        choices=Colony.STATUS_CHOICES,
+        initial=Colony.ACTIVE,
+        required=False,
+        label=_label_with_help(
+            "Status",
+            "Current development phase of the colony (e.g. Founding queen in tube, Active, Hibernating).",
+        ),
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
+    # Initial population / Volksstärke (available on colony creation)
+    initial_queens = forms.IntegerField(
+        required=False,
+        min_value=0,
+        initial=1,
+        label=_label_with_help(
+            "Queens (initial count)",
+            "Number of queens currently in the colony (default: 1).",
+        ),
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "1"}),
+    )
+    initial_workers = forms.IntegerField(
+        required=False,
+        min_value=0,
+        initial=0,
+        label=_label_with_help(
+            "Workers (initial count)",
+            "Number of workers currently in the colony (0 for a founding queen in a test tube).",
+        ),
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "0"}),
+    )
+    initial_estimated = forms.BooleanField(
+        required=False,
+        label="Worker / queen count is estimated (approximate)",
+    )
+
     # found_date/purchase_date are handled outside Meta.fields: each maps to
     # *two* model fields (date + precision), which a plain ModelForm mapping
     # can't express. See save() below for how they get written back.
@@ -153,8 +192,11 @@ class ColonyForm(forms.ModelForm):
     class Meta:
         model = Colony
         fields = [
-            "species", "name", "origin_type", "found_location", "purchase_shop",
+            "species", "name", "status", "origin_type", "found_location", "purchase_shop",
         ]
+
+    def clean_status(self):
+        return self.cleaned_data.get("status") or Colony.ACTIVE
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -169,7 +211,8 @@ class ColonyForm(forms.ModelForm):
         self.fields["purchase_shop"].label = _label_with_help(
             "Purchase from", "A shop name, or the username/handle of whoever you got it from."
         )
-        if self.instance.pk:
+        is_edit = bool(self.instance.pk)
+        if is_edit:
             # Species is immutable after creation: changing it would orphan
             # journal history recorded against the original species.
             self.fields["species"].disabled = True
@@ -183,15 +226,33 @@ class ColonyForm(forms.ModelForm):
             self.fields["hide_found_location"].initial = not self.instance.share_found_location
         self.helper = FormHelper()
         self.helper.form_tag = False
+
+        if not is_edit:
+            basics_div = Div(
+                HTML('<h6 class="text-muted mb-3"><i class="bi bi-info-circle me-1"></i>Basics</h6>'),
+                "name",
+                "status",
+                HTML('<hr class="my-3"><h6 class="text-muted mb-2"><i class="bi bi-people-fill me-1"></i>Initial Population / Volksstärke (optional)</h6><p class="small text-muted mb-3">Record your queen & worker counts so your colony dashboard immediately shows its current size.</p>'),
+                Row(
+                    Column("initial_queens", css_class="col-md-6 mb-2"),
+                    Column("initial_workers", css_class="col-md-6 mb-2"),
+                ),
+                "initial_estimated",
+                css_class="border rounded p-3 mb-3",
+            )
+        else:
+            basics_div = Div(
+                HTML('<h6 class="text-muted mb-3"><i class="bi bi-info-circle me-1"></i>Basics</h6>'),
+                "name",
+                "status",
+                css_class="border rounded p-3 mb-3",
+            )
+
         # species (HiddenInput) is rendered manually in the template before crispy output
         self.helper.layout = Layout(
+            basics_div,
             Div(
-                HTML('<h6 class="text-muted mb-3">Basics</h6>'),
-                "name",
-                css_class="border rounded p-3 mb-3",
-            ),
-            Div(
-                HTML('<h6 class="text-muted mb-3">Where it came from</h6>'),
+                HTML('<h6 class="text-muted mb-3"><i class="bi bi-geo-alt-fill me-1"></i>Where it came from</h6>'),
                 "origin_type",
                 "found_location",
                 "found_date",
@@ -200,7 +261,7 @@ class ColonyForm(forms.ModelForm):
                 css_class="border rounded p-3 mb-3",
             ),
             Div(
-                HTML('<h6 class="text-muted mb-3">Privacy</h6>'),
+                HTML('<h6 class="text-muted mb-3"><i class="bi bi-shield-lock-fill me-1"></i>Privacy</h6>'),
                 "keep_private",
                 "hide_found_location",
                 css_class="border rounded p-3 mb-3",
@@ -209,6 +270,7 @@ class ColonyForm(forms.ModelForm):
         )
 
     def save(self, commit=True):
+        is_new = not self.instance.pk
         instance = super().save(commit=False)
         for field_name, precision_field in [
             ("found_date", "found_date_precision"),
@@ -222,6 +284,21 @@ class ColonyForm(forms.ModelForm):
         instance.share_found_location = not self.cleaned_data.get("hide_found_location")
         if commit:
             instance.save()
+            if is_new:
+                queens = self.cleaned_data.get("initial_queens")
+                workers = self.cleaned_data.get("initial_workers")
+                estimated = bool(self.cleaned_data.get("initial_estimated"))
+                if queens is not None or workers is not None:
+                    census_date = instance.found_date or instance.purchase_date or timezone.now().date()
+                    ColonyCensus.objects.create(
+                        colony=instance,
+                        date=census_date,
+                        queens=queens,
+                        queens_is_estimated=estimated,
+                        workers=workers,
+                        workers_is_estimated=estimated,
+                        note="Initial count upon adding colony",
+                    )
         return instance
 
 

@@ -14,7 +14,7 @@
                 &mdash; <em>{{ entry.colony.species.name }}</em>
                 <span class="text-muted small ms-1">by <a href="{% url 'user_colonies' entry.colony.user.username %}" class="text-reset text-decoration-none">@{{ entry.colony.user.username }}</a></span>
                 {% if entry.event_type and entry.event_type != 'GENERAL' %}
-                <span class="badge text-bg-info text-white ms-1">{{ entry.get_event_type_display }}</span>
+                <span class="badge {{ entry.event_badge_class }} ms-1"><i class="bi {{ entry.event_icon }} me-1"></i>{{ entry.get_event_type_display }}</span>
                 {% endif %}
             </div>
             <div class="text-end text-muted small text-nowrap">

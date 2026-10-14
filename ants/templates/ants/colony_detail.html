@@ -96,8 +96,8 @@
                     <div>
                         <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                             <h1 class="h2 mb-0 fw-bold">{{ colony.name }}</h1>
-                            <span class="badge {% if colony.status == 'ACTIVE' %}text-bg-success{% elif colony.status == 'DEAD' %}text-bg-secondary{% else %}text-bg-info{% endif %}">
-                                {{ colony.get_status_display }}
+                            <span class="badge {{ colony.status_badge_class }}">
+                                <i class="bi {{ colony.status_icon }} me-1"></i>{{ colony.get_status_display }}
                             </span>
                             {% if colony.is_public %}
                             <span class="badge text-bg-light border">{% trans "Public" %}</span>
@@ -635,7 +635,7 @@
                                 <span class="text-muted small ms-1">({% trans "added" %} {{ entry.created_at|date:"N j, Y" }})</span>
                                 {% endif %}
                                 {% if entry.event_type and entry.event_type != 'GENERAL' %}
-                                <span class="badge text-bg-info text-white ms-1">{{ entry.get_event_type_display }}</span>
+                                <span class="badge {{ entry.event_badge_class }} ms-1"><i class="bi {{ entry.event_icon }} me-1"></i>{{ entry.get_event_type_display }}</span>
                                 {% endif %}
                             </div>
                             <div class="d-flex align-items-center gap-2 ms-2">

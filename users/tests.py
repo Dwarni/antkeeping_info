@@ -100,6 +100,54 @@ class UserProfileColoniesViewTest(TestCase):
         self.assertNotContains(response, "Secret Colony")
 
 
+
+    def test_status_filtering_in_profile_colonies(self):
+        self.client.login(username="owner", password="pass")
+        species = _make_species()
+        Colony.objects.create(user=self.user, species=species, name="Active 1", status=Colony.ACTIVE)
+        Colony.objects.create(user=self.user, species=species, name="Founding 1", status=Colony.FOUNDING)
+        Colony.objects.create(user=self.user, species=species, name="Hibernating 1", status=Colony.HIBERNATING)
+        Colony.objects.create(user=self.user, species=species, name="Dead 1", status=Colony.DEAD)
+
+        # All colonies
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.context["total_colonies"], 4)
+        self.assertEqual(resp.context["active_colonies"], 1)
+        self.assertEqual(resp.context["founding_colonies"], 1)
+        self.assertEqual(resp.context["hibernating_colonies"], 1)
+        self.assertEqual(resp.context["archived_colonies"], 1)
+
+        # Filter active
+        resp_act = self.client.get(f"{self.url}?status=active")
+        self.assertEqual(len(resp_act.context["colonies"]), 1)
+        self.assertEqual(resp_act.context["colonies"][0].name, "Active 1")
+
+        # Filter founding
+        resp_fnd = self.client.get(f"{self.url}?status=founding")
+        self.assertEqual(len(resp_fnd.context["colonies"]), 1)
+        self.assertEqual(resp_fnd.context["colonies"][0].name, "Founding 1")
+
+        # Filter hibernating
+        resp_hib = self.client.get(f"{self.url}?status=hibernating")
+        self.assertEqual(len(resp_hib.context["colonies"]), 1)
+        self.assertEqual(resp_hib.context["colonies"][0].name, "Hibernating 1")
+
+        # Filter archived
+        resp_arc = self.client.get(f"{self.url}?status=archived")
+        self.assertEqual(len(resp_arc.context["colonies"]), 1)
+        self.assertEqual(resp_arc.context["colonies"][0].name, "Dead 1")
+
+    def test_colony_volksstaerke_display_in_profile_colonies(self):
+        from ants.models import ColonyCensus
+        self.client.login(username="owner", password="pass")
+        species = _make_species()
+        c = Colony.objects.create(user=self.user, species=species, name="Growing Colony", status=Colony.ACTIVE)
+        ColonyCensus.objects.create(colony=c, queens=1, workers=42)
+
+        resp = self.client.get(self.url)
+        self.assertContains(resp, "1 👑 • 42 🐜")
+
+
 class UserProfileJournalsViewTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="owner", password="pass")

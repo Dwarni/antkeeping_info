@@ -92,17 +92,33 @@ class UserProfileColoniesView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        colonies = (
+        all_colonies = (
             self.request.user.colonies.select_related("species", "title_image")
+            .prefetch_related("censuses")
             .annotate(journal_entries_count=Count("journal_entries", distinct=True))
             .order_by("-created_at")
         )
+        status_filter = self.request.GET.get("status", "").strip().lower()
+        if status_filter == "active":
+            colonies = [c for c in all_colonies if c.status == Colony.ACTIVE]
+        elif status_filter == "founding":
+            colonies = [c for c in all_colonies if c.status == Colony.FOUNDING]
+        elif status_filter == "hibernating":
+            colonies = [c for c in all_colonies if c.status == Colony.HIBERNATING]
+        elif status_filter == "archived":
+            colonies = [c for c in all_colonies if c.status in (Colony.DEAD, Colony.GIVEN_AWAY)]
+        else:
+            status_filter = ""
+            colonies = list(all_colonies)
+
         context["colonies"] = colonies
-        context["total_colonies"] = colonies.count()
-        context["active_colonies"] = sum(
-            1 for c in colonies if c.status == Colony.ACTIVE
-        )
-        context["public_colonies"] = sum(1 for c in colonies if c.is_public)
+        context["current_status_filter"] = status_filter
+        context["total_colonies"] = len(all_colonies)
+        context["active_colonies"] = sum(1 for c in all_colonies if c.status == Colony.ACTIVE)
+        context["founding_colonies"] = sum(1 for c in all_colonies if c.status == Colony.FOUNDING)
+        context["hibernating_colonies"] = sum(1 for c in all_colonies if c.status == Colony.HIBERNATING)
+        context["archived_colonies"] = sum(1 for c in all_colonies if c.status in (Colony.DEAD, Colony.GIVEN_AWAY))
+        context["public_colonies"] = sum(1 for c in all_colonies if c.is_public)
         return context
 
 

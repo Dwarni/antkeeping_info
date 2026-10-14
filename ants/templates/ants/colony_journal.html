@@ -50,8 +50,8 @@
                     <div class="text-muted small">
                         <em class="me-2">{{ colony.species.name }}</em>
                         <span>{% trans "kept by" %} <a href="{% url 'user_colonies' colony.user.username %}" class="fw-semibold text-reset text-decoration-none">@{{ colony.user.username }}</a></span>
-                        <span class="badge {% if colony.status == 'ACTIVE' %}text-bg-success{% elif colony.status == 'DEAD' %}text-bg-secondary{% else %}text-bg-info{% endif %} ms-2">
-                            {{ colony.get_status_display }}
+                        <span class="badge {{ colony.status_badge_class }} ms-2">
+                            <i class="bi {{ colony.status_icon }} me-1"></i>{{ colony.get_status_display }}
                         </span>
                     </div>
                 </div>
@@ -129,7 +129,7 @@
                     <span class="text-muted small ms-2">({% trans "added" %} {{ entry.created_at|date:"N j, Y" }})</span>
                     {% endif %}
                     {% if entry.event_type and entry.event_type != 'GENERAL' %}
-                    <span class="badge text-bg-info text-white ms-2">{{ entry.get_event_type_display }}</span>
+                    <span class="badge {{ entry.event_badge_class }} ms-2"><i class="bi {{ entry.event_icon }} me-1"></i>{{ entry.get_event_type_display }}</span>
                     {% endif %}
                 </div>
                 <div class="d-flex align-items-center gap-2">

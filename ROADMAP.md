@@ -77,13 +77,16 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Kartenbedienung mit responsivem Jahres- & Artenfilter und WCAG AA Darkmode-Styling.
 
 ### 4. Halterbereich, Kolonien & Haltungstagebuch
-- [ ] **Kolonie-Verwaltung (`/users/.../colonies/`)**
-  - Anlegen und Bearbeiten einer Kolonie (Art, Fangdatum, Volksstärke).
-  - Statusanzeigen (Gründung, aktiv, Winterruhe, verstorben).
-- [ ] **Haltungstagebuch / Journal (`/users/.../journals/`)**
-  - Schnelles Hinzufügen von Einträgen und Fotos.
-  - Chronologische Timeline-Darstellung und Filterung nach Ereignissen (Fütterung, Schlupf, Umzug).
-  - Teilen-Funktion (Social Share Modal, Share-Links).
+- [x] **Kolonie-Verwaltung (`/users/.../colonies/`)**
+  - Anlegen und Bearbeiten einer Kolonie (Art, Fang-/Kaufdatum, Volksstärke mit Initial-Zählung beim Erstellen).
+  - Statusanzeigen mit WCAG-AA-konformen Badges & Icons (Gründung, aktiv, Winterruhe, verstorben, abgegeben).
+  - Filter-Pills nach Koloniestatus mit Zähler-Badges auf der Übersichtsseite.
+  - Automatische Berechnung und Anzeige der aktuellen Volksstärke (`1 👑 • 42 🐜`) auf Übersichtskarten.
+- [x] **Haltungstagebuch / Journal (`/users/.../journals/` & `/ants/colonies/.../journal/`)**
+  - Schnelles Hinzufügen von Einträgen und Fotos via Schnell-Eingabe-Modal und Drag-and-Drop / Clipboard (Ctrl+V).
+  - Chronologische Timeline-Darstellung mit visueller Timeline-Leiste und farblich passenden Ereignis-Icons (Fütterung, Schlupf, Umzug, Winterruhe etc.).
+  - 1-Klick-Filter-Pills nach Ereignissen (`FEEDING`, `FIRST_WORKER`, `NEST_MOVE`, `HIBERNATION_START`, `FOUNDING`, `ISSUE`).
+  - Teilen-Funktion (Social Share Modal für WhatsApp, Telegram, Reddit, X, E-Mail, Zwischenablage sowie native Web Share API).
 
 ### 5. Benutzerkonto & Allgemeine Seiten
 - [ ] **Benutzerprofil & Einstellungen (`/users/...`)**
