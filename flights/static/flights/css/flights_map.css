@@ -1,6 +1,16 @@
+/* Flights Map Styles - Light & Dark Mode */
+
+.map-container {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color);
+    background-color: var(--bs-tertiary-bg);
+}
+
 #map {
     width: 100%;
-    height: calc(100vh - 260px);
+    height: calc(100vh - 340px);
+    min-height: 480px;
 }
 
 #map.iframe {
@@ -9,7 +19,8 @@
 
 @media (max-width: 970px) {
     #map {
-        height: calc(100vh - 360px);
+        height: calc(100vh - 420px);
+        min-height: 380px;
     }
     #map.iframe {
         height: calc(100vh - 170px);
@@ -30,7 +41,8 @@
 }
 
 .info-window-label {
-    font-weight: bold;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
 }
 
 .info-window-column {
@@ -39,4 +51,13 @@
 
 .info-window-section {
     margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.08));
+}
+
+.info-window-section h5 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--bs-heading-color, var(--bs-body-color));
+    margin-bottom: 0.5rem;
 }

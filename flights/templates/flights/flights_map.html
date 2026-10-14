@@ -1,55 +1,121 @@
-{% extends 'flights/flights.html' %}
+{% extends "flights/flights.html" %}
 {% load i18n %}
 {% load static %}
+
 {% block title %}
-{{ block.super }} - Flights map
+{{ block.super }} - {% trans "Historical Nuptial Flight Reports (Archive)" %}
 {% endblock %}
+
 {% block meta %}
-<meta name="description" content="{% trans 'A map on which you can see ant nuptial flight spottings.' %}">
+<meta name="description" content="{% trans 'Interactive world map of archived ant nuptial flight sightings, weather records, and habitat observations.' %}">
 {% endblock %}
+
 {% block css %}
-<link rel="stylesheet" href="{% static 'flights/css/flights_map.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'flights/css/vendor/leaflet.css' %}">
-<link rel="stylesheet" href="{% static 'flights/css/vendor/MarkerCluster.css' %}">
-<link rel="stylesheet" href="{% static 'flights/css/vendor/MarkerCluster.Default.css' %}">
+<link rel="stylesheet" href="{% static "flights/css/flights_map.css" %}?v=10">
+<link rel="stylesheet" href="{% static "flights/css/vendor/leaflet.css" %}">
+<link rel="stylesheet" href="{% static "flights/css/vendor/MarkerCluster.css" %}">
+<link rel="stylesheet" href="{% static "flights/css/vendor/MarkerCluster.Default.css" %}">
 {% endblock %}
+
 {% block content %}
-{{ block.super }}
-<div class="alert alert-warning" role="alert">
-    {% include "snippets/historical_flight_reports_hint.html" %}
-    <p class="text-muted small mb-0">
-        {% include "snippets/flight_report_links.html" %}
-    </p>
-</div>
-<div>
-    <div class="row mb-3">
-        <div class="col">
-            <select id="yearSelect" class="form-select">
-                <option value="all">{% trans "All Years" %}</option>
-                {% for year in years %}
-                <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
-                {% endfor %}
-            </select>
+<div class="flights-map-page pb-4">
+    {# Breadcrumb #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="{% url "home" %}" class="text-decoration-none text-secondary">{% trans "Home" %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url "nuptial_flight_table" %}" class="text-decoration-none text-secondary">{% trans "Nuptial Flights" %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans "Reports (Archived Map)" %}</li>
+        </ol>
+    </nav>
+
+    {# Header #}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+        <div>
+            <h1 class="h2 mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-globe-americas text-primary"></i>
+                <span>{% trans "Nuptial Flight Reports" %}</span>
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-6">{% trans "Archived" %}</span>
+            </h1>
+            <p class="text-secondary mb-0">
+                {% trans "Interactive world map of historical flight sightings, weather records, and habitat observations." %}
+            </p>
         </div>
-        <div class="col">
-            <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control" id="antSearchInput" placeholder="{% trans 'Search' %}">
+        <div>
+            <a href="https://antscout.com/flights" target="_blank" rel="noopener noreferrer" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-broadcast"></i>
+                <span>{% trans "Live Flights on AntScout.com" %}</span>
+                <i class="bi bi-box-arrow-up-right small"></i>
+            </a>
+        </div>
+    </div>
+
+    {# Archive Alert #}
+    <div class="card border-warning-subtle bg-warning-subtle p-3 mb-3 shadow-sm rounded-3">
+        <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-archive-fill text-warning fs-3 flex-shrink-0 mt-1"></i>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-body mb-1">{% trans "Read-Only Historical Archive" %}</div>
+                <p class="text-body-secondary small mb-2">
+                    {% trans "This map serves as a permanent reference archive of past nuptial flight sightings. Submissions of new flight reports on antkeeping.info are closed." %}
+                </p>
+                <div class="d-flex flex-wrap align-items-center gap-2 small">
+                    <span class="text-body fw-semibold">{% trans "Looking for live reports or want to log new sightings?" %}</span>
+                    <a href="https://antscout.com/flights" target="_blank" rel="noopener noreferrer" class="badge bg-primary text-white text-decoration-none px-2 py-1 d-inline-flex align-items-center gap-1">
+                        <span>AntScout.com/flights</span>
+                        <i class="bi bi-box-arrow-up-right" style="font-size: 0.7rem;"></i>
+                    </a>
+                    <span class="text-secondary">&bull;</span>
+                    <span class="text-secondary">{% trans "Also see" %} <a href="https://antflights.com/" target="_blank" rel="noopener noreferrer">antflights.com</a> {% trans "and" %} <a href="https://www.inaturalist.org/projects/ant-nuptial-flights" target="_blank" rel="noopener noreferrer">iNaturalist</a></span>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<div id="map" {% if iframe %} class="iframe" {% endif %}></div>
-<div id="flightInfoModal" class="modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog">
-        <div id="flightInfoModalContent" class="modal-content">
+
+    {# Controls #}
+    <div class="card p-3 mb-3 bg-body-tertiary border">
+        <div class="row g-2 align-items-center">
+            <div class="col-12 col-sm-4 col-md-3">
+                <label for="yearSelect" class="form-label small fw-semibold text-secondary mb-1">{% trans "Filter Year" %}</label>
+                <select id="yearSelect" class="form-select form-select-sm" aria-label="{% trans "Select Year" %}">
+                    <option value="all">{% trans "All Years" %}</option>
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if year == current_year %} selected {% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-sm-8 col-md-6">
+                <label for="antSearchInput" class="form-label small fw-semibold text-secondary mb-1">{% trans "Search Species or Location" %}</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-body text-secondary border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="search" class="form-control border-start-0" id="antSearchInput" placeholder="{% trans "Filter by species (e.g. Lasius niger)…" %}" aria-label="{% trans "Search ant species" %}">
+                </div>
+            </div>
+            <div class="col-12 col-md-3 text-md-end mt-md-4">
+                <a href="{% url "nuptial_flight_table" %}" class="btn btn-sm btn-outline-secondary w-100 w-md-auto d-inline-flex align-items-center justify-content-center gap-1">
+                    <i class="bi bi-calendar3-range"></i>
+                    <span>{% trans "Nuptial Flight Table" %}</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Map #}
+    <div class="map-container shadow-sm">
+        <div id="map" {% if iframe %} class="iframe" {% endif %}></div>
+    </div>
+
+    {# Modal #}
+    <div id="flightInfoModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div id="flightInfoModalContent" class="modal-content shadow"></div>
         </div>
     </div>
 </div>
 {% endblock %}
+
 {% block script %}
-<script src="{% static 'flights/js/vendor/leaflet.js' %}"></script>
-<script>L.Icon.Default.imagePath = "{% static 'flights/css/vendor/images/' %}";</script>
-<script src="{% static 'flights/js/vendor/leaflet.markercluster.js' %}"></script>
-<script src="{% static 'flights/js/flights_map.js' %}?v=17"></script>
+<script src="{% static "flights/js/vendor/leaflet.js" %}"></script>
+<script>L.Icon.Default.imagePath = "{% static "flights/css/vendor/images/" %}";</script>
+<script src="{% static "flights/js/vendor/leaflet.markercluster.js" %}"></script>
+<script src="{% static "flights/js/flights_map.js" %}?v=18"></script>
 {% endblock %}

@@ -190,9 +190,28 @@
     </div>
   </div>
 
-  <p class="text-muted small mt-3">
-    {% include "snippets/flight_report_links.html" %}
-  </p>
+
+  <!-- AntScout Live Nuptial Flight Callout -->
+  <div class="card border-primary-subtle bg-body-tertiary p-3 mt-3 shadow-sm rounded-3">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-box bg-primary-subtle text-primary flex-shrink-0" style="width: 44px; height: 44px; font-size: 1.25rem;">
+          <i class="bi bi-broadcast"></i>
+        </div>
+        <div>
+          <div class="fw-bold text-body mb-0">{% trans "Live Nuptial Flights & Sighting Reports on AntScout" %}</div>
+          <div class="text-secondary small">
+            {% trans "Local reporting on antkeeping.info is closed (archived). For live seasonal tracking, real-time alerts, and submitting new sightings, visit" %}
+            <a href="https://antscout.com/flights" target="_blank" rel="noopener noreferrer" class="fw-bold">AntScout.com/flights <i class="bi bi-box-arrow-up-right small"></i></a>.
+          </div>
+        </div>
+      </div>
+      <a href="https://antscout.com/flights" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary flex-shrink-0 d-inline-flex align-items-center gap-1 shadow-sm">
+        <span>AntScout Flights</span>
+        <i class="bi bi-box-arrow-up-right small"></i>
+      </a>
+    </div>
+  </div>
 </section>
 
 <!-- Section 3: Ant Database & Tools -->

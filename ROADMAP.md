@@ -49,6 +49,10 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
     - **Beliebtheit nach Ameisengattung**: Aufschlüsselung der Akzeptanzwerte aggregiert nach Gattungen (*Lasius*, *Camponotus*, *Messor* etc.) mit visualisierten Prozent-Balken.
     - Vollständiges Arten-Ranking mit Direktverlinkung zu Haltungsberichten und Stimmen-Logs (`/fooddb/<id>/<slug>/ratings/`).
     - SEO-Integration: `FoodItemSitemap` und direkte Verknüpfung in der globalen Suche und Autocomplete.
+- [x] **Schwarmflug-Archiv & Karten (`/flights/`)**
+  - Readonly-Archivierung: Lokale Meldungen dauerhaft deaktiviert, klare Kennzeichnung als permanentes historisches Archiv.
+  - Prominente AntScout-Integration: Verlinkung auf `https://antscout.com/flights` als primäre Plattform für Live-Meldungen und Schwarmflug-Tracking (Landingpage-Hero/Callout, Navbar-Dropdown und Banner auf der Kartenseite).
+  - Modernisierte Kartenansicht mit Breadcrumbs, Filterleiste nach Jahren & Arten und WCAG AA Darkmode-Styling.
 
 ---
 
@@ -66,11 +70,11 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
 - [x] **Futter-Detailansicht**
   - Verdaulichkeit, Beliebtheit bei verschiedenen Gattungen, Nährwertübersicht.
 
-### 3. Schwarmflug-Meldungen & Karten
-- [ ] **Schwarmflug-Meldungen & Karte (`/flights/`)**
-  - Karten-Usability (Zoom, Cluster, mobile Touch-Bedienung).
-  - Melde-Formular: Einfachheit der Dateneingabe für Halter (Datum, Wetter, Fundort).
-  - Feedback nach Absenden einer Meldung (Toasts / Bestätigung).
+### 3. Schwarmflug-Meldungen & Archiv
+- [x] **Schwarmflug-Archiv & Karten (`/flights/`)**
+  - Readonly-Archivierung: Lokale Meldungen dauerhaft deaktiviert, klare Kennzeichnung als historisches Referenzarchiv.
+  - Prominente AntScout-Integration: Verlinkung auf `https://antscout.com/flights` für Live-Schwarmflugtracking & neue Meldungen.
+  - Kartenbedienung mit responsivem Jahres- & Artenfilter und WCAG AA Darkmode-Styling.
 
 ### 4. Halterbereich, Kolonien & Haltungstagebuch
 - [ ] **Kolonie-Verwaltung (`/users/.../colonies/`)**
