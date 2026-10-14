@@ -1,0 +1,360 @@
+{% extends "layout.html" %}
+{% load i18n static thumbnail %}
+
+{% block title %}{{ food_item.name }} ({{ category_label }}) — Ant Food Database | Antkeeping.info{% endblock %}
+{% block og_title %}{{ food_item.name }} — Ant Food Database | Antkeeping.info{% endblock %}
+{% block og_description %}{% if food_item.description %}{{ food_item.description }}{% else %}Community acceptance ratings, genus popularity, and feeding guide for {{ food_item.name }}.{% endif %}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static "ants/css/food_overview.css" %}">
+{% endblock %}
+
+{% block content %}
+<div class="food-detail-container pb-5">
+  {# Breadcrumb #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+      <li class="breadcrumb-item"><a href="{% url "home" %}" class="text-decoration-none text-secondary">{% trans "Home" %}</a></li>
+      <li class="breadcrumb-item"><a href="{% url "food_overview" %}" class="text-decoration-none text-secondary">{% trans "Food Database" %}</a></li>
+      <li class="breadcrumb-item"><a href="{% url "food_overview" %}?category={{ food_item.category }}" class="text-decoration-none text-secondary">{{ category_label }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ food_item.name }}</li>
+    </ol>
+  </nav>
+
+  {# Hero Card #}
+  <div class="food-detail-header-card shadow-sm mb-4">
+    <div class="row g-4 align-items-center">
+      <div class="col-12 col-md-4 col-lg-3 text-center">
+        {% if food_item.image %}
+          {% thumbnail food_item.image "600x600" crop="center" as im %}
+          {% thumbnail food_item.image "1600x1600" as im_full %}
+          <button type="button" class="food-item-thumb-button mx-auto" style="max-width: 240px;"
+                  data-bs-toggle="modal" data-bs-target="#food-item-image-modal"
+                  data-full-src="{{ im_full.url }}" data-name="{{ food_item.name }}"
+                  data-author="{{ food_item.image_author }}"
+                  data-license-label="{{ food_item.get_image_license_display }}"
+                  data-license-href="{% if food_item.image_source_url %}{{ food_item.image_source_url }}{% else %}{{ food_item.image_license_url }}{% endif %}"
+                  title="{% trans "Click to zoom image" %}">
+            <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
+                 class="food-item-thumb shadow-sm" alt="{{ food_item.name }}">
+          </button>
+          {% endthumbnail %}
+          {% endthumbnail %}
+          {% if food_item.image_author or food_item.image_license %}
+          <div class="food-item-attribution text-secondary small mt-2">
+            {% if food_item.image_author %}{% trans "Photo:" %} {{ food_item.image_author }}{% endif %}
+            {% if food_item.image_license %}
+            {% if food_item.image_source_url %}
+            <a href="{{ food_item.image_source_url }}" target="_blank" rel="noopener license" class="text-secondary">{{ food_item.get_image_license_display }}</a>
+            {% else %}
+            <a href="{{ food_item.image_license_url }}" target="_blank" rel="noopener license" class="text-secondary">{{ food_item.get_image_license_display }}</a>
+            {% endif %}
+            {% endif %}
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="food-placeholder-thumb mx-auto shadow-sm" style="max-width: 200px;">
+            <i class="bi bi-egg-fried"></i>
+            <span class="food-item-thumb-label text-secondary">{% trans "No image yet" %}</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-12 col-md-8 col-lg-9">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1">
+            {% if food_item.category == "PROTEIN" %}<i class="bi bi-egg-fried me-1"></i>
+            {% elif food_item.category == "SUGAR" %}<i class="bi bi-droplet-half me-1"></i>
+            {% elif food_item.category == "SEEDS" %}<i class="bi bi-flower1 me-1"></i>
+            {% elif food_item.category == "PLANT" %}<i class="bi bi-tree me-1"></i>
+            {% else %}<i class="bi bi-grid me-1"></i>{% endif %}
+            {{ category_label }}
+          </span>
+          {% if overall_acceptance is not None %}
+            {% if overall_acceptance >= 70 %}
+              <span class="badge badge-acceptance-high rounded-pill px-3 py-1 fw-semibold">
+                <i class="bi bi-check-circle-fill me-1"></i>{{ overall_acceptance }}% {% trans "acceptance" %}
+              </span>
+            {% elif overall_acceptance >= 40 %}
+              <span class="badge badge-acceptance-mid rounded-pill px-3 py-1 fw-semibold">
+                <i class="bi bi-dash-circle-fill me-1"></i>{{ overall_acceptance }}% {% trans "acceptance" %}
+              </span>
+            {% else %}
+              <span class="badge badge-acceptance-low rounded-pill px-3 py-1 fw-semibold">
+                <i class="bi bi-x-circle-fill me-1"></i>{{ overall_acceptance }}% {% trans "acceptance" %}
+              </span>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        <h1 class="h2 fw-bold mb-2">{{ food_item.name }}</h1>
+
+        {% if food_item.description %}
+        <p class="text-secondary fs-6 mb-3">
+          {{ food_item.description }}
+        </p>
+        {% endif %}
+
+        {# Quick Stat Tiles #}
+        <div class="row row-cols-2 row-cols-sm-4 g-2 mt-2">
+          <div class="col">
+            <div class="food-stat-tile shadow-sm">
+              <div class="stat-value {% if overall_acceptance >= 70 %}text-success{% elif overall_acceptance >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                {% if overall_acceptance is not None %}{{ overall_acceptance }}%{% else %}&mdash;{% endif %}
+              </div>
+              <div class="stat-label">{% trans "Acceptance" %}</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="food-stat-tile shadow-sm">
+              <div class="stat-value {% if overall_net > 0 %}text-success{% elif overall_net < 0 %}text-danger{% else %}text-secondary{% endif %}">
+                {% if overall_net > 0 %}+{% endif %}{{ overall_net }}
+              </div>
+              <div class="stat-label">{% trans "Net Score" %}</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="food-stat-tile shadow-sm">
+              <div class="stat-value text-body">{{ total_votes }}</div>
+              <div class="stat-label">{% trans "Total Votes" %}</div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="food-stat-tile shadow-sm">
+              <div class="stat-value text-body">{{ species_ratings|length }}</div>
+              <div class="stat-label">{% trans "Species Tested" %}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Feeding Advice & Suitability Guide #}
+  <div class="food-guide-card shadow-sm mb-4">
+    <h2 class="h5 fw-bold mb-2 d-flex align-items-center gap-2">
+      <i class="bi bi-lightbulb text-warning"></i>
+      <span>{% trans "Feeding & Suitability Guide" %}</span>
+    </h2>
+    <div class="text-secondary small">
+      {% if food_item.category == "PROTEIN" %}
+        <p class="mb-2">
+          <strong>{% trans "Why ants need protein:" %}</strong>
+          {% trans "Essential for larval growth, pupation, and egg production by the queen. Adult workers consume very little protein themselves; they carry it to the larvae." %}
+        </p>
+        <p class="mb-2">
+          <strong>{% trans "Preparation & Safety:" %}</strong>
+          {% trans "Pre-freeze feeder insects for at least 24–48 hours at -18°C or dip them in boiling water for 10–15 seconds to eliminate harmful mites and pathogens. Cut insects in half for young colonies to facilitate access." %}
+        </p>
+        <p class="mb-0">
+          <strong>{% trans "Portioning & Hygiene:" %}</strong>
+          {% trans "Remove uneaten insect parts within 24–48 hours to prevent mold and bacteria in the arena or nest chambers." %}
+        </p>
+      {% elif food_item.category == "SUGAR" %}
+        <p class="mb-2">
+          <strong>{% trans "Why ants need carbohydrates:" %}</strong>
+          {% trans "The primary energy source for adult workers to fuel foraging, brood tending, and nest maintenance." %}
+        </p>
+        <p class="mb-2">
+          <strong>{% trans "Safety against drowning:" %}</strong>
+          {% trans "Never offer large pools of liquid honey or sugar water to small colonies without a cotton plug or liquid feeder. Workers can easily get stuck and drown." %}
+        </p>
+        <p class="mb-0">
+          <strong>{% trans "Hygiene:" %}</strong>
+          {% trans "Replace sugar solutions every 2–4 days before fermentation occurs." %}
+        </p>
+      {% elif food_item.category == "SEEDS" %}
+        <p class="mb-2">
+          <strong>{% trans "Why ants need seeds:" %}</strong>
+          {% trans "Staple food for granivorous species (e.g. Messor, Pheidole). Workers crush the seeds into 'ant bread' to feed larvae and the queen." %}
+        </p>
+        <p class="mb-0">
+          <strong>{% trans "Dry storage:" %}</strong>
+          {% trans "Ensure seed storage chambers in the nest remain completely dry to prevent seeds from sprouting or rotting." %}
+        </p>
+      {% elif food_item.category == "PLANT" %}
+        <p class="mb-2">
+          <strong>{% trans "Usage for leafcutters:" %}</strong>
+          {% trans "Fungus-growing ants (Atta and Acromyrmex) use fresh, pesticide-free leaves to cultivate their symbiotic fungus garden." %}
+        </p>
+        <p class="mb-0">
+          <strong>{% trans "Pesticide danger:" %}</strong>
+          {% trans "Never use commercially treated florist plants. Always harvest fresh wild bramble, rose, or fruit tree leaves from pesticide-free areas." %}
+        </p>
+      {% else %}
+        <p class="mb-0">
+          {% trans "Supplemental and specialty nutrition. Always monitor colony acceptance and remove uneaten leftovers promptly." %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    {# Left / Top: Genus Popularity Breakdown #}
+    {% if genus_list %}
+    <div class="col-12 col-lg-5">
+      <div class="card shadow-sm border mb-4">
+        <div class="card-header bg-body-tertiary border-bottom py-3">
+          <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+            <i class="bi bi-diagram-3 text-primary"></i>
+            <span>{% trans "Popularity by Ant Genus" %}</span>
+          </h2>
+        </div>
+        <div class="list-group list-group-flush">
+          {% for g in genus_list %}
+          <div class="list-group-item py-2 px-3">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <span class="fw-semibold">
+                <em>{{ g.genus }}</em>
+                <span class="text-secondary small fw-normal">({{ g.species_count }} {% if g.species_count == 1 %}{% trans "species" %}{% else %}{% trans "species" %}{% endif %})</span>
+              </span>
+              <span class="small fw-bold {% if g.acceptance_pct >= 70 %}text-success{% elif g.acceptance_pct >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                {{ g.acceptance_pct }}%
+              </span>
+            </div>
+            <div class="acceptance-progress">
+              <div class="acceptance-progress-bar" style="width: {{ g.acceptance_pct }}%; {% if g.acceptance_pct < 40 %}background-color: #d32f2f;{% elif g.acceptance_pct < 70 %}background-color: #ed6c02;{% endif %}"></div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between text-secondary small mt-1" style="font-size: 0.75rem;">
+              <span><i class="bi bi-hand-thumbs-up-fill text-success"></i> {{ g.up_count }}</span>
+              <span><i class="bi bi-hand-thumbs-down-fill text-danger"></i> {{ g.down_count }}</span>
+              <span>{% trans "Net:" %} {% if g.net_score > 0 %}+{% endif %}{{ g.net_score }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Right: All Species Rankings & Voting #}
+    <div class="col-12 {% if genus_list %}col-lg-7{% else %}col-12{% endif %}">
+      <div class="card shadow-sm border mb-4">
+        <div class="card-header bg-body-tertiary border-bottom py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <h2 class="h6 mb-0 fw-bold d-flex align-items-center gap-2">
+            <i class="bi bi-trophy text-warning"></i>
+            <span>{% trans "Species Acceptance Rankings" %}</span>
+          </h2>
+          <span class="badge bg-secondary-subtle text-secondary-emphasis">
+            {{ species_ratings|length }} {% trans "species tested" %}
+          </span>
+        </div>
+
+        {% if not species_ratings %}
+        <div class="card-body p-4 text-center text-secondary">
+          <i class="bi bi-inbox display-6 d-block mb-2 text-muted"></i>
+          <p class="mb-0">{% trans "No species votes recorded for this food item yet." %}</p>
+        </div>
+        {% else %}
+        <div class="list-group list-group-flush">
+          {% for r in species_ratings %}
+          <div class="list-group-item d-flex align-items-center justify-content-between gap-2 flex-wrap py-2 px-3">
+            <div class="min-w-0">
+              <a href="{% url "ant_detail" r.species__slug %}" class="fw-semibold text-decoration-none">
+                <em>{{ r.species__name }}</em>
+              </a>
+              <div class="d-flex align-items-center gap-2 mt-1 small">
+                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                  <i class="bi bi-hand-thumbs-up-fill me-1"></i>{{ r.up_count }}
+                </span>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                  <i class="bi bi-hand-thumbs-down-fill me-1"></i>{{ r.down_count }}
+                </span>
+                <span class="fw-medium {% if r.net_score > 0 %}text-success{% elif r.net_score < 0 %}text-danger{% else %}text-secondary{% endif %}">
+                  {% trans "Net:" %} {% if r.net_score > 0 %}+{% endif %}{{ r.net_score }}
+                </span>
+                <span class="badge {% if r.acceptance_pct >= 70 %}badge-acceptance-high{% elif r.acceptance_pct >= 40 %}badge-acceptance-mid{% else %}badge-acceptance-low{% endif %} rounded-pill">
+                  {{ r.acceptance_pct }}%
+                </span>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+              <a href="{% url "food_item_species_ratings" food_item.pk r.species__slug %}" class="btn btn-sm btn-outline-secondary py-1 px-2 rounded-pill small" title="{% trans "View individual ratings" %}">
+                <i class="bi bi-journal-text"></i> {% trans "Logs" %}
+              </a>
+              {% if user.is_authenticated %}
+              <form hx-post="{% url "food_overview_vote" %}"
+                    hx-target="#food-item-ratings-{{ food_item.pk }}"
+                    class="d-inline-flex gap-1">
+                {% csrf_token %}
+                <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
+                <input type="hidden" name="species_id" value="{{ r.species_id }}">
+                <button type="submit" name="vote" value="1"
+                        class="btn btn-sm btn-vote {% if r.user_vote == 1 %}btn-success{% else %}btn-outline-success{% endif %}"
+                        title="{% trans "Accepts it" %}" aria-label="{% trans "Accepts it" %}">
+                  <i class="bi bi-hand-thumbs-up{% if r.user_vote == 1 %}-fill{% endif %}"></i>
+                </button>
+                <button type="submit" name="vote" value="-1"
+                        class="btn btn-sm btn-vote {% if r.user_vote == -1 %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                        title="{% trans "Doesn't accept it" %}" aria-label="{% trans "Doesn't accept it" %}">
+                  <i class="bi bi-hand-thumbs-down{% if r.user_vote == -1 %}-fill{% endif %}"></i>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {# Vote for a new species card footer #}
+        <div class="card-footer bg-body-tertiary p-3">
+          {% if user.is_authenticated %}
+          <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#detail-vote-form">
+            <i class="bi bi-plus-circle"></i>
+            <span>{% trans "Vote for another ant species" %}</span>
+          </button>
+          <div class="collapse mt-3" id="detail-vote-form">
+            <form hx-post="{% url "food_overview_vote" %}"
+                  data-species-vote-form data-species-suffix="detail"
+                  class="card p-3 border">
+              {% csrf_token %}
+              <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
+              <div class="mb-2 position-relative">
+                <label class="form-label small fw-semibold mb-1" for="species-search-detail">{% trans "Ant species" %}</label>
+                <input type="hidden" name="species_id" id="species-id-detail">
+                <input type="text"
+                       class="form-control form-control-sm"
+                       id="species-search-detail"
+                       name="q"
+                       placeholder="{% trans "Type species name (min. 4 characters)…" %}"
+                       autocomplete="off"
+                       hx-get="{% url "nuptial_flight_species_suggest" %}"
+                       hx-trigger="input changed delay:300ms"
+                       hx-target="next div"
+                       hx-swap="innerHTML"
+                       hx-include="this">
+                <div class="species-chips list-group position-absolute w-100 shadow-sm" style="z-index: 1000;"></div>
+              </div>
+              <div class="d-flex gap-2 align-items-center">
+                <button type="submit" name="vote" value="1" class="btn btn-sm btn-success" disabled>
+                  <i class="bi bi-hand-thumbs-up-fill me-1"></i>{% trans "Accepts it" %}
+                </button>
+                <button type="submit" name="vote" value="-1" class="btn btn-sm btn-danger" disabled>
+                  <i class="bi bi-hand-thumbs-down-fill me-1"></i>{% trans "Doesn't accept it" %}
+                </button>
+                <span class="text-secondary small fst-italic">{% trans "Select a species first" %}</span>
+              </div>
+            </form>
+          </div>
+          {% else %}
+          <span class="text-secondary small">
+            <a href="{% url "account_login" %}?next={{ request.get_full_path|urlencode }}" class="fw-semibold">{% trans "Log in" %}</a>
+            {% trans "to vote on how your colonies accept this food item." %}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include "ants/food_item_image_modal.html" %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="{% static "js/htmx.min.js" %}?v=2.0.4"></script>
+<script src="{% static "ants/js/food_species_search.js" %}"></script>
+<script src="{% static "ants/js/food_item_image_modal.js" %}"></script>
+{% endblock %}

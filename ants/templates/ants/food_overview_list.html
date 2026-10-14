@@ -1,11 +1,26 @@
-{% load i18n thumbnail %}
+{% load i18n thumbnail static %}
 <div id="food-data-list" hx-swap-oob="true">
 {% if not food_data %}
-  <p class="text-muted">No food items in this category yet.</p>
+  <div class="card p-5 text-center bg-body-tertiary border">
+    <i class="bi bi-inbox text-secondary display-6 mb-2"></i>
+    <h3 class="h5 fw-bold mb-1">{% trans "No food items in this category yet" %}</h3>
+    <p class="text-secondary small mb-3">
+      {% trans "Be the first to suggest a food item for this category!" %}
+    </p>
+    {% if user.is_authenticated %}
+    <div>
+      <button type="button" class="btn btn-sm btn-primary"
+              hx-get="{% url "food_overview_new_item_form" %}?category={{ selected_category }}"
+              hx-target="#new-food-item-panel" hx-swap="innerHTML">
+        <i class="bi bi-plus-circle me-1"></i>{% trans "Suggest food item" %}
+      </button>
+    </div>
+    {% endif %}
+  </div>
 {% else %}
   {% for entry in food_data %}
-  <div class="card mb-4" id="food-item-card-{{ entry.food_item.pk }}" data-food-name="{{ entry.food_item.name }}">
-    <div class="card-header d-flex flex-column flex-sm-row align-items-sm-start gap-2">
+  <div class="food-overview-card shadow-sm" id="food-item-card-{{ entry.food_item.pk }}" data-food-name="{{ entry.food_item.name }}">
+    <div class="food-card-header d-flex flex-column flex-sm-row align-items-sm-start gap-3">
       <div class="food-item-thumb-wrap flex-shrink-0">
         {% if entry.food_item.image %}
         {% thumbnail entry.food_item.image "768x768" crop="center" as im %}
@@ -14,39 +29,89 @@
                 data-full-src="{{ im_full.url }}" data-name="{{ entry.food_item.name }}"
                 data-author="{{ entry.food_item.image_author }}"
                 data-license-label="{{ entry.food_item.get_image_license_display }}"
-                data-license-href="{% if entry.food_item.image_source_url %}{{ entry.food_item.image_source_url }}{% else %}{{ entry.food_item.image_license_url }}{% endif %}">
+                data-license-href="{% if entry.food_item.image_source_url %}{{ entry.food_item.image_source_url }}{% else %}{{ entry.food_item.image_license_url }}{% endif %}"
+                title="{% trans "Click to zoom image" %}">
           <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}"
-               class="rounded food-item-thumb" alt="{{ entry.food_item.name }}">
+               class="food-item-thumb" alt="{{ entry.food_item.name }}">
         </button>
         {% endthumbnail %}
         {% endthumbnail %}
         {% if entry.food_item.image_author or entry.food_item.image_license %}
-        <div class="food-item-attribution text-muted" style="font-size: 0.7rem;">
-          {% if entry.food_item.image_author %}{% trans 'Photo:' %} {{ entry.food_item.image_author }}{% endif %}
+        <div class="food-item-attribution text-secondary mt-1" style="font-size: 0.7rem;">
+          {% if entry.food_item.image_author %}{% trans "Photo:" %} {{ entry.food_item.image_author }}{% endif %}
           {% if entry.food_item.image_license %}
           {% if entry.food_item.image_source_url %}
-          <a href="{{ entry.food_item.image_source_url }}" target="_blank" rel="noopener license">{{ entry.food_item.get_image_license_display }}</a>
+          <a href="{{ entry.food_item.image_source_url }}" target="_blank" rel="noopener license" class="text-secondary">{{ entry.food_item.get_image_license_display }}</a>
           {% else %}
-          <a href="{{ entry.food_item.image_license_url }}" target="_blank" rel="noopener license">{{ entry.food_item.get_image_license_display }}</a>
+          <a href="{{ entry.food_item.image_license_url }}" target="_blank" rel="noopener license" class="text-secondary">{{ entry.food_item.get_image_license_display }}</a>
           {% endif %}
           {% endif %}
         </div>
         {% endif %}
         {% else %}
-        <span class="rounded bg-light text-muted d-flex flex-column align-items-center justify-content-center food-item-thumb">
-          <i class="bi bi-bug-fill"></i>
-          <span class="food-item-thumb-label">{% trans 'No image yet' %}</span>
-        </span>
+        <div class="food-placeholder-thumb">
+          <i class="bi bi-egg-fried"></i>
+          <span class="food-item-thumb-label text-secondary">{% trans "No image yet" %}</span>
+        </div>
         {% endif %}
       </div>
-      <div class="d-flex align-items-baseline gap-2 flex-wrap">
-        <h2 class="h5 mb-0">{{ entry.food_item.name }}</h2>
+      <div class="flex-grow-1 min-w-0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+          <h2 class="h5 mb-0 fw-bold">
+            <a href="{% url "food_item_detail" entry.food_item.pk %}" class="food-title-link">
+              {{ entry.food_item.name }}
+            </a>
+          </h2>
+          <div class="d-flex align-items-center gap-1 flex-wrap">
+            {% if entry.acceptance_pct is not None %}
+              {% if entry.acceptance_pct >= 70 %}
+                <span class="badge badge-acceptance-high rounded-pill px-2 py-1 small fw-semibold">
+                  <i class="bi bi-check-circle-fill me-1"></i>{{ entry.acceptance_pct }}% {% trans "acceptance" %}
+                </span>
+              {% elif entry.acceptance_pct >= 40 %}
+                <span class="badge badge-acceptance-mid rounded-pill px-2 py-1 small fw-semibold">
+                  <i class="bi bi-dash-circle-fill me-1"></i>{{ entry.acceptance_pct }}% {% trans "acceptance" %}
+                </span>
+              {% else %}
+                <span class="badge badge-acceptance-low rounded-pill px-2 py-1 small fw-semibold">
+                  <i class="bi bi-x-circle-fill me-1"></i>{{ entry.acceptance_pct }}% {% trans "acceptance" %}
+                </span>
+              {% endif %}
+            {% endif %}
+            <a href="{% url "food_item_detail" entry.food_item.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill small" title="{% trans "View detailed feeding guide & stats" %}">
+              {% trans "Details & Guide" %} &raquo;
+            </a>
+          </div>
+        </div>
+
         {% if entry.food_item.description %}
-        <span class="text-muted small">{{ entry.food_item.description }}</span>
+        <p class="text-secondary small mb-2">
+          {{ entry.food_item.description }}
+        </p>
         {% endif %}
+
+        <div class="d-flex align-items-center gap-2 flex-wrap text-secondary small">
+          <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+            {{ entry.food_item.get_category_display }}
+          </span>
+          {% if entry.total_ratings %}
+          <span>
+            <i class="bi bi-people me-1"></i>
+            {% blocktrans with total=entry.total_ratings species=entry.total_species %}
+              {{ total }} vote{{ total|pluralize }} across {{ species }} species{{ species|pluralize }}
+            {% endblocktrans %}
+          </span>
+          <span class="text-muted">&bull;</span>
+          <span class="fw-semibold {% if entry.overall_net_score > 0 %}text-success{% elif entry.overall_net_score < 0 %}text-danger{% else %}text-secondary{% endif %}">
+            {% trans "Net score:" %} {% if entry.overall_net_score > 0 %}+{% endif %}{{ entry.overall_net_score }}
+          </span>
+          {% else %}
+          <span class="text-muted">{% trans "No votes yet" %}</span>
+          {% endif %}
+        </div>
       </div>
     </div>
-    {% include "ants/food_overview_species_list.html" with food_item=entry.food_item top_species=entry.top_species extra_count=entry.extra_count total_species=entry.total_species total_ratings=entry.total_ratings overall_net_score=entry.overall_net_score %}
+    {% include "ants/food_overview_species_list.html" with food_item=entry.food_item top_species=entry.top_species extra_count=entry.extra_count total_species=entry.total_species total_ratings=entry.total_ratings overall_net_score=entry.overall_net_score acceptance_pct=entry.acceptance_pct up_total=entry.up_total down_total=entry.down_total %}
   </div>
   {% endfor %}
 {% endif %}

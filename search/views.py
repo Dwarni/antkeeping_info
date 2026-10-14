@@ -225,7 +225,7 @@ class SearchAutocompleteView(View):
                 "type": "food",
                 "title": f.name,
                 "subtitle": f.get_category_display(),
-                "url": f"{reverse("food_overview")}?category={f.category}",
+                "url": f.get_absolute_url(),
                 "icon": "bi-egg-fried",
             }
             for f in food_items

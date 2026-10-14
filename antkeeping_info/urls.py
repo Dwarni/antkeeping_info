@@ -19,6 +19,7 @@ from django.views.generic import TemplateView
 
 from antkeeping_info.sitemaps import (
     AntSpeciesSitemap,
+    FoodItemSitemap,
     FoodItemSpeciesRatingSitemap,
     StaticViewSitemap,
     TaxonomicRanksByRegionSitemap,
@@ -64,6 +65,7 @@ urlpatterns = [
                 "species": AntSpeciesSitemap,
                 "static": StaticViewSitemap,
                 "regions": TaxonomicRanksByRegionSitemap,
+                "food-items": FoodItemSitemap,
                 "food-ratings": FoodItemSpeciesRatingSitemap,
             }
         },

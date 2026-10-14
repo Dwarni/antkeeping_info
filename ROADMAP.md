@@ -35,6 +35,20 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Kategorie-Pills mit Zähler-Badges zur schnellen Filterung der Treffer.
   - Tippfehler-Toleranz mit „Meintest du: ...?“-Vorschlägen für Gattungen und Arten.
   - Leere-Zustände mit Vorschlägen beliebter Suchbegriffe und Hilfestellungen.
+- [x] **Futter-Datenbank (`/fooddb/` & `/fooddb/<id>/`)**
+  - **Futter-Übersicht (`/fooddb/`)**:
+    - Kategorisierungs-Tabs (Proteine, Zucker/Kohlenhydrate, Körner/Samen, Blätter, Sonstiges) mit Farbschema, Icons und dynamischen Zähler-Badges.
+    - Schnelle Client-Seitige Sofortsuche mit Live-Trefferzähler („X von Y Futtermitteln“) und informativem Leere-Zustand mit Zurücksetzen-Aktion.
+    - WCAG AA-konforme Akzeptanz-Badges (Hohe/Mittlere/Geringe Akzeptanz in % mit Barrierefreiheitsfarben für Light- & Darkmode).
+    - Theme-adaptive Platzhalter (`.food-placeholder-thumb`) ohne harte Weißtöne im Darkmode.
+    - Direkte Stimmabgabe für angemeldete Nutzer und übersichtliche Aufklapp-Suche für weitere Arten.
+  - **Futter-Detailansicht (`/fooddb/<id>/`)**:
+    - Vollwertige Detailseite (`FoodItemDetailView`) mit Breadcrumb-Navigation, High-Res Fotogalerie und Quellnachweisen.
+    - Kennzahlen-Kacheln: Akzeptanzrate (%), Netto-Score, Gesamtwertungen und Anzahl getesteter Arten.
+    - Spezifischer Fütterungs- und Eignungsratgeber je nach Futterkategorie (Proteine: Larvenwachstum, Überbrühen/Einfrieren gegen Milben; Zucker: Energie, Ertrinkschutz mit Watte; Körner: Messor-Kornspeicher trocken halten; Blätter: frische Futterpflanzen ohne Pestizide).
+    - **Beliebtheit nach Ameisengattung**: Aufschlüsselung der Akzeptanzwerte aggregiert nach Gattungen (*Lasius*, *Camponotus*, *Messor* etc.) mit visualisierten Prozent-Balken.
+    - Vollständiges Arten-Ranking mit Direktverlinkung zu Haltungsberichten und Stimmen-Logs (`/fooddb/<id>/<slug>/ratings/`).
+    - SEO-Integration: `FoodItemSitemap` und direkte Verknüpfung in der globalen Suche und Autocomplete.
 
 ---
 
@@ -46,10 +60,10 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Autovervollständigung, Leere-Zustände und Tippfehler-Toleranz.
 
 ### 2. Futter-Datenbank
-- [ ] **Futter-Übersicht (`/fooddb/`)**
+- [x] **Futter-Übersicht (`/fooddb/`)**
   - Kategorisierung (Zuckerquellen, Proteine/Futtertiere, Körner/Samen).
   - Filterung und Eignungsbewertungen auf einen Blick.
-- [ ] **Futter-Detailansicht**
+- [x] **Futter-Detailansicht**
   - Verdaulichkeit, Beliebtheit bei verschiedenen Gattungen, Nährwertübersicht.
 
 ### 3. Schwarmflug-Meldungen & Karten

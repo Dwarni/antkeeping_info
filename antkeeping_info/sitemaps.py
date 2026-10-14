@@ -1,7 +1,7 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 
-from ants.models import AntSpecies, SpeciesFoodRating
+from ants.models import AntSpecies, FoodItem, SpeciesFoodRating
 
 
 class AntSpeciesSitemap(Sitemap):
@@ -65,3 +65,16 @@ class FoodItemSpeciesRatingSitemap(Sitemap):
     def location(self, item):
         food_item_id, species_slug = item
         return reverse("food_item_species_ratings", args=[food_item_id, species_slug])
+
+
+class FoodItemSitemap(Sitemap):
+    """One entry per food item."""
+
+    changefreq = "weekly"
+    priority = 0.6
+
+    def items(self):
+        return FoodItem.objects.all().order_by("id")
+
+    def location(self, item):
+        return item.get_absolute_url()

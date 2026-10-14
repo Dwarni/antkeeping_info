@@ -327,7 +327,7 @@
                                         </span>
                                     </div>
                                     <h3 class="h6 mb-1 text-truncate fw-bold">
-                                        <a href="{% url "food_overview" %}?category={{ food.category }}" class="text-decoration-none text-body">
+                                        <a href="{{ food.get_absolute_url }}" class="text-decoration-none text-body">
                                             {{ food.name }}
                                         </a>
                                     </h3>

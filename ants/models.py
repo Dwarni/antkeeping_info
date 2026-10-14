@@ -853,6 +853,9 @@ class FoodItem(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse("food_item_detail", args=[self.pk])
+
     @property
     def image_license_url(self):
         return self.IMAGE_LICENSE_URLS.get(self.image_license, "")

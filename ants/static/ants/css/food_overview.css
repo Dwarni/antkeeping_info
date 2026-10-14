@@ -1,5 +1,13 @@
+/* Food Database Styles - Light & Dark Mode (WCAG AA) */
+
 .food-item-thumb-wrap {
     width: 100%;
+}
+
+@media (min-width: 576px) {
+    .food-item-thumb-wrap {
+        width: 160px;
+    }
 }
 
 .food-item-thumb-button {
@@ -9,6 +17,12 @@
     border: 0;
     background: none;
     cursor: pointer;
+    text-align: left;
+    transition: transform 0.15s ease;
+}
+
+.food-item-thumb-button:hover {
+    transform: scale(1.02);
 }
 
 .food-item-thumb {
@@ -16,20 +30,230 @@
     height: auto;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    font-size: 3rem;
+    font-size: 2.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--bs-border-color);
+}
+
+.food-placeholder-thumb {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px dashed var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    text-align: center;
+    padding: 0.75rem;
+    transition: background-color 0.15s ease;
+}
+
+.food-placeholder-thumb i {
+    font-size: 2.25rem;
+    opacity: 0.75;
 }
 
 .food-item-thumb-label {
     font-size: 0.75rem;
-    margin-top: 0.25rem;
+    margin-top: 0.35rem;
+    font-weight: 500;
 }
 
-.species-chips:not(:empty) {
-    margin-bottom: 0.5rem;
+.food-overview-card {
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-@media (min-width: 576px) {
-    .food-item-thumb-wrap {
-        width: 192px;
-    }
+.food-overview-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.food-card-header {
+    background-color: var(--bs-secondary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+    padding: 1.25rem;
+}
+
+.food-title-link {
+    color: var(--bs-heading-color, var(--bs-body-color));
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.food-title-link:hover {
+    color: var(--bs-primary);
+    text-decoration: underline;
+}
+
+.food-category-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    transition: all 0.15s ease;
+}
+
+.food-category-pill:hover {
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-primary);
+    color: var(--bs-body-color);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.food-category-pill.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.25);
+}
+
+.food-category-pill .badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Acceptance badges */
+.badge-acceptance-high {
+    background-color: rgba(46, 125, 50, 0.12);
+    color: #2e7d32;
+    border: 1px solid rgba(46, 125, 50, 0.3);
+}
+
+.badge-acceptance-mid {
+    background-color: rgba(237, 108, 2, 0.12);
+    color: #ed6c02;
+    border: 1px solid rgba(237, 108, 2, 0.3);
+}
+
+.badge-acceptance-low {
+    background-color: rgba(211, 47, 47, 0.12);
+    color: #d32f2f;
+    border: 1px solid rgba(211, 47, 47, 0.3);
+}
+
+[data-bs-theme="dark"] .badge-acceptance-high {
+    background-color: rgba(76, 175, 80, 0.18);
+    color: #81c784;
+    border-color: rgba(76, 175, 80, 0.4);
+}
+
+[data-bs-theme="dark"] .badge-acceptance-mid {
+    background-color: rgba(255, 152, 0, 0.18);
+    color: #ffb74d;
+    border-color: rgba(255, 152, 0, 0.4);
+}
+
+[data-bs-theme="dark"] .badge-acceptance-low {
+    background-color: rgba(244, 67, 54, 0.18);
+    color: #e57373;
+    border-color: rgba(244, 67, 54, 0.4);
+}
+
+/* Species Vote Rows */
+.species-vote-row {
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,0.06));
+}
+
+.species-vote-row:last-child {
+    border-bottom: none;
+}
+
+.species-vote-row:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.btn-vote {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0.25rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.12s ease;
+}
+
+/* Genus Acceptance Progress Bar */
+.acceptance-progress {
+    height: 6px;
+    border-radius: 999px;
+    background-color: var(--bs-border-color);
+    overflow: hidden;
+}
+
+.acceptance-progress-bar {
+    height: 100%;
+    background-color: #2e7d32;
+    border-radius: 999px;
+}
+
+[data-bs-theme="dark"] .acceptance-progress-bar {
+    background-color: #66bb6a;
+}
+
+/* Food Detail Page Elements */
+.food-detail-header-card {
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.food-detail-image {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    border: 1px solid var(--bs-border-color);
+}
+
+.food-stat-tile {
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    padding: 0.85rem 1rem;
+    text-align: center;
+}
+
+.food-stat-tile .stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.food-stat-tile .stat-label {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    margin-top: 0.2rem;
+}
+
+.food-guide-card {
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-left: 4px solid var(--bs-primary);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
 }

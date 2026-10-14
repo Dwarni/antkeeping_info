@@ -1,74 +1,177 @@
-{% extends 'layout.html' %}
+{% extends "layout.html" %}
 {% load i18n %}
 {% load static %}
 {% load bootstraptags %}
+
 {% block title %}Ant Food Database — What Do Ants Eat? | Antkeeping.info{% endblock %}
 {% block og_title %}Ant Food Database — Antkeeping.info{% endblock %}
 {% block og_description %}Discover what ants eat. Browse community-rated food items — protein, sugar, seeds, nuts, fruit and more — ranked by which ant species accept them best.{% endblock %}
 {% block meta %}
 <meta name="description" content="Discover what ants eat. Browse community-rated food items — protein, sugar, seeds, nuts, fruit and more — ranked by which ant species accept them best.">
 {% endblock %}
+
 {% block css %}
-<link rel="stylesheet" href="{% static 'ants/css/food_overview.css' %}">
+<link rel="stylesheet" href="{% static "ants/css/food_overview.css" %}">
 {% endblock %}
+
 {% block content %}
+<div class="food-overview-container pb-5">
+  {# Breadcrumb #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0 small">
+      <li class="breadcrumb-item"><a href="{% url "home" %}" class="text-decoration-none text-secondary">{% trans "Home" %}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{% trans "Food Database" %}</li>
+    </ol>
+  </nav>
 
-<h1 class="h2 mb-1">Ant Food Database</h1>
-<p class="text-muted mb-4">Which ant species accept a given food? Ranked by community ratings — most liked first.</p>
+  {# Header #}
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1 d-flex align-items-center gap-2">
+        <i class="bi bi-egg-fried text-primary"></i>
+        <span>{% trans "Ant Food Database" %}</span>
+      </h1>
+      <p class="text-secondary mb-0">
+        {% trans "Community ratings on food suitability and acceptance across ant species — ranked from highest to lowest acceptance." %}
+      </p>
+    </div>
+    {% if user.is_authenticated %}
+    <div>
+      <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm"
+              hx-get="{% url "food_overview_new_item_form" %}?category={{ selected_category }}"
+              hx-target="#new-food-item-panel" hx-swap="innerHTML">
+        <i class="bi bi-plus-circle"></i>
+        <span>{% trans "Suggest food item" %}</span>
+      </button>
+    </div>
+    {% endif %}
+  </div>
 
-<ul class="nav nav-pills mb-4 flex-wrap">
-  {% for key, label in categories %}
-  <li class="nav-item">
-    <a class="nav-link{% if key == selected_category %} active{% endif %}"
-       href="?category={{ key }}">{{ label }}</a>
-  </li>
-  {% endfor %}
-</ul>
+  {# Category Navigation Tabs #}
+  <div class="food-category-nav d-flex flex-wrap gap-2 mb-4">
+    {% for key, label in categories %}
+    <a class="food-category-pill{% if key == selected_category %} active{% endif %}"
+       href="?category={{ key }}">
+      {% if key == "PROTEIN" %}
+        <i class="bi bi-egg-fried text-warning"></i>
+      {% elif key == "SUGAR" %}
+        <i class="bi bi-droplet-half text-info"></i>
+      {% elif key == "SEEDS" %}
+        <i class="bi bi-flower1 text-success"></i>
+      {% elif key == "PLANT" %}
+        <i class="bi bi-tree text-success"></i>
+      {% else %}
+        <i class="bi bi-grid text-secondary"></i>
+      {% endif %}
+      <span>{{ label }}</span>
+      {% if category_counts %}
+      <span class="badge rounded-pill {% if key == selected_category %}bg-light text-dark{% else %}bg-secondary-subtle text-secondary-emphasis{% endif %} ms-1">
+        {% if key == "PROTEIN" %}{{ category_counts.PROTEIN|default:0 }}
+        {% elif key == "SUGAR" %}{{ category_counts.SUGAR|default:0 }}
+        {% elif key == "SEEDS" %}{{ category_counts.SEEDS|default:0 }}
+        {% elif key == "PLANT" %}{{ category_counts.PLANT|default:0 }}
+        {% else %}{{ category_counts.OTHER|default:0 }}{% endif %}
+      </span>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
 
-<div class="d-flex gap-2 align-items-center flex-wrap mb-3">
-  <input type="text" id="food-filter-input" class="form-control form-control-sm"
-         style="max-width: 320px;" autocomplete="off"
-         placeholder="Filter foods in this category…">
-  {% if user.is_authenticated %}
-  <button type="button" class="btn btn-sm btn-outline-primary"
-          hx-get="{% url 'food_overview_new_item_form' %}?category={{ selected_category }}"
-          hx-target="#new-food-item-panel" hx-swap="innerHTML">
-    <i class="bi bi-plus-circle"></i> {% trans 'Add new food item' %}
-  </button>
-  {% else %}
-  <span class="text-muted small">
-    <a href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}">{% trans 'Log in' %}</a>
-    {% trans 'or' %}
-    <a href="{% url 'account_signup' %}?next={{ request.get_full_path|urlencode }}">{% trans 'create a free account' %}</a>
-    {% trans 'to add a new food item.' %}
-  </span>
-  {% endif %}
+  {# Filter Toolbar #}
+  <div class="card p-3 mb-4 bg-body-tertiary border">
+    <div class="row g-2 align-items-center justify-content-between">
+      <div class="col-12 col-md-6 col-lg-5">
+        <div class="input-group">
+          <span class="input-group-text bg-body text-secondary border-end-0">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="search" id="food-filter-input" class="form-control border-start-0"
+                 autocomplete="off"
+                 placeholder="{% trans "Filter food by name in this category…" %}"
+                 aria-label="{% trans "Filter food items" %}">
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-7 d-flex align-items-center justify-content-md-end gap-2 flex-wrap">
+        <span id="food-filter-count" class="text-secondary small fw-medium"></span>
+        {% if not user.is_authenticated %}
+        <span class="text-secondary small">
+          <a href="{% url "account_login" %}?next={{ request.get_full_path|urlencode }}" class="fw-semibold">{% trans "Log in" %}</a>
+          {% trans "or" %}
+          <a href="{% url "account_signup" %}?next={{ request.get_full_path|urlencode }}" class="fw-semibold">{% trans "sign up" %}</a>
+          {% trans "to vote or add items." %}
+        </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div id="new-food-item-panel" class="mb-4"></div>
+
+  {# Empty filter state #}
+  <div id="food-filter-empty" class="card text-center p-5 mb-4 border d-none">
+    <div class="card-body">
+      <i class="bi bi-search text-secondary display-6 mb-3 d-block"></i>
+      <h3 class="h5 fw-bold mb-1">{% trans "No matching food items found" %}</h3>
+      <p class="text-secondary small mb-3">
+        {% trans "Try adjusting your search keyword or switch to another category." %}
+      </p>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('food-filter-input').value=''; document.getElementById('food-filter-input').dispatchEvent(new Event('input'));">
+        <i class="bi bi-x-circle me-1"></i>{% trans "Clear filter" %}
+      </button>
+    </div>
+  </div>
+
+  {% include "ants/food_overview_list.html" %}
+
+  {% include "ants/food_item_image_modal.html" %}
 </div>
-
-<div id="new-food-item-panel" class="mb-3"></div>
-
-{% include "ants/food_overview_list.html" %}
-
-{% include "ants/food_item_image_modal.html" %}
-
 {% endblock %}
+
 {% block script %}
-<script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
-<script src="{% static 'ants/js/food_species_search.js' %}"></script>
-<script src="{% static 'ants/js/food_item_image_modal.js' %}"></script>
+<script src="{% static "js/htmx.min.js" %}?v=2.0.4"></script>
+<script src="{% static "ants/js/food_species_search.js" %}"></script>
+<script src="{% static "ants/js/food_item_image_modal.js" %}"></script>
 
 <script>
-// Client-side filter: hide food cards whose name doesn't match the typed text.
+// Client-side filter: live search with count indicator and empty state
 (function () {
     var input = document.getElementById('food-filter-input');
+    var countEl = document.getElementById('food-filter-count');
+    var emptyEl = document.getElementById('food-filter-empty');
     if (!input) return;
-    input.addEventListener('input', function () {
+
+    function applyFilter() {
         var query = input.value.trim().toLowerCase();
-        document.querySelectorAll('#food-data-list [data-food-name]').forEach(function (card) {
-            var name = card.dataset.foodName.toLowerCase();
-            card.style.display = name.indexOf(query) === -1 ? 'none' : '';
+        var cards = document.querySelectorAll('#food-data-list [data-food-name]');
+        var total = cards.length;
+        var visible = 0;
+
+        cards.forEach(function (card) {
+            var name = (card.dataset.foodName || '').toLowerCase();
+            var matches = !query || name.indexOf(query) !== -1;
+            card.style.display = matches ? '' : 'none';
+            if (matches) visible++;
         });
-    });
+
+        if (countEl) {
+            if (query) {
+                countEl.textContent = visible + ' / ' + total + ' {% trans "items found" %}';
+            } else {
+                countEl.textContent = total + ' ' + (total === 1 ? '{% trans "item" %}' : '{% trans "items" %}');
+            }
+        }
+
+        if (emptyEl) {
+            if (total > 0 && visible === 0) {
+                emptyEl.classList.remove('d-none');
+            } else {
+                emptyEl.classList.add('d-none');
+            }
+        }
+    }
+
+    input.addEventListener('input', applyFilter);
+    applyFilter();
 })();
 </script>
 {% endblock %}

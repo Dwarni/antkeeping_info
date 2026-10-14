@@ -1,27 +1,56 @@
 {% load i18n %}
 <div id="food-item-ratings-{{ food_item.pk }}" class="card-body p-0" data-food-item-id="{{ food_item.pk }}">
   {% if total_ratings %}
-  <div class="px-3 pt-2 pb-1 d-flex align-items-center gap-2 flex-wrap">
-    <span class="fw-semibold">{% blocktrans with score=overall_net_score %}Net score: {{ score }}{% endblocktrans %}</span>
-    <span class="text-muted small">
-      {{ total_ratings }} vote{{ total_ratings|pluralize }} across {{ total_species }} species{{ total_species|pluralize }}
-    </span>
+  <div class="px-3 py-2 bg-body-tertiary border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap small">
+      <span class="fw-bold {% if overall_net_score > 0 %}text-success{% elif overall_net_score < 0 %}text-danger{% else %}text-secondary{% endif %}">
+        {% trans "Net:" %} {% if overall_net_score > 0 %}+{% endif %}{{ overall_net_score }}
+      </span>
+      <span class="text-secondary">
+        &bull;
+        {% blocktrans with total=total_ratings count=total_species %}
+          {{ total }} vote{{ total|pluralize }} across {{ count }} species{{ count|pluralize }}
+        {% endblocktrans %}
+      </span>
+      {% if acceptance_pct is not None %}
+      <span class="badge {% if acceptance_pct >= 70 %}badge-acceptance-high{% elif acceptance_pct >= 40 %}badge-acceptance-mid{% else %}badge-acceptance-low{% endif %} rounded-pill">
+        {{ acceptance_pct }}% {% trans "acceptance" %}
+      </span>
+      {% endif %}
+    </div>
+    <a href="{% url "food_item_detail" food_item.pk %}" class="small text-decoration-none fw-medium">
+      {% trans "View full rankings & guide" %} &raquo;
+    </a>
   </div>
   {% endif %}
 
   {% if not top_species %}
-    <p class="px-3 pb-3 mb-0 text-muted small">No votes yet for this food item.</p>
+    <p class="px-3 py-3 mb-0 text-secondary small">
+      <i class="bi bi-info-circle me-1"></i>{% trans "No votes yet for this food item. Rate it below for your species!" %}
+    </p>
   {% else %}
-    <ul class="list-group list-group-flush">
+    <div class="list-group list-group-flush">
       {% for row in top_species %}
-      <li class="list-group-item d-flex align-items-center gap-2 flex-wrap py-2">
-        <a href="{% url 'food_item_species_ratings' food_item.pk row.species__slug %}" class="fw-semibold text-decoration-none me-1">
-          <em>{{ row.species__name }}</em>
-        </a>
-        <span class="text-success small"><i class="bi bi-hand-thumbs-up-fill"></i> {{ row.up_count }}</span>
-        <span class="text-danger small"><i class="bi bi-hand-thumbs-down-fill"></i> {{ row.down_count }}</span>
+      <div class="list-group-item species-vote-row d-flex align-items-center justify-content-between gap-2 flex-wrap py-2 px-3">
+        <div class="d-flex align-items-center gap-2 flex-wrap min-w-0">
+          <a href="{% url "food_item_species_ratings" food_item.pk row.species__slug %}" class="fw-semibold text-decoration-none me-1" title="{% trans "View rating logs" %}">
+            <em>{{ row.species__name }}</em>
+          </a>
+          <span class="badge bg-success-subtle text-success border border-success-subtle" title="{% trans "Accepts it" %}">
+            <i class="bi bi-hand-thumbs-up-fill me-1"></i>{{ row.up_count }}
+          </span>
+          <span class="badge bg-danger-subtle text-danger border border-danger-subtle" title="{% trans "Doesn't accept it" %}">
+            <i class="bi bi-hand-thumbs-down-fill me-1"></i>{{ row.down_count }}
+          </span>
+          {% if row.acceptance_pct is not None and row.total_votes > 0 %}
+          <span class="text-secondary small">
+            ({{ row.acceptance_pct }}%)
+          </span>
+          {% endif %}
+        </div>
+
         {% if user.is_authenticated %}
-        <form hx-post="{% url 'food_overview_vote' %}"
+        <form hx-post="{% url "food_overview_vote" %}"
               hx-target="#food-item-ratings-{{ food_item.pk }}"
               hx-swap="outerHTML"
               class="d-inline-flex gap-1 ms-auto">
@@ -29,72 +58,80 @@
           <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
           <input type="hidden" name="species_id" value="{{ row.species_id }}">
           <button type="submit" name="vote" value="1"
-                  class="btn btn-sm {% if row.user_vote == 1 %}btn-success{% else %}btn-outline-success{% endif %}"
-                  aria-label="{% trans 'Accepts it' %}">
+                  class="btn btn-sm btn-vote {% if row.user_vote == 1 %}btn-success{% else %}btn-outline-success{% endif %}"
+                  aria-label="{% trans "Accepts it" %}"
+                  title="{% trans "Accepts it" %}">
             <i class="bi bi-hand-thumbs-up{% if row.user_vote == 1 %}-fill{% endif %}"></i>
           </button>
           <button type="submit" name="vote" value="-1"
-                  class="btn btn-sm {% if row.user_vote == -1 %}btn-danger{% else %}btn-outline-danger{% endif %}"
-                  aria-label="{% trans "Doesn't accept it" %}">
+                  class="btn btn-sm btn-vote {% if row.user_vote == -1 %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                  aria-label="{% trans "Doesn't accept it" %}"
+                  title="{% trans "Doesn't accept it" %}">
             <i class="bi bi-hand-thumbs-down{% if row.user_vote == -1 %}-fill{% endif %}"></i>
           </button>
         </form>
         {% endif %}
-      </li>
+      </div>
       {% endfor %}
-    </ul>
+    </div>
+
     {% if extra_count > 0 %}
-    <div class="px-3 py-2 text-muted small border-top">
-      + {{ extra_count }} more species voted on this food item.
+    <div class="px-3 py-2 text-secondary small border-top bg-body-tertiary d-flex align-items-center justify-content-between">
+      <span>
+        {% blocktrans with count=extra_count %}+ {{ count }} more species voted on this food item.{% endblocktrans %}
+      </span>
+      <a href="{% url "food_item_detail" food_item.pk %}" class="fw-semibold text-decoration-none">
+        {% trans "Show all" %} &raquo;
+      </a>
     </div>
     {% endif %}
   {% endif %}
 
   {% if user.is_authenticated %}
-  <div class="border-top">
-    <button class="btn btn-sm btn-link text-decoration-none px-3 py-2" type="button"
+  <div class="border-top p-2 bg-body-tertiary">
+    <button class="btn btn-sm btn-link text-decoration-none px-2 py-1 text-secondary d-inline-flex align-items-center gap-1" type="button"
             data-bs-toggle="collapse"
-            data-bs-target="#vote-form-{{ food_item.pk }}">
-      <i class="bi bi-plus-circle"></i> {% trans 'Vote for another species' %}
+            data-bs-target="#vote-form-{{ food_item.pk }}"
+            aria-expanded="false"
+            aria-controls="vote-form-{{ food_item.pk }}">
+      <i class="bi bi-plus-circle"></i>
+      <span>{% trans "Vote for another ant species" %}</span>
     </button>
-    <div class="collapse px-3 pb-3" id="vote-form-{{ food_item.pk }}">
-      <form hx-post="{% url 'food_overview_vote' %}"
+    <div class="collapse px-2 pt-2 pb-1" id="vote-form-{{ food_item.pk }}">
+      <form hx-post="{% url "food_overview_vote" %}"
             hx-target="#food-item-ratings-{{ food_item.pk }}"
             hx-swap="outerHTML"
-            data-species-vote-form data-species-suffix="{{ food_item.pk }}">
+            data-species-vote-form data-species-suffix="{{ food_item.pk }}"
+            class="card p-3 border">
         {% csrf_token %}
         <input type="hidden" name="food_item_id" value="{{ food_item.pk }}">
         <div class="mb-2 position-relative">
-          <label class="form-label small fw-semibold mb-1" for="species-search-{{ food_item.pk }}">{% trans 'Ant species' %}</label>
+          <label class="form-label small fw-semibold mb-1" for="species-search-{{ food_item.pk }}">{% trans "Ant species" %}</label>
           <input type="hidden" name="species_id" id="species-id-{{ food_item.pk }}">
           <input type="text"
                  class="form-control form-control-sm"
                  id="species-search-{{ food_item.pk }}"
                  name="q"
-                 placeholder="{% trans 'Type species name (min. 4 characters)…' %}"
+                 placeholder="{% trans "Type species name (min. 4 characters)…" %}"
                  autocomplete="off"
-                 hx-get="{% url 'nuptial_flight_species_suggest' %}"
+                 hx-get="{% url "nuptial_flight_species_suggest" %}"
                  hx-trigger="input changed delay:300ms"
                  hx-target="next div"
                  hx-swap="innerHTML"
                  hx-include="this">
-          <div id="species-suggest-{{ food_item.pk }}" class="position-absolute w-100 species-suggest-dropdown"></div>
-          <div class="form-text text-danger d-none" id="species-required-hint-{{ food_item.pk }}">
-            {% trans 'Select a species.' %}
-          </div>
+          <div class="species-chips list-group position-absolute w-100 shadow-sm" style="z-index: 1000;"></div>
         </div>
-        <button type="submit" name="vote" value="1" class="btn btn-sm btn-outline-success">
-          <i class="bi bi-hand-thumbs-up"></i> {% trans 'Accepts it' %}
-        </button>
-        <button type="submit" name="vote" value="-1" class="btn btn-sm btn-outline-danger">
-          <i class="bi bi-hand-thumbs-down"></i> {% trans "Doesn't accept it" %}
-        </button>
+        <div class="d-flex gap-2 align-items-center">
+          <button type="submit" name="vote" value="1" class="btn btn-sm btn-success" disabled>
+            <i class="bi bi-hand-thumbs-up-fill me-1"></i>{% trans "Accepts it" %}
+          </button>
+          <button type="submit" name="vote" value="-1" class="btn btn-sm btn-danger" disabled>
+            <i class="bi bi-hand-thumbs-down-fill me-1"></i>{% trans "Doesn't accept it" %}
+          </button>
+          <span class="text-secondary small fst-italic">{% trans "Select a species first" %}</span>
+        </div>
       </form>
     </div>
-  </div>
-  {% else %}
-  <div class="border-top px-3 py-2 text-muted small">
-    <a href="{% url 'account_login' %}?next={{ request.get_full_path|urlencode }}">{% trans 'Log in' %}</a> {% trans 'to vote.' %}
   </div>
   {% endif %}
 </div>

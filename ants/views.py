@@ -918,15 +918,26 @@ def _build_food_overview_item_context(food_item, user):
         )
     for row in all_species:
         row["user_vote"] = user_votes.get(row["species_id"])
+        total_v = row["up_count"] + row["down_count"]
+        row["acceptance_pct"] = round(row["up_count"] / total_v * 100) if total_v > 0 else 0
+        row["total_votes"] = total_v
 
     agg = food_item.species_ratings.aggregate(net=Sum("vote"), total=Count("id"))
+    up_total = sum(r["up_count"] for r in all_species)
+    down_total = sum(r["down_count"] for r in all_species)
+    total_ratings = agg["total"] or 0
+    acceptance_pct = round(up_total / (up_total + down_total) * 100) if (up_total + down_total) > 0 else None
+
     return {
         "food_item": food_item,
         "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
         "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
         "total_species": len(all_species),
-        "total_ratings": agg["total"],
+        "total_ratings": total_ratings,
         "overall_net_score": agg["net"] or 0,
+        "acceptance_pct": acceptance_pct,
+        "up_total": up_total,
+        "down_total": down_total,
     }
 
 
@@ -1042,19 +1053,30 @@ def _build_food_overview_list_context(selected_category, user):
     ratings_by_food = {}
     for row in species_qs:
         row["user_vote"] = user_votes.get((row["food_item_id"], row["species_id"]))
+        total_v = row["up_count"] + row["down_count"]
+        row["acceptance_pct"] = round(row["up_count"] / total_v * 100) if total_v > 0 else 0
+        row["total_votes"] = total_v
         ratings_by_food.setdefault(row["food_item_id"], []).append(row)
 
     food_data = []
     for food_item in food_items:
         all_species = ratings_by_food.get(food_item.pk, [])
         ov = overall_by_food.get(food_item.pk, {})
+        up_total = sum(r["up_count"] for r in all_species)
+        down_total = sum(r["down_count"] for r in all_species)
+        total_ratings = ov.get("total_ratings", 0)
+        acceptance_pct = round(up_total / (up_total + down_total) * 100) if (up_total + down_total) > 0 else None
+
         food_data.append({
             "food_item": food_item,
             "top_species": all_species[:_FOOD_OVERVIEW_TOP_N],
             "extra_count": max(0, len(all_species) - _FOOD_OVERVIEW_TOP_N),
             "total_species": len(all_species),
-            "total_ratings": ov.get("total_ratings", 0),
+            "total_ratings": total_ratings,
             "overall_net_score": ov.get("overall_net", 0) or 0,
+            "acceptance_pct": acceptance_pct,
+            "up_total": up_total,
+            "down_total": down_total,
         })
 
     return {"food_data": food_data}
@@ -1071,7 +1093,13 @@ class FoodOverviewView(TemplateView):
         raw = self.request.GET.get("category", "")
         selected = raw if raw in valid_keys else valid_keys[0]
 
+        category_counts = dict(
+            FoodItem.objects.values("category")
+            .annotate(count=Count("id"))
+            .values_list("category", "count")
+        )
         context["categories"] = FoodItem.CATEGORY_CHOICES
+        context["category_counts"] = category_counts
         context["selected_category"] = selected
         context["selected_category_label"] = dict(FoodItem.CATEGORY_CHOICES)[selected]
         context.update(_build_food_overview_list_context(selected, self.request.user))
@@ -1178,6 +1206,90 @@ def _build_food_item_species_ratings_context(food_item_id, species_slug):
         .order_by("-created_at")
     )
     return {"food_item": food_item, "species": species, "ratings": ratings}
+
+
+@method_decorator(never_cache, name="dispatch")
+class FoodItemDetailView(DetailView):
+    """Detailed view for a single FoodItem showing acceptance stats, genus popularity, and feeding guide."""
+
+    model = FoodItem
+    template_name = "ants/food_item_detail.html"
+    context_object_name = "food_item"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        food_item = self.object
+
+        species_ratings_qs = (
+            SpeciesFoodRating.objects
+            .filter(food_item=food_item)
+            .values("species_id", "species__name", "species__slug", "species__genus__name")
+            .annotate(
+                net_score=Sum("vote"),
+                up_count=Count("id", filter=Q(vote=SpeciesFoodRating.UP)),
+                down_count=Count("id", filter=Q(vote=SpeciesFoodRating.DOWN)),
+                total_count=Count("id"),
+            )
+            .order_by("-net_score", "-up_count")
+        )
+        species_ratings = list(species_ratings_qs)
+
+        user_votes = {}
+        if self.request.user.is_authenticated:
+            user_votes = dict(
+                SpeciesFoodRating.objects.filter(food_item=food_item, user=self.request.user)
+                .values_list("species_id", "vote")
+            )
+
+        genus_stats = {}
+        for r in species_ratings:
+            r["user_vote"] = user_votes.get(r["species_id"])
+            total_v = r["up_count"] + r["down_count"]
+            r["acceptance_pct"] = round(r["up_count"] / total_v * 100) if total_v > 0 else 0
+
+            genus_name = r["species__genus__name"] or _("Other")
+            if genus_name not in genus_stats:
+                genus_stats[genus_name] = {
+                    "genus": genus_name,
+                    "species_count": 0,
+                    "up_count": 0,
+                    "down_count": 0,
+                    "total_votes": 0,
+                }
+            genus_stats[genus_name]["species_count"] += 1
+            genus_stats[genus_name]["up_count"] += r["up_count"]
+            genus_stats[genus_name]["down_count"] += r["down_count"]
+            genus_stats[genus_name]["total_votes"] += total_v
+
+        genus_list = list(genus_stats.values())
+        for g in genus_list:
+            g["acceptance_pct"] = (
+                round(g["up_count"] / g["total_votes"] * 100)
+                if g["total_votes"] > 0
+                else 0
+            )
+            g["net_score"] = g["up_count"] - g["down_count"]
+        genus_list.sort(key=lambda x: (-x["acceptance_pct"], -x["total_votes"]))
+
+        total_up = sum(r["up_count"] for r in species_ratings)
+        total_down = sum(r["down_count"] for r in species_ratings)
+        total_votes = total_up + total_down
+        overall_acceptance = (
+            round(total_up / total_votes * 100) if total_votes > 0 else None
+        )
+        overall_net = total_up - total_down
+
+        context["species_ratings"] = species_ratings
+        context["genus_list"] = genus_list
+        context["total_up"] = total_up
+        context["total_down"] = total_down
+        context["total_votes"] = total_votes
+        context["overall_acceptance"] = overall_acceptance
+        context["overall_net"] = overall_net
+        context["category_label"] = dict(FoodItem.CATEGORY_CHOICES).get(
+            food_item.category, food_item.category
+        )
+        return context
 
 
 @method_decorator(never_cache, name="dispatch")
