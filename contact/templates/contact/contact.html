@@ -89,14 +89,14 @@
                             {% trans "Prefer to use your email client? Write to our team directly:" %}
                         </p>
                         <div class="input-group input-group-sm mb-3">
-                            <input type="text" class="form-control font-monospace bg-body-tertiary" id="adminEmailInput" value="admin@antkeeping.info" readonly aria-label="{% trans 'Admin email address' %}">
+                            <input type="text" class="form-control font-monospace" id="adminEmailInput" value="admin@antkeeping.info" readonly aria-label="{% trans 'Admin email address' %}">
                             <button class="btn btn-outline-secondary" type="button" id="copyEmailBtn" title="{% trans 'Copy email address' %}">
                                 <i class="bi bi-clipboard" id="copyEmailIcon"></i>
                                 <span class="d-none d-sm-inline ms-1" id="copyEmailText">{% trans "Copy" %}</span>
                             </button>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-body-secondary text-body-secondary border border-secondary-subtle px-2 py-1 small">
+                            <span class="badge reply-time-badge rounded-pill px-2 py-1 small">
                                 <i class="bi bi-clock-history me-1"></i>{% trans "Reply within 24–48h" %}
                             </span>
                             <a href="mailto:admin@antkeeping.info" class="small fw-semibold ms-auto">

@@ -525,3 +525,44 @@ body.iframe {
   background-color: rgba(255, 193, 7, 0.15) !important;
   color: #ffe082 !important;
 }
+
+/* Contact page direct email box & badge */
+#adminEmailInput {
+  background-color: var(--bs-secondary-bg) !important;
+  color: var(--bs-body-color) !important;
+  border-color: var(--bs-border-color) !important;
+  user-select: all;
+}
+
+[data-bs-theme="dark"] #adminEmailInput {
+  background-color: #232b27 !important;
+  color: #d8e4de !important;
+  border-color: #3a4f44 !important;
+}
+
+[data-bs-theme="dark"] #copyEmailBtn {
+  background-color: #232b27;
+  color: #d8e4de;
+  border-color: #3a4f44;
+}
+
+[data-bs-theme="dark"] #copyEmailBtn:hover {
+  background-color: #2b3530;
+  color: #52b788;
+  border-color: #52b788;
+}
+
+.reply-time-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-body-secondary);
+  border: 1px solid var(--bs-border-color);
+  font-weight: 500;
+}
+
+[data-bs-theme="dark"] .reply-time-badge {
+  background-color: #232b27 !important;
+  color: #a0b2a6 !important;
+  border-color: #3a4f44 !important;
+}
