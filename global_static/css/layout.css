@@ -457,10 +457,54 @@ body.iframe {
   font-style: normal;
 }
 
+/* License Badges */
+.license-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-body-color) !important;
+  border: 1px solid var(--bs-border-color);
+  font-weight: 600;
+  font-size: 0.775rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 2rem;
+  text-decoration: none !important;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.license-badge:hover {
+  background-color: var(--bs-tertiary-bg);
+  border-color: var(--bs-primary);
+  color: var(--bs-primary) !important;
+}
+
+[data-bs-theme="dark"] .license-badge {
+  background-color: #232b27 !important;
+  color: #d8e4de !important;
+  border-color: #3a4f44 !important;
+}
+
+[data-bs-theme="dark"] .license-badge:hover {
+  background-color: #2b3530 !important;
+  border-color: #52b788 !important;
+  color: #52b788 !important;
+}
+
 [data-bs-theme="dark"] .doc-content .table-light {
   --bs-table-bg: #232b27;
   --bs-table-color: #d8e4de;
   --bs-table-border-color: #3a4f44;
+}
+
+[data-bs-theme="dark"] .bg-primary-subtle {
+  background-color: rgba(45, 106, 79, 0.28) !important;
+  color: #74c69d !important;
+}
+
+[data-bs-theme="dark"] .border-primary-subtle {
+  border-color: rgba(116, 198, 157, 0.35) !important;
 }
 
 [data-bs-theme="dark"] .bg-success-subtle {
