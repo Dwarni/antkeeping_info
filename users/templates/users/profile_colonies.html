@@ -174,17 +174,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-2 align-self-end align-self-md-center flex-wrap">
-                    <a href="{{ colony.get_absolute_url }}#collapse-add-journal" class="btn btn-sm btn-outline-success" title="{% trans 'Add a quick journal entry' %}">
+                <div class="d-flex align-items-center gap-1 gap-md-2 align-self-end align-self-md-center flex-wrap flex-md-nowrap flex-shrink-0">
+                    <a href="{{ colony.get_absolute_url }}#collapse-add-journal" class="btn btn-sm btn-outline-success text-nowrap" title="{% trans 'Add a quick journal entry' %}">
                         <i class="bi bi-pencil-square me-1"></i>{% trans "+ Entry" %}
                     </a>
-                    <a href="{% url 'colony_journal' colony.user.username colony.slug %}" class="btn btn-sm btn-outline-secondary">
+                    <a href="{% url 'colony_journal' colony.user.username colony.slug %}" class="btn btn-sm btn-outline-secondary text-nowrap">
                         <i class="bi bi-journal-richtext me-1"></i>{% trans "Journal" %}
                     </a>
-                    <a href="{{ colony.get_absolute_url }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ colony.get_absolute_url }}" class="btn btn-sm btn-outline-primary text-nowrap">
                         {% trans "Overview" %} &rarr;
                     </a>
-                    <a href="{% url 'colony_edit' colony.pk %}" class="btn btn-sm btn-light border text-muted" title="{% trans 'Edit colony' %}">
+                    <a href="{% url 'colony_edit' colony.pk %}" class="btn btn-sm btn-outline-secondary text-nowrap" title="{% trans 'Edit colony' %}" aria-label="{% trans 'Edit colony' %}">
                         <i class="bi bi-pencil"></i>
                     </a>
                 </div>

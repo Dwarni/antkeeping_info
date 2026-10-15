@@ -639,7 +639,7 @@
                                 {% endif %}
                             </div>
                             <div class="d-flex align-items-center gap-2 ms-2">
-                                <a href="{% url 'colony_journal_entry_detail' colony.user.username colony.slug entry.pk %}" class="btn btn-sm btn-light border py-0 px-2 text-decoration-none" title="{% trans 'View single post' %}">
+                                <a href="{% url 'colony_journal_entry_detail' colony.user.username colony.slug entry.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2 text-decoration-none" title="{% trans 'View single post' %}">
                                     <i class="bi bi-link-45deg"></i>
                                 </a>
                             {% if is_owner %}
