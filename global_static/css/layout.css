@@ -566,3 +566,10 @@ body.iframe {
   color: #a0b2a6 !important;
   border-color: #3a4f44 !important;
 }
+
+/* Form required field asterisk */
+.asteriskField {
+  color: var(--bs-danger);
+  margin-left: 0.2rem;
+  font-weight: 700;
+}

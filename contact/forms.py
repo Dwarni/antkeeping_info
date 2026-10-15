@@ -89,7 +89,7 @@ class ContactForm(forms.Form):
         self.fields["gdpr_consent"].label = mark_safe(
             f'{_("I have read and agree to the")} '
             f'<a href="{privacy_url}" target="_blank" rel="noopener">'
-            f'{_("Privacy Policy")}</a> <span class="text-danger">*</span>'
+            f'{_("Privacy Policy")}</a>'
         )
         self.helper = FormHelper()
         self.helper.form_id = "contactForm"
