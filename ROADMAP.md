@@ -82,10 +82,12 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Statusanzeigen mit WCAG-AA-konformen Badges & Icons (Gründung, aktiv, Winterruhe, verstorben, abgegeben).
   - Filter-Pills nach Koloniestatus mit Zähler-Badges auf der Übersichtsseite.
   - Automatische Berechnung und Anzeige der aktuellen Volksstärke (`1 👑 • 42 🐜`) auf Übersichtskarten.
-- [x] **Haltungstagebuch / Journal (`/users/.../journals/` & `/ants/colonies/.../journal/`)**
+  - Darkmode-Kontrast für Aktions- & Edit-Buttons optimiert (`btn-outline-secondary`) und Umbruch-Schutz (`flex-md-nowrap flex-shrink-0 text-nowrap`).
+- [x] **Haltungstagebuch / Journal (`/users/.../journals/`, `/ants/colonies/.../journal/` & `/ants/colonies/community/`)**
   - Schnelles Hinzufügen von Einträgen und Fotos via Schnell-Eingabe-Modal und Drag-and-Drop / Clipboard (Ctrl+V).
   - Chronologische Timeline-Darstellung mit visueller Timeline-Leiste und farblich passenden Ereignis-Icons (Fütterung, Schlupf, Umzug, Winterruhe etc.).
   - 1-Klick-Filter-Pills nach Ereignissen (`FEEDING`, `FIRST_WORKER`, `NEST_MOVE`, `HIBERNATION_START`, `FOUNDING`, `ISSUE`).
+  - Community Journal: Einklappbarer Filter in der mobilen Ansicht (standardmäßig eingeklappt) mit dynamischem Zähler für aktive Filter; voll ausgeklappt auf Desktop (`d-md-block`).
   - Teilen-Funktion (Social Share Modal für WhatsApp, Telegram, Reddit, X, E-Mail, Zwischenablage sowie native Web Share API).
 
 ### 5. Benutzerkonto & Allgemeine Seiten
