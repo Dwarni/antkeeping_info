@@ -421,3 +421,63 @@ body.iframe {
   border-color: #2d6a4f !important;
   color: #ffffff !important;
 }
+
+/* ==========================================================================
+   Documentation, Legal & Contact Page Styling
+   ========================================================================== */
+
+.scroll-mt {
+  scroll-margin-top: 5.5rem;
+}
+
+.doc-mobile-toc {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.doc-mobile-toc::-webkit-scrollbar {
+  display: none;
+}
+
+.doc-toc-link {
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+}
+
+.doc-toc-link:hover {
+  background-color: var(--bs-secondary-bg);
+  color: var(--bs-primary) !important;
+}
+
+.hover-primary:hover {
+  color: var(--bs-primary) !important;
+}
+
+.doc-content address {
+  font-style: normal;
+}
+
+[data-bs-theme="dark"] .doc-content .table-light {
+  --bs-table-bg: #232b27;
+  --bs-table-color: #d8e4de;
+  --bs-table-border-color: #3a4f44;
+}
+
+[data-bs-theme="dark"] .bg-success-subtle {
+  background-color: rgba(45, 106, 79, 0.25) !important;
+  color: #74c69d !important;
+}
+
+[data-bs-theme="dark"] .border-success-subtle {
+  border-color: rgba(116, 198, 157, 0.3) !important;
+}
+
+[data-bs-theme="dark"] .bg-info-subtle {
+  background-color: rgba(33, 150, 243, 0.15) !important;
+  color: #90caf9 !important;
+}
+
+[data-bs-theme="dark"] .bg-warning-subtle {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+  color: #ffe082 !important;
+}

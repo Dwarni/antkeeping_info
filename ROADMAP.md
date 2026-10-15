@@ -60,7 +60,23 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - **Zentraler Einstellungs-Hub (`/users/profile/settings/`)**: Strukturierte Karten für Profildaten (Name, Bio, Standort), E-Mail-Adressen, Passwort/Sicherheit und verknüpfte Social Accounts (Discord, Google).
   - **Privatsphäre & Sichtbarkeitseinstellungen**: Voller Name ist standardmäßig öffentlich komplett ausgeblendet (nur Nickname @username sichtbar), mit konfigurierbaren Schaltern für Namen, Standort und Biografie.
   - **Allauth E-Mail- & Passwortseiten**: Modernisiertes Design für `/accounts/email/`, `/accounts/password/change/` und `/accounts/password/set/` mit Breadcrumbs, Sub-Navigation und WCAG AA-konformen Status-Badges im Light- und Darkmode.
-
+- [x] **Kontakt & Rechtliches (`/contact/`, `/legal-notice/`, `/privacy-policy/`)**
+  - **Kontaktformular (`/contact/`)**:
+    - Übersichtliches 2-Spalten-Layout (Desktop) mit moderner Hauptformular-Karte und Sidebar für alternative Kontaktkanäle.
+    - Schnelles Validierungsfeedback mit Bootstrap 5 Formvalidierung (`was-validated`), Live-Zeichenzähler (`X / 5000 Zeichen`) und animiertem Spinner-Button gegen versehentliche Mehrfachabsendungen.
+    - Automatische Vorbelegung von Name und E-Mail für angemeldete Nutzer (`request.user`) inkl. dezentem Hinweis.
+    - Mehrschichtiger Spamschutz: Honeypot-Felder (`phone`, `address`), zeitgesteuerter kryptografischer Token (`form_token`) und IP-basiertes Rate-Limiting.
+    - Community- und Support-Karten: Discord-Server-CTA (`discord_url`), direkte E-Mail mit 1-Klick-Kopierfunktion und Quick-Links für Arten- & Futter-Fragen sowie GitHub-Fehlermeldungen.
+  - **Impressum / Legal Notice (`/legal-notice/`)**:
+    - Vollständige Angaben nach § 5 DDG (Verantwortlicher, Anschrift, Kontakt-E-Mail mit Mailto-Aktion).
+    - Optimierte Typografie und mobile Lesbarkeit mit Zeilenbegrenzung, weichem Zeilenabstand und strukturierten Inhaltskarten.
+    - Klebriges Inhaltsverzeichnis (Sticky-TOC) auf Desktop und horizontale Touch-Quick-Jump-Pills auf Smartphones (`#provider`, `#liability-content`, `#liability-links`, `#copyright`, `#credits`).
+    - Urheberrechtshinweise (CC BY 4.0 Lizenz-Badge) und Open-Source-Danksagung für genutzte Icons (Solar Icons, Framework7 ant icon, Bootstrap Icons).
+  - **Datenschutzerklärung (`/privacy-policy/`)**:
+    - „Privacy at a Glance“-Highlightkarten (keine Tracking-Cookies/Google Analytics, ausschließlich essenzielle Session-/CSRF-Cookies, max. 14-tägige Serverlog-Aufbewahrung, DDoS-Schutz via Cloudflare).
+    - Strukturierte Dokumentation der Serverlog-Daten, Cookie-Tabelle mit Verwendungszweck und Laufzeit.
+    - DSGVO-Betroffenenrechte (Auskunft, Berichtigung, Löschung) mit direkter E-Mail-Anfrage-Aktion.
+    - Vollständige i18n-Unterstützung (`{% load i18n %}` / `{% trans %}`) in Footer, Formularen und Vorlagen sowie Aufnahme in die `sitemap.xml`.
 
 ---
 
@@ -106,9 +122,20 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Vollständiger Einstellungs-Hub (`/users/profile/settings/`): Profil-Details (Name, Bio, Standort), Avatar-Verwaltung, E-Mail-Status und Sicherheitsübersicht.
   - Privatsphäre & Sichtbarkeit: Standardmäßig strikter Schutz des Klarnamens (nur Nickname @username öffentlich), granulare Schalter für Name, Standort und Bio.
   - Überarbeitete Allauth-Templates für E-Mail-Einstellungen (`/accounts/email/`), Passwortänderung (`/accounts/password/change/`) und Passwort-Erstellung (`/accounts/password/set/`) im konsistenten Profil-Design mit WCAG AA-Kontrast.
-- [ ] **Kontakt & Rechtliches (`/contact/`, `/legal-notice/`, `/privacy-policy/`)**
-  - Schnelles Kontaktformular mit Validierungsfeedback.
-  - Lesbarkeit und Typografie auf mobilen Geräten.
+- [x] **Kontakt & Rechtliches (`/contact/`, `/legal-notice/`, `/privacy-policy/`)**
+  - **Kontaktformular (`/contact/`)**:
+    - Schnelles 2-Spalten-Layout (Desktop) mit übersichtlicher Formular-Karte und Sidebar für alternative Kontaktwege.
+    - Sofortiges Validierungsfeedback (HTML5 & Bootstrap 5 `was-validated`, Live-Zeichenzähler bis 5.000 Zeichen, animierter Spinner-Button zur Vermeidung von Mehrfachabsendungen).
+    - Automatische Vorbelegung von Name und E-Mail für angemeldete Nutzer (`request.user`) inkl. dezentem Status-Hinweis.
+    - Mehrschichtiger Spamschutz (Honeypot-Felder, kryptografisch signierter Zeitstempel-Token mit Mindestdauer, IP-basiertes Rate-Limiting).
+    - Direkte Community-Integration (Discord-Einladungskarte mit Direktlink, 1-Klick-Kopierfunktion für die Kontakt-E-Mail, Schnell-FAQ zu Futter, Arten & Fehlerberichten).
+  - **Rechtliches & Datenschutz (`/legal-notice/` & `/privacy-policy/`)**:
+    - Ausgezeichnete Typografie und Lesbarkeit auf Mobil- und Desktop-Geräten (optimierte Zeilenbreite und -höhe, strukturierte Inhaltskarten mit konsistentem Spacing).
+    - Horizontale Quick-Jump-Pills für Mobilgeräte (`.doc-mobile-toc` mit sanftem Touch-Scroll und `scroll-margin-top`) für 1-Tap-Sprung zu Abschnitten.
+    - Klebrige Inhaltsverzeichnis-Sidebar (`sticky-top`) auf Desktop zur schnellen Orientierung.
+    - Gesetzliche Angaben nach § 5 DDG (Verantwortlicher, Kontakt, Haftungsausschluss für Inhalte & Links, CC BY 4.0 Lizenz und Open-Source-Credits für Icons & Assets).
+    - DSGVO-konforme Datenschutzerklärung mit „Privacy at a Glance“-Highlightkarten (keine Tracking-Cookies/Google Analytics, ausschließlich essenzielle Session-/CSRF-Cookies, 14-tägige Log-Löschung, Cloudflare-Sicherheits-CDN, Betroffenenrechte mit Mailvorlage).
+    - Vollständige Mehrsprachigkeit (`{% load i18n %}` / `{% trans %}`) in Footer, Formularen und Vorlagen sowie Integration von `/legal-notice/` und `/privacy-policy/` in die `sitemap.xml`.
 
 ---
 

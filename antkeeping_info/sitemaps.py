@@ -32,6 +32,8 @@ class StaticViewSitemap(Sitemap):
             "flights_list",
             "flights_top_lists",
             "contact",
+            "legal",
+            "privacy",
         ]
 
     def location(self, item):

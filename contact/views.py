@@ -8,6 +8,7 @@ from django.core.mail import send_mail
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.generic import FormView
 
@@ -27,9 +28,15 @@ class ContactView(FormView):
     success_url = reverse_lazy("contact")
 
     def get_initial(self):
-        """Inject a signed timestamp token so form_valid() can verify elapsed time."""
+        """Inject signed timestamp token and prefill name/email for authenticated users."""
         initial = super().get_initial()
         initial["form_token"] = signing.dumps("contact_form")
+        if self.request.user.is_authenticated:
+            user = self.request.user
+            if not initial.get("name"):
+                initial["name"] = user.get_full_name() or user.username
+            if not initial.get("email"):
+                initial["email"] = user.email
         return initial
 
     def _is_rate_limited(self, request) -> bool:
@@ -54,7 +61,7 @@ class ContactView(FormView):
             logger.info("Spam discarded: honeypot filled (IP: %s)", ip)
             messages.success(
                 self.request,
-                "Your message has been sent. Thank you for contacting us!",
+                _("Your message has been sent. Thank you for contacting us!"),
             )
             return super().form_valid(form)
 
@@ -69,7 +76,7 @@ class ContactView(FormView):
             # no effect (POST data takes precedence), so a redirect is the only way to
             # serve a page with a valid token.
             logger.info("Contact form: invalid form_token, redirecting to fresh form (IP: %s)", ip)
-            messages.warning(self.request, "Your session has expired. Please try again.")
+            messages.warning(self.request, _("Your session has expired. Please try again."))
             return redirect("contact")
 
         try:
@@ -79,7 +86,7 @@ class ContactView(FormView):
             logger.info("Spam discarded: submitted too fast (IP: %s)", ip)
             messages.success(
                 self.request,
-                "Your message has been sent. Thank you for contacting us!",
+                _("Your message has been sent. Thank you for contacting us!"),
             )
             return super().form_valid(form)
         except signing.SignatureExpired:
@@ -90,7 +97,7 @@ class ContactView(FormView):
             logger.warning("Rate limit exceeded (IP: %s)", ip)
             messages.error(
                 self.request,
-                "You have sent too many messages recently. Please wait before trying again.",
+                _("You have sent too many messages recently. Please wait before trying again."),
             )
             return self.form_invalid(form)
 
@@ -121,7 +128,7 @@ class ContactView(FormView):
             logger.exception("Failed to send contact form email")
             messages.error(
                 self.request,
-                "Sorry, there was an error sending your message. Please try again later.",
+                _("Sorry, there was an error sending your message. Please try again later."),
             )
             return self.form_invalid(form)
 
@@ -145,6 +152,6 @@ class ContactView(FormView):
 
         messages.success(
             self.request,
-            "Your message has been sent. Thank you for contacting us!",
+            _("Your message has been sent. Thank you for contacting us!"),
         )
         return super().form_valid(form)

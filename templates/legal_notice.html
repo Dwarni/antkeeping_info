@@ -1,48 +1,273 @@
-{% extends 'layout.html' %} {% block content %}
-<h1>Legal notice of website antkeeping.info</h1>
-<h2>Information according to § 5 DDG (German law)</h2>
-<h3>Responsible person</h3>
-<address>
-    Andreas Weggel
-    <br> Dahlienweg 2
-    <br> 95463 Bindlach
-    <br> Germany
-</address>
-<h3>Contact</h3>
-<p><a href="mailto:admin@antkeeping.info">admin@antkeeping.info</a></p>
-<h2>Limitation of liability for internal content</h2>
-<p>The content of this website has been compiled with care and to the best of my knowledge. However, I cannot assume
-    any liability for the up-to-dateness, completeness or accuracy of any of the pages.</p>
-<p>Pursuant to § 7 para. 1 DDG, I as the service provider am liable for my own content on these pages in accordance
-    with general laws. However, pursuant to §§ 8 to 10 DDG, I am not under obligation to monitor external information
-    provided or stored on this website. Once I become aware of a specific infringement of the law, I will immediately
-    remove the content in question. Any liability can only be assumed from the point in time at which the infringement
-    becomes known to me.</p>
+{% extends "layout.html" %}
+{% load i18n static %}
 
-<h2>Limitation of liability for external links</h2>
-<p>This website contains links to third-party websites (“external links”). As the content of these websites is not
-    under my control, I cannot assume any liability for such external content. The respective provider of the linked
-    website is solely responsible for its content. At the time of linking, no infringements of the law were apparent.
-    As soon as an infringement becomes known to me, I will immediately remove the link in question.</p>
+{% block title %}{% trans "Legal Notice" %} — Antkeeping.info{% endblock %}
+{% block og_title %}{% trans "Legal Notice" %} — Antkeeping.info{% endblock %}
+{% block og_description %}{% trans "Legal notice, provider identification under § 5 DDG, copyright information, and disclaimers for Antkeeping.info." %}{% endblock %}
 
-<h2>Copyright</h2>
-<p>Unless otherwise noted, all content on this website is licensed under
-    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">Creative Commons Attribution 4.0 International (CC BY 4.0)</a>.
-    You are free to share and adapt the content for any purpose, provided you give appropriate credit to Antkeeping.info.</p>
-<p>Images and photographs may be licensed under different terms. Where this is the case, the applicable license is indicated directly alongside the image.</p>
+{% block content %}
+<div class="py-3 py-md-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 52px; height: 52px;">
+            <i class="bi bi-file-earmark-text-fill fs-3"></i>
+        </div>
+        <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h1 class="h2 fw-bold mb-0 text-body">{% trans "Legal Notice" %}</h1>
+                <span class="badge text-bg-secondary-subtle border text-secondary small">§ 5 DDG</span>
+            </div>
+            <p class="text-muted mb-0">
+                {% trans "Provider identification, statutory information, and liability disclosures for antkeeping.info." %}
+            </p>
+        </div>
+    </div>
 
-<h2>Credits</h2>
-<h3>Icons</h3>
-<ul>
-    <li>
-        <a href="https://www.svgrepo.com/svg/528359/list-arrow-down-minimalistic" target="_blank" rel="noopener">List Arrow Down Minimalistic</a>
-        by <a href="https://www.svgrepo.com/collection/solar-bold-duotone-icons/" target="_blank" rel="noopener">Solar Icons</a>,
-        licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>
-    </li>
-    <li>
-        <a href="https://www.svgrepo.com/svg/437376/ant" target="_blank" rel="noopener">Ant</a>
-        by <a href="https://github.com/framework7io/framework7-icons" target="_blank" rel="noopener">framework7io</a>,
-        licensed under the <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>
-    </li>
-</ul>
+    <!-- Mobile Quick-Jump Pills (Horizontally Scrollable) -->
+    <div class="d-lg-none mb-3">
+        <div class="doc-mobile-toc d-flex gap-2 pb-2 overflow-x-auto text-nowrap">
+            <a href="#provider" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-person-vcard me-1"></i>{% trans "Provider" %}
+            </a>
+            <a href="#liability-content" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-shield-check me-1"></i>{% trans "Content Liability" %}
+            </a>
+            <a href="#liability-links" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-link-45deg me-1"></i>{% trans "Links Liability" %}
+            </a>
+            <a href="#copyright" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-creative-commons me-1"></i>{% trans "Copyright" %}
+            </a>
+            <a href="#credits" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-award me-1"></i>{% trans "Credits" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Desktop Sticky Table of Contents Sidebar -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sticky-top" style="top: 2rem; z-index: 10;">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="h6 fw-bold text-uppercase tracking-wider text-muted mb-3">
+                            <i class="bi bi-list-nested me-1"></i>{% trans "On this page" %}
+                        </h2>
+                        <nav class="nav flex-column doc-toc-nav gap-1 small">
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#provider">
+                                <i class="bi bi-person-vcard text-primary me-2"></i>{% trans "Provider & Contact" %}
+                            </a>
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#liability-content">
+                                <i class="bi bi-shield-check text-primary me-2"></i>{% trans "Liability for Content" %}
+                            </a>
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#liability-links">
+                                <i class="bi bi-link-45deg text-primary me-2"></i>{% trans "Liability for Links" %}
+                            </a>
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#copyright">
+                                <i class="bi bi-creative-commons text-primary me-2"></i>{% trans "Copyright & License" %}
+                            </a>
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#credits">
+                                <i class="bi bi-award text-primary me-2"></i>{% trans "Credits & Icons" %}
+                            </a>
+                        </nav>
+                        <hr class="my-3">
+                        <div class="small text-muted">
+                            <i class="bi bi-shield-lock me-1"></i>
+                            {% trans "See also our" %} <a href="{% url 'privacy' %}" class="fw-semibold">{% trans "Privacy Policy" %}</a>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-lg-9">
+            <div class="d-flex flex-column gap-4 doc-content">
+                <!-- Section 1: Information according to § 5 DDG -->
+                <section id="provider" class="card shadow-sm border-0 border-top border-4 border-primary rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-person-vcard-fill text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "Information according to § 5 DDG (German Telemedia Act)" %}
+                            </h2>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3 bg-body-tertiary border h-100">
+                                    <h3 class="h6 fw-bold text-muted text-uppercase mb-2">
+                                        <i class="bi bi-person-fill text-primary me-1"></i>{% trans "Responsible Provider" %}
+                                    </h3>
+                                    <address class="mb-0 text-body lh-lg not-italic">
+                                        <strong>Andreas Weggel</strong><br>
+                                        Dahlienweg 2<br>
+                                        95463 Bindlach<br>
+                                        Germany
+                                    </address>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3 bg-body-tertiary border h-100 d-flex flex-column">
+                                    <h3 class="h6 fw-bold text-muted text-uppercase mb-2">
+                                        <i class="bi bi-envelope-at-fill text-primary me-1"></i>{% trans "Contact Information" %}
+                                    </h3>
+                                    <p class="mb-2 text-body">
+                                        {% trans "Email:" %}
+                                        <a href="mailto:admin@antkeeping.info" class="fw-semibold text-break">admin@antkeeping.info</a>
+                                    </p>
+                                    <p class="mb-3 text-muted small">
+                                        {% trans "For questions regarding ant species data, feedback, or inquiries." %}
+                                    </p>
+                                    <div class="mt-auto">
+                                        <a href="{% url 'contact' %}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-envelope"></i> {% trans "Contact Form" %} &rarr;
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Limitation of Liability for Internal Content -->
+                <section id="liability-content" class="card shadow-sm border-0 rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-shield-check text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "Limitation of Liability for Internal Content" %}
+                            </h2>
+                        </div>
+                        <p class="text-body lh-base mb-3">
+                            {% trans "The content of this website has been compiled with care and to the best of our knowledge. However, we cannot assume any liability for the up-to-dateness, completeness, or accuracy of any pages or data presented." %}
+                        </p>
+                        <p class="text-body lh-base mb-0">
+                            {% trans "Pursuant to § 7 para. 1 DDG, we as the service provider are liable for our own content on these pages in accordance with general statutory laws. However, pursuant to §§ 8 to 10 DDG, we are under no obligation to monitor external information transmitted or stored on this website. Once we become aware of a specific legal infringement, we will immediately remove or restrict access to the affected content. Any liability in this respect can only be assumed from the time that knowledge of a concrete infringement is obtained." %}
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 3: Limitation of Liability for External Links -->
+                <section id="liability-links" class="card shadow-sm border-0 rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-link-45deg text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "Limitation of Liability for External Links" %}
+                            </h2>
+                        </div>
+                        <p class="text-body lh-base mb-0">
+                            {% trans "This website contains links to third-party websites ('external links'). As the contents of these external websites are not under our control, we cannot assume any liability for such external content. The respective provider or operator of the linked website is solely responsible for its contents. At the time the link was established, no legal violations were apparent. Should any legal infringements become known to us, we will remove the respective link without undue delay." %}
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 4: Copyright & Open Knowledge -->
+                <section id="copyright" class="card shadow-sm border-0 rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-creative-commons text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "Copyright & Licensing" %}
+                            </h2>
+                        </div>
+                        <div class="p-3 rounded-3 bg-primary-subtle border border-primary-subtle mb-3">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-info-circle-fill text-primary fs-5 flex-shrink-0 mt-1"></i>
+                                <div class="text-body small lh-base">
+                                    {% blocktrans %}Unless otherwise noted, all text, structure, and curated antkeeping data on this website are licensed under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license" class="fw-semibold">Creative Commons Attribution 4.0 International (CC BY 4.0)</a> license.{% endblocktrans %}
+                                    <div class="mt-1">
+                                        {% trans "You are free to share and adapt the material for any purpose, provided appropriate credit is given to <strong>Antkeeping.info</strong>." %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-body lh-base mb-0">
+                            {% trans "Images and colony photographs uploaded by community members or sourced externally may be licensed under differing terms. Where applicable, the specific license and author attribution are indicated directly alongside the image or within the respective species profile." %}
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 5: Credits -->
+                <section id="credits" class="card shadow-sm border-0 rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-award text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "Credits & Open-Source Acknowledgements" %}
+                            </h2>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            {% trans "We gratefully acknowledge the creators of open-source icons, frameworks, and graphics used across this website:" %}
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">{% trans "Asset" %}</th>
+                                        <th scope="col">{% trans "Creator / Source" %}</th>
+                                        <th scope="col">{% trans "License" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-arrow-down-short fs-5 text-primary"></i>
+                                                <span class="fw-semibold">List Arrow Down Minimalistic</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="https://www.svgrepo.com/collection/solar-bold-duotone-icons/" target="_blank" rel="noopener">Solar Icons</a>
+                                            via <a href="https://www.svgrepo.com/svg/528359/list-arrow-down-minimalistic" target="_blank" rel="noopener">SVGRepo</a>
+                                        </td>
+                                        <td>
+                                            <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" class="badge text-bg-light border text-body text-decoration-none">
+                                                CC BY 4.0
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                {% include "icons/ant_icon.html" with size="18" class="text-primary" %}
+                                                <span class="fw-semibold">Ant Silhouette Icon</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="https://github.com/framework7io/framework7-icons" target="_blank" rel="noopener">framework7io</a>
+                                            via <a href="https://www.svgrepo.com/svg/437376/ant" target="_blank" rel="noopener">SVGRepo</a>
+                                        </td>
+                                        <td>
+                                            <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener" class="badge text-bg-light border text-body text-decoration-none">
+                                                MIT License
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-bootstrap-fill fs-5 text-primary"></i>
+                                                <span class="fw-semibold">Bootstrap Icons</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="https://icons.getbootstrap.com/" target="_blank" rel="noopener">Bootstrap Team</a>
+                                        </td>
+                                        <td>
+                                            <a href="https://github.com/twbs/icons/blob/main/LICENSE" target="_blank" rel="noopener" class="badge text-bg-light border text-body text-decoration-none">
+                                                MIT License
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

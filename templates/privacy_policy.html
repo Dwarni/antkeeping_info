@@ -1,46 +1,362 @@
-{% extends 'layout.html' %} 
+{% extends "layout.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "Privacy Policy" %} — Antkeeping.info{% endblock %}
+{% block og_title %}{% trans "Privacy Policy" %} — Antkeeping.info{% endblock %}
+{% block og_description %}{% trans "Privacy policy of Antkeeping.info. Learn how we protect your personal data, our cookie policy, server log retention, and your rights under the GDPR." %}{% endblock %}
+
 {% block content %}
-<h1>Privacy policy of website antkeeping.info</h1>
-<h2>Webserver logs</h2>
-<h3>What personal data is collected?</h3>
-<p>When you access this website, the following information is stored in a server log file:</p>
-<ul>
-    <li>The page you visited</li>
-    <li>Date/Time of visit</li>
-    <li>The amount of data sent in Byte</li>
-    <li>Source/Link from which you accessed the page</li>
-    <li>The web browser you used</li>
-    <li>The operating system you used</li>
-    <li>Your IP-address</li>
-</ul>
-<h3>What is this data used for?</h3>
-<p>The data is used for two things:</p>
-<ol>
-    <li>Protection and prevention of attacks against this website like DDoS, Brute force password attacks etc.
-        Since it might be neccessary to conduct legal actions it is necessary to store the visitor's IP address.
-    </li>
-    <li>Creating anonymized web site statistics</li>
-</ol>
-<h3>How long is your personal data stored?</h3>
-<p>The personal data in the server log files is stored for a maximum of two weeks. After that your IP-address is anonymized.</p>
-<p>The website statics are stored for an unlimited time. But since all the data used for it was anonymized previously it is not possible to make any connection to your person.</p> 
-<h2>Cookies</h2>
-<p>This website only uses strictly necessary cookies, which do not require your consent:</p>
-<ul>
-    <li><strong>Session cookie</strong> – keeps you logged in while browsing access-restricted pages. This cookie is only set when you log in and is deleted when you log out or close your browser session.</li>
-    <li><strong>CSRF token</strong> – protects forms against <a target="_blank" href="https://en.wikipedia.org/wiki/Cross-site_request_forgery">Cross-Site Request Forgery</a> attacks. This cookie is a standard security measure and contains no personal data.</li>
-</ul>
-<p>No tracking, advertising, or analytics cookies are used on this website.</p>
-<h2>What rights do you have?</h2>
-<p>You have the right to ask what personal data is stored, request error correction and request deletion of personal data.
-To make these requests you have to send an email to:
-<a href="mailto:admin@antkeeping.info">admin@antkeeping.info</a></p>
-<p>In this email you must prove that you are eligible to receive this information. Otherwise your request cannot be processed.</p>
-<h2>Third party services</h2>
-<h3>Cloudflare</h3>
-<p>This website is served through <a target="_blank" href="https://www.cloudflare.com/">Cloudflare</a>, which acts as a reverse proxy and CDN to protect the website against DDoS attacks and other threats.
-All traffic between your browser and this website passes through Cloudflare's infrastructure.
-As a result, Cloudflare processes connection data such as your IP address and HTTP request headers.
-Please refer to the <a target="_blank" href="https://www.cloudflare.com/privacypolicy/">Cloudflare Privacy Policy</a> for details on how they handle this data.</p>
-<p>No other third-party services are used. This website does not use any advertising networks, tracking services, or analytics platforms.</p>
+<div class="py-3 py-md-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 52px; height: 52px;">
+            <i class="bi bi-shield-check-fill fs-3"></i>
+        </div>
+        <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h1 class="h2 fw-bold mb-0 text-body">{% trans "Privacy Policy" %}</h1>
+                <span class="badge text-bg-success-subtle border border-success-subtle text-success small">
+                    <i class="bi bi-patch-check-fill me-1"></i>{% trans "GDPR / DSGVO" %}
+                </span>
+            </div>
+            <p class="text-muted mb-0">
+                {% trans "Transparent information on data processing, minimal collection, and privacy-by-design at antkeeping.info." %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Privacy at a Glance Highlights -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 border-top border-3 border-success rounded-3 bg-body">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-2 text-success mb-2">
+                        <i class="bi bi-shield-slash-fill fs-5"></i>
+                        <h2 class="h6 fw-bold mb-0 text-body">{% trans "Zero Tracking" %}</h2>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        {% trans "No tracking pixels, Google Analytics, or third-party advertising networks." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 border-top border-3 border-info rounded-3 bg-body">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-2 text-info mb-2">
+                        <i class="bi bi-cookie fs-5"></i>
+                        <h2 class="h6 fw-bold mb-0 text-body">{% trans "Essential Only" %}</h2>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        {% trans "Only strictly necessary cookies for secure logins and form CSRF protection." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 border-top border-3 border-warning rounded-3 bg-body">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-2 text-warning mb-2">
+                        <i class="bi bi-clock-history fs-5"></i>
+                        <h2 class="h6 fw-bold mb-0 text-body">{% trans "14-Day Retention" %}</h2>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        {% trans "Server log IPs are stored for security purposes for at most two weeks." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 border-top border-3 border-primary rounded-3 bg-body">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-2 text-primary mb-2">
+                        <i class="bi bi-cloud-check-fill fs-5"></i>
+                        <h2 class="h6 fw-bold mb-0 text-body">{% trans "Edge Defense" %}</h2>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        {% trans "Encrypted transit and DDoS protection provided securely via Cloudflare." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Quick-Jump Pills (Horizontally Scrollable) -->
+    <div class="d-lg-none mb-3">
+        <div class="doc-mobile-toc d-flex gap-2 pb-2 overflow-x-auto text-nowrap">
+            <a href="#logs" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-hdd-network me-1"></i>{% trans "Server Logs" %}
+            </a>
+            <a href="#cookies" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-cookie me-1"></i>{% trans "Cookies" %}
+            </a>
+            <a href="#rights" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-person-check me-1"></i>{% trans "Your Rights" %}
+            </a>
+            <a href="#third-party" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-cloud me-1"></i>{% trans "Third-Party" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Desktop Sticky Table of Contents Sidebar -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="sticky-top" style="top: 2rem; z-index: 10;">
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-body p-3">
+                        <h2 class="h6 fw-bold text-uppercase tracking-wider text-muted mb-3">
+                            <i class="bi bi-list-nested me-1"></i>{% trans "On this page" %}
+                        </h2>
+                        <nav class="nav flex-column doc-toc-nav gap-1 small">
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#logs">
+                                <i class="bi bi-hdd-network text-primary me-2"></i>{% trans "Webserver Logs" %}
+                            </a>
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#cookies">
+                                <i class="bi bi-cookie text-primary me-2"></i>{% trans "Cookies & Storage" %}
+                            </a>
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#rights">
+                                <i class="bi bi-person-check text-primary me-2"></i>{% trans "Your Rights (GDPR)" %}
+                            </a>
+                            <a class="nav-link doc-toc-link rounded px-2 py-1 text-body" href="#third-party">
+                                <i class="bi bi-cloud text-primary me-2"></i>{% trans "Third-Party & CDN" %}
+                            </a>
+                        </nav>
+                        <hr class="my-3">
+                        <div class="small text-muted">
+                            <i class="bi bi-file-earmark-text me-1"></i>
+                            {% trans "See also our" %} <a href="{% url 'legal' %}" class="fw-semibold">{% trans "Legal Notice" %}</a>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-lg-9">
+            <div class="d-flex flex-column gap-4 doc-content">
+                <!-- Section 1: Webserver Logs -->
+                <section id="logs" class="card shadow-sm border-0 border-top border-4 border-primary rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-hdd-network-fill text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "Webserver Log Files" %}
+                            </h2>
+                        </div>
+
+                        <h3 class="h6 fw-bold text-body mb-2">{% trans "What personal data is collected?" %}</h3>
+                        <p class="text-body lh-base mb-3">
+                            {% trans "When you access antkeeping.info, the following technical access information is automatically transmitted by your browser and recorded in server log files:" %}
+                        </p>
+
+                        <div class="row g-2 mb-4">
+                            <div class="col-sm-6">
+                                <div class="p-2 px-3 rounded-2 bg-body-tertiary border small d-flex align-items-center gap-2">
+                                    <i class="bi bi-file-earmark text-primary"></i>
+                                    <span>{% trans "Requested URL and visited page" %}</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-2 px-3 rounded-2 bg-body-tertiary border small d-flex align-items-center gap-2">
+                                    <i class="bi bi-calendar-event text-primary"></i>
+                                    <span>{% trans "Date and exact time of the request" %}</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-2 px-3 rounded-2 bg-body-tertiary border small d-flex align-items-center gap-2">
+                                    <i class="bi bi-arrow-down-up text-primary"></i>
+                                    <span>{% trans "Transferred data volume (in bytes)" %}</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-2 px-3 rounded-2 bg-body-tertiary border small d-flex align-items-center gap-2">
+                                    <i class="bi bi-box-arrow-in-right text-primary"></i>
+                                    <span>{% trans "Referrer URL (source of the visit)" %}</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-2 px-3 rounded-2 bg-body-tertiary border small d-flex align-items-center gap-2">
+                                    <i class="bi bi-browser-chrome text-primary"></i>
+                                    <span>{% trans "Browser type, version, and operating system" %}</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-2 px-3 rounded-2 bg-body-tertiary border small d-flex align-items-center gap-2">
+                                    <i class="bi bi-globe text-primary"></i>
+                                    <span>{% trans "IP address of the requesting device" %}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="h6 fw-bold text-body mb-2">{% trans "What is this data used for?" %}</h3>
+                        <p class="text-body lh-base mb-2">
+                            {% trans "The server log data is processed for two legitimate purposes (Art. 6 para. 1 lit. f GDPR):" %}
+                        </p>
+                        <ol class="text-body lh-base mb-3 ps-3">
+                            <li class="mb-1">
+                                <strong>{% trans "Security & Abuse Prevention:" %}</strong>
+                                {% trans "Protecting against and investigating cyberattacks, DDoS attempts, abusive scraping, and brute force login attempts. Storing the IP address temporarily is necessary to enable effective defenses and legal pursuit of severe abuse." %}
+                            </li>
+                            <li>
+                                <strong>{% trans "Anonymized Performance Analysis:" %}</strong>
+                                {% trans "Compiling aggregated, non-identifiable traffic statistics to optimize server capacity and response times." %}
+                            </li>
+                        </ol>
+
+                        <h3 class="h6 fw-bold text-body mb-2">{% trans "How long is your personal data stored?" %}</h3>
+                        <p class="text-body lh-base mb-0">
+                            {% trans "Personal data contained in server log files (the IP address) is retained for a maximum of <strong>14 days (two weeks)</strong>. Thereafter, the IP address is permanently anonymized or deleted. Aggregated website statistics contain no personal identifiers and cannot be traced back to an individual." %}
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Section 2: Cookies -->
+                <section id="cookies" class="card shadow-sm border-0 rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-cookie text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "Cookies & Local Storage" %}
+                            </h2>
+                        </div>
+
+                        <p class="text-body lh-base mb-3">
+                            {% trans "This website uses strictly necessary cookies and browser storage required for core site security and functionality. Under applicable privacy laws (ePrivacy Directive & GDPR), these do not require prior consent:" %}
+                        </p>
+
+                        <div class="table-responsive mb-3">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">{% trans "Name" %}</th>
+                                        <th scope="col">{% trans "Type" %}</th>
+                                        <th scope="col">{% trans "Purpose" %}</th>
+                                        <th scope="col">{% trans "Duration" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="font-monospace fw-semibold">sessionid</td>
+                                        <td><span class="badge text-bg-primary-subtle text-primary border">{% trans "Essential" %}</span></td>
+                                        <td>{% trans "Maintains authenticated user session across requests." %}</td>
+                                        <td>{% trans "Until logout or browser close" %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-monospace fw-semibold">csrftoken</td>
+                                        <td><span class="badge text-bg-primary-subtle text-primary border">{% trans "Security" %}</span></td>
+                                        <td>{% trans "Guards against Cross-Site Request Forgery attacks on forms." %}</td>
+                                        <td>{% trans "1 year (CSRF security token)" %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-monospace fw-semibold">colorTheme</td>
+                                        <td><span class="badge text-bg-secondary-subtle text-secondary border">{% trans "Preference" %}</span></td>
+                                        <td>{% trans "Stores your selected Light or Dark mode setting in localStorage." %}</td>
+                                        <td>{% trans "Persistent until cleared" %}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-3 rounded-3 bg-success-subtle border border-success-subtle">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill text-success fs-5 flex-shrink-0"></i>
+                                <div class="text-body small fw-semibold">
+                                    {% trans "No advertising, profiling, third-party, or behavioural tracking cookies are ever used on Antkeeping.info." %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: User Rights -->
+                <section id="rights" class="card shadow-sm border-0 rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-person-check-fill text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "What Rights Do You Have Under the GDPR?" %}
+                            </h2>
+                        </div>
+
+                        <p class="text-body lh-base mb-3">
+                            {% trans "Under the European General Data Protection Regulation (GDPR / DSGVO), you are entitled to the following rights regarding personal data stored about you:" %}
+                        </p>
+
+                        <ul class="text-body lh-base mb-4 ps-3">
+                            <li class="mb-1">
+                                <strong>{% trans "Right of Access (Art. 15 GDPR):" %}</strong>
+                                {% trans "You may request confirmation as to whether personal data concerning you is processed and obtain a copy." %}
+                            </li>
+                            <li class="mb-1">
+                                <strong>{% trans "Right to Rectification (Art. 16 GDPR):" %}</strong>
+                                {% trans "You have the right to request correction of inaccurate or incomplete personal data." %}
+                            </li>
+                            <li class="mb-1">
+                                <strong>{% trans "Right to Erasure (Art. 17 GDPR):" %}</strong>
+                                {% trans "You may request deletion of your account and personal data ('Right to be Forgotten')." %}
+                            </li>
+                            <li class="mb-1">
+                                <strong>{% trans "Right to Restriction & Data Portability (Arts. 18 & 20 GDPR):" %}</strong>
+                                {% trans "You may request restriction of processing or receive your data in a structured format." %}
+                            </li>
+                        </ul>
+
+                        <!-- GDPR Inquiry Box -->
+                        <div class="p-3 p-md-4 rounded-3 bg-body-tertiary border">
+                            <h3 class="h6 fw-bold text-body mb-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-envelope-check text-primary"></i>
+                                {% trans "How to submit a data request" %}
+                            </h3>
+                            <p class="text-muted small mb-3">
+                                {% trans "To exercise any of your statutory rights, please send an email from the address registered with your account to:" %}
+                            </p>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <a href="mailto:admin@antkeeping.info?subject=[GDPR%20Inquiry]%20Personal%20Data%20Request" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2 fw-semibold">
+                                    <i class="bi bi-envelope-fill"></i>
+                                    admin@antkeeping.info
+                                </a>
+                                <span class="text-muted small">
+                                    {% trans "Please include your username and specify the nature of your request." %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4: Third-Party Services -->
+                <section id="third-party" class="card shadow-sm border-0 rounded-3 scroll-mt">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <i class="bi bi-cloud-check-fill text-primary fs-5"></i>
+                            <h2 class="h5 fw-bold mb-0 text-body">
+                                {% trans "Third-Party Services & Infrastructure" %}
+                            </h2>
+                        </div>
+
+                        <h3 class="h6 fw-bold text-body mb-2">Cloudflare</h3>
+                        <p class="text-body lh-base mb-3">
+                            {% trans "This website is routed through" %}
+                            <a href="https://www.cloudflare.com/" target="_blank" rel="noopener noreferrer">Cloudflare</a>
+                            (Cloudflare Inc., 101 Townsend St, San Francisco, CA 94107, USA),
+                            {% trans "which operates as a Content Delivery Network (CDN) and reverse proxy. Cloudflare protects antkeeping.info against Distributed Denial of Service (DDoS) attacks, speeds up asset delivery, and safeguards user traffic." %}
+                        </p>
+                        <p class="text-body lh-base mb-3">
+                            {% trans "All connections between your web browser and this website route through Cloudflare edge infrastructure. Consequently, Cloudflare processes connection data including your IP address and HTTP header data to identify malicious requests and ensure network security." %}
+                        </p>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                                {% trans "Cloudflare Privacy Policy" %}
+                            </a>
+                        </div>
+                        <p class="text-muted small mb-0">
+                            {% trans "No other third-party analytics, tracking pixels, advertising networks, or social plugins are embedded on antkeeping.info." %}
+                        </p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
