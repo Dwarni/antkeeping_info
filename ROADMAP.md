@@ -53,6 +53,14 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Readonly-Archivierung: Lokale Meldungen dauerhaft deaktiviert, klare Kennzeichnung als permanentes historisches Archiv.
   - Prominente AntScout-Integration: Verlinkung auf `https://antscout.com/flights` als primäre Plattform für Live-Meldungen und Schwarmflug-Tracking (Landingpage-Hero/Callout, Navbar-Dropdown und Banner auf der Kartenseite).
   - Modernisierte Kartenansicht mit Breadcrumbs, Filterleiste nach Jahren & Arten und WCAG AA Darkmode-Styling.
+- [x] **Benutzerprofil & Einstellungen (`/users/...`)**
+  - **Einheitliche Sub-Navigation**: Schnelles Wechseln zwischen Übersicht, Kolonien, Journalen, Futterbewertungen, Schwierigkeitsgraden und Einstellungen inklusive Zähler-Badges und responsivem Touch-Horizontal-Scroll auf mobilen Endgeräten.
+  - **Avatar-Upload & System**: `UserProfile`-Erweiterung mit square Avatar-Upload, File-Größen- & Typ-Validierung, Live-Bildvorschau beim Upload und Fallback auf zentrierte Benutzer-Initialen (`{% user_avatar %}`).
+  - **Avatar-Integration**: Durchgängige Anzeige in der Navbar, im Profil-Dashboard, in den Einstellungen und in Kommentaren des Community- und Haltungstagebuchs.
+  - **Zentraler Einstellungs-Hub (`/users/profile/settings/`)**: Strukturierte Karten für Profildaten (Name, Bio, Standort), E-Mail-Adressen, Passwort/Sicherheit und verknüpfte Social Accounts (Discord, Google).
+  - **Privatsphäre & Sichtbarkeitseinstellungen**: Voller Name ist standardmäßig öffentlich komplett ausgeblendet (nur Nickname @username sichtbar), mit konfigurierbaren Schaltern für Namen, Standort und Biografie.
+  - **Allauth E-Mail- & Passwortseiten**: Modernisiertes Design für `/accounts/email/`, `/accounts/password/change/` und `/accounts/password/set/` mit Breadcrumbs, Sub-Navigation und WCAG AA-konformen Status-Badges im Light- und Darkmode.
+
 
 ---
 
@@ -91,8 +99,13 @@ Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheit
   - Teilen-Funktion (Social Share Modal für WhatsApp, Telegram, Reddit, X, E-Mail, Zwischenablage sowie native Web Share API).
 
 ### 5. Benutzerkonto & Allgemeine Seiten
-- [ ] **Benutzerprofil & Einstellungen (`/users/...`)**
-  - Sub-Navigation, Avatar-Upload, E-Mail-Einstellungen und Passwortänderung.
+- [x] **Benutzerprofil & Einstellungen (`/users/...`)**
+  - Einheitliche Sub-Navigation (`profile_nav.html`) über Dashboard, Kolonien, Journale, Futterbewertungen, Schwierigkeit und Einstellungen mit dynamischen Zähler-Badges und barrierefreiem Touch-Scroll.
+  - Avatar-Upload (`UserProfile` Model, File-Validierung bis 5 MB, Live-Vorschau per JS, Lösch-Aktion und SVG/Initialen-Fallback-Tag `{% user_avatar %}`).
+  - Integration des Benutzer-Avatars in der Navbar, im Profil, in Einstellungen und bei Kommentaren im Haltungstagebuch.
+  - Vollständiger Einstellungs-Hub (`/users/profile/settings/`): Profil-Details (Name, Bio, Standort), Avatar-Verwaltung, E-Mail-Status und Sicherheitsübersicht.
+  - Privatsphäre & Sichtbarkeit: Standardmäßig strikter Schutz des Klarnamens (nur Nickname @username öffentlich), granulare Schalter für Name, Standort und Bio.
+  - Überarbeitete Allauth-Templates für E-Mail-Einstellungen (`/accounts/email/`), Passwortänderung (`/accounts/password/change/`) und Passwort-Erstellung (`/accounts/password/set/`) im konsistenten Profil-Design mit WCAG AA-Kontrast.
 - [ ] **Kontakt & Rechtliches (`/contact/`, `/legal-notice/`, `/privacy-policy/`)**
   - Schnelles Kontaktformular mit Validierungsfeedback.
   - Lesbarkeit und Typografie auf mobilen Geräten.

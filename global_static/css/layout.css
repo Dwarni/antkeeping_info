@@ -368,3 +368,60 @@ body.iframe {
   font-size: 0.8rem;
   font-weight: 600;
 }
+
+/* ==========================================================================
+   User Profile, Subnavigation & Avatar Styling
+   ========================================================================== */
+
+.profile-subnav {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.profile-subnav::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-subnav .btn {
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+}
+
+.profile-subnav .btn:hover:not(.active) {
+  background-color: var(--bs-secondary-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+
+.profile-subnav .btn.active {
+  box-shadow: 0 2px 4px rgba(45, 106, 79, 0.2);
+}
+
+.user-avatar-placeholder {
+  user-select: none;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  letter-spacing: -0.02em;
+}
+
+[data-bs-theme="dark"] .user-avatar-placeholder.bg-primary-subtle {
+  background-color: rgba(45, 106, 79, 0.35) !important;
+  color: #74c69d !important;
+  border: 1px solid rgba(116, 198, 157, 0.3);
+}
+
+[data-bs-theme="dark"] .profile-subnav .btn-outline-secondary {
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+
+[data-bs-theme="dark"] .profile-subnav .btn-outline-secondary:hover:not(.active) {
+  background-color: #21262d;
+  border-color: #8b949e;
+  color: #f0f6fc;
+}
+
+[data-bs-theme="dark"] .profile-subnav .btn.active {
+  background-color: #2d6a4f !important;
+  border-color: #2d6a4f !important;
+  color: #ffffff !important;
+}

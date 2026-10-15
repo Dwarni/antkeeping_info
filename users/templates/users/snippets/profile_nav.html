@@ -1,0 +1,72 @@
+{% load i18n static %}
+<nav aria-label="{% trans 'Profile navigation' %}" class="profile-subnav-container mb-4">
+    <div class="d-flex flex-nowrap overflow-x-auto gap-2 pb-2 profile-subnav text-nowrap" role="tablist">
+        <a href="{% url 'user_profile' %}"
+           class="btn btn-sm d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 {% if active_tab == 'dashboard' or request.resolver_match.url_name == 'user_profile' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}"
+           role="tab"
+           aria-selected="{% if active_tab == 'dashboard' or request.resolver_match.url_name == 'user_profile' %}true{% else %}false{% endif %}">
+            <i class="bi bi-speedometer2"></i>
+            <span>{% trans "Overview" %}</span>
+        </a>
+
+        <a href="{% url 'user_profile_colonies' %}"
+           class="btn btn-sm d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 {% if active_tab == 'colonies' or request.resolver_match.url_name == 'user_profile_colonies' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}"
+           role="tab"
+           aria-selected="{% if active_tab == 'colonies' or request.resolver_match.url_name == 'user_profile_colonies' %}true{% else %}false{% endif %}">
+            {% include "icons/ant_icon.html" with size="15" %}
+            <span>{% trans "My Colonies" %}</span>
+            {% if colonies_count is not None %}
+            <span class="badge rounded-pill {% if active_tab == 'colonies' or request.resolver_match.url_name == 'user_profile_colonies' %}bg-white text-primary{% else %}bg-secondary-subtle text-body-secondary border{% endif %}">
+                {{ colonies_count }}
+            </span>
+            {% endif %}
+        </a>
+
+        <a href="{% url 'user_profile_journals' %}"
+           class="btn btn-sm d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 {% if active_tab == 'journals' or request.resolver_match.url_name == 'user_profile_journals' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}"
+           role="tab"
+           aria-selected="{% if active_tab == 'journals' or request.resolver_match.url_name == 'user_profile_journals' %}true{% else %}false{% endif %}">
+            <i class="bi bi-journal-richtext"></i>
+            <span>{% trans "My Journals" %}</span>
+            {% if journal_entries_count is not None %}
+            <span class="badge rounded-pill {% if active_tab == 'journals' or request.resolver_match.url_name == 'user_profile_journals' %}bg-white text-primary{% else %}bg-secondary-subtle text-body-secondary border{% endif %}">
+                {{ journal_entries_count }}
+            </span>
+            {% endif %}
+        </a>
+
+        <a href="{% url 'user_profile_food_ratings' %}"
+           class="btn btn-sm d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 {% if active_tab == 'food_ratings' or request.resolver_match.url_name == 'user_profile_food_ratings' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}"
+           role="tab"
+           aria-selected="{% if active_tab == 'food_ratings' or request.resolver_match.url_name == 'user_profile_food_ratings' %}true{% else %}false{% endif %}">
+            {% include "icons/food_icon.html" with size="15" %}
+            <span>{% trans "Food Ratings" %}</span>
+            {% if food_ratings_count is not None %}
+            <span class="badge rounded-pill {% if active_tab == 'food_ratings' or request.resolver_match.url_name == 'user_profile_food_ratings' %}bg-white text-primary{% else %}bg-secondary-subtle text-body-secondary border{% endif %}">
+                {{ food_ratings_count }}
+            </span>
+            {% endif %}
+        </a>
+
+        <a href="{% url 'user_profile_difficulty_ratings' %}"
+           class="btn btn-sm d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 {% if active_tab == 'difficulty_ratings' or request.resolver_match.url_name == 'user_profile_difficulty_ratings' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}"
+           role="tab"
+           aria-selected="{% if active_tab == 'difficulty_ratings' or request.resolver_match.url_name == 'user_profile_difficulty_ratings' %}true{% else %}false{% endif %}">
+            <i class="bi bi-bar-chart-steps"></i>
+            <span>{% trans "Difficulty Ratings" %}</span>
+            {% if difficulty_ratings_count is not None %}
+            <span class="badge rounded-pill {% if active_tab == 'difficulty_ratings' or request.resolver_match.url_name == 'user_profile_difficulty_ratings' %}bg-white text-primary{% else %}bg-secondary-subtle text-body-secondary border{% endif %}">
+                {{ difficulty_ratings_count }}
+            </span>
+            {% endif %}
+        </a>
+
+        <a href="{% url 'user_profile_settings' %}"
+           class="btn btn-sm d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 ms-auto {% if active_tab == 'settings' or request.resolver_match.url_name == 'user_profile_settings' or request.resolver_match.url_name in 'account_email account_change_password account_set_password' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}"
+           role="tab"
+           aria-selected="{% if active_tab == 'settings' or request.resolver_match.url_name == 'user_profile_settings' or request.resolver_match.url_name in 'account_email account_change_password account_set_password' %}true{% else %}false{% endif %}">
+            <i class="bi bi-gear-fill"></i>
+            <span>{% trans "Settings" %}</span>
+        </a>
+    </div>
+</nav>

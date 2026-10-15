@@ -47,21 +47,24 @@
             </div>
         </div>
 
-        {# Filter pills #}
+        {# Profile Subnavigation #}
+        {% include "users/snippets/profile_nav.html" with active_tab="colonies" %}
+
         {% if total_colonies > 0 %}
-        <div class="d-flex align-items-center gap-2 flex-wrap mb-3 pb-2 border-bottom">
-            <span class="small text-muted fw-semibold me-1"><i class="bi bi-funnel me-1"></i>{% trans "Status" %}:</span>
+        {# Filter pills #}
+        <div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+            <span class="text-muted small fw-semibold me-1"><i class="bi bi-funnel me-1"></i>{% trans "Status" %}:</span>
             <a href="{% url 'user_profile_colonies' %}" class="badge rounded-pill text-decoration-none {% if not current_status_filter %}bg-primary text-white{% else %}bg-body-secondary text-body border{% endif %} px-3 py-2">
                 {% trans "All" %} <span class="opacity-75 ms-1">({{ total_colonies }})</span>
             </a>
             {% if active_colonies > 0 %}
             <a href="{% url 'user_profile_colonies' %}?status=active" class="badge rounded-pill text-decoration-none {% if current_status_filter == 'active' %}bg-success text-white{% else %}bg-success-subtle text-success-emphasis border border-success-subtle{% endif %} px-3 py-2">
-                <i class="bi bi-check-circle-fill me-1"></i>{% trans "Active" %} <span class="opacity-75 ms-1">({{ active_colonies }})</span>
+                <i class="bi bi-activity me-1"></i>{% trans "Active" %} <span class="opacity-75 ms-1">({{ active_colonies }})</span>
             </a>
             {% endif %}
             {% if founding_colonies > 0 %}
             <a href="{% url 'user_profile_colonies' %}?status=founding" class="badge rounded-pill text-decoration-none {% if current_status_filter == 'founding' %}bg-warning text-dark{% else %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% endif %} px-3 py-2">
-                <i class="bi bi-egg me-1"></i>{% trans "Founding" %} <span class="opacity-75 ms-1">({{ founding_colonies }})</span>
+                <i class="bi bi-egg-fill me-1"></i>{% trans "Founding" %} <span class="opacity-75 ms-1">({{ founding_colonies }})</span>
             </a>
             {% endif %}
             {% if hibernating_colonies > 0 %}

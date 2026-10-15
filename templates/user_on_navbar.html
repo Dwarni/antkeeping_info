@@ -1,16 +1,22 @@
-{% load i18n %}
+{% load i18n user_tags %}
 {% if user.is_authenticated %}
     <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true"
+        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 py-1" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true"
             aria-expanded="false">
-            <i class="bi bi-person-circle"></i>
+            {% user_avatar user size=26 %}
             <span>{{ user.username }}</span>
         </a>
         <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile" %}">
-                    <i class="bi bi-person-circle text-primary"></i>
-                    <span>{% trans "Profile" %}</span>
+                    <i class="bi bi-speedometer2 text-primary"></i>
+                    <span>{% trans "Profile Overview" %}</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile_settings" %}">
+                    <i class="bi bi-gear-fill text-secondary"></i>
+                    <span>{% trans "Settings & Avatar" %}</span>
                 </a>
             </li>
             <li><hr class="dropdown-divider"></li>

@@ -44,6 +44,9 @@
             </div>
         </div>
 
+        {# Profile Subnavigation #}
+        {% include "users/snippets/profile_nav.html" with active_tab="food_ratings" %}
+
         {% if not food_ratings %}
         <div class="card text-center py-5 border-0 bg-body-tertiary shadow-sm">
             <div class="card-body">

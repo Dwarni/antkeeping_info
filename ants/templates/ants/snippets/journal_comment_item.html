@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n user_tags %}
 {% if comment.is_removed %}
     {% if request.user.is_staff %}
     <div class="card mb-3 border-danger bg-danger-subtle shadow-sm" id="comment-{{ comment.pk }}">
@@ -44,9 +44,7 @@
         <div class="card-body py-3 px-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge rounded-circle bg-secondary text-white p-2 d-inline-flex justify-content-center align-items-center" style="width: 28px; height: 28px;">
-                        <i class="bi bi-person-fill"></i>
-                    </span>
+                    {% user_avatar comment.user size=28 class="border border-1 border-body flex-shrink-0" %}
                     <div>
                         <a href="{% url 'user_colonies' comment.user.username %}" class="fw-semibold text-reset text-decoration-none">
                             @{{ comment.user.username }}

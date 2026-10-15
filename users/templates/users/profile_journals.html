@@ -94,6 +94,9 @@
             </div>
         </div>
 
+        {# Profile Subnavigation #}
+        {% include "users/snippets/profile_nav.html" with active_tab="journals" %}
+
         {% if colonies %}
         {# Filter Card & Event Pills #}
         <div class="card shadow-sm border-0 mb-4 bg-body-tertiary">
