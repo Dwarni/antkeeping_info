@@ -136,6 +136,17 @@ body.iframe {
   --bs-primary: #52b788;
   --bs-primary-rgb: 82, 183, 136;
 
+  --bs-secondary: #a0b2a6;
+  --bs-secondary-rgb: 160, 178, 166;
+  --bs-secondary-color: #a0b2a6;
+  --bs-secondary-color-rgb: 160, 178, 166;
+  --bs-secondary-text-emphasis: #c2d1c8;
+  --bs-secondary-bg-subtle: #232b27;
+  --bs-secondary-border-subtle: #3a4f44;
+
+  --bs-tertiary-color: rgba(160, 178, 166, 0.7);
+  --bs-tertiary-color-rgb: 160, 178, 166;
+
   --bs-link-color: #52b788;
   --bs-link-color-rgb: 82, 183, 136;
   --bs-link-hover-color: #74c69d;
@@ -492,10 +503,56 @@ body.iframe {
   color: #52b788 !important;
 }
 
+[data-bs-theme="dark"] .table-light,
 [data-bs-theme="dark"] .doc-content .table-light {
   --bs-table-bg: #232b27;
   --bs-table-color: #d8e4de;
   --bs-table-border-color: #3a4f44;
+}
+
+[data-bs-theme="dark"] .text-secondary {
+  color: var(--bs-secondary-color) !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+  color: var(--bs-secondary-color) !important;
+}
+
+[data-bs-theme="dark"] .text-body-secondary {
+  color: var(--bs-secondary-color) !important;
+}
+
+[data-bs-theme="dark"] .text-secondary-emphasis {
+  color: var(--bs-secondary-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .bg-secondary-subtle {
+  background-color: var(--bs-secondary-bg-subtle) !important;
+  color: var(--bs-secondary-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .border-secondary-subtle {
+  border-color: var(--bs-secondary-border-subtle) !important;
+}
+
+[data-bs-theme="dark"] .border-secondary {
+  border-color: var(--bs-secondary-border-subtle) !important;
+}
+
+[data-bs-theme="dark"] .bg-dark-subtle {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--bs-body-color) !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary {
+  --bs-btn-color: #a0b2a6;
+  --bs-btn-border-color: #3a4f44;
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: #2d6a4f;
+  --bs-btn-hover-border-color: #2d6a4f;
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: #2d6a4f;
+  --bs-btn-active-border-color: #2d6a4f;
 }
 
 [data-bs-theme="dark"] .bg-primary-subtle {
