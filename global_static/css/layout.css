@@ -375,16 +375,12 @@ body.iframe {
 
 .profile-subnav {
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.profile-subnav::-webkit-scrollbar {
-  display: none;
 }
 
 .profile-subnav .btn {
   font-weight: 500;
   transition: all 0.15s ease-in-out;
+  white-space: nowrap;
 }
 
 .profile-subnav .btn:hover:not(.active) {
