@@ -297,6 +297,24 @@ class UserProfileSettingsViewTest(TestCase):
         self.user.profile.refresh_from_db()
         self.assertFalse(bool(self.user.profile.avatar))
 
+    def test_avatar_is_optimized_and_converted_to_webp(self):
+        self.client.login(username="settingsuser", password="secretpassword")
+        large_test_img = _create_test_image("PNG", size=(1200, 800))
+        data = {
+            "first_name": "AntKeeper",
+            "last_name": "Pro",
+            "avatar": large_test_img,
+        }
+        response = self.client.post(self.url, data, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.user.profile.refresh_from_db()
+        avatar = self.user.profile.avatar
+        self.assertTrue(bool(avatar))
+        self.assertTrue(avatar.name.endswith(".webp"))
+        with Image.open(avatar.path) as img:
+            self.assertEqual(img.format, "WEBP")
+            self.assertEqual(img.size, (512, 512))
+
     def test_rejects_non_image_upload(self):
         self.client.login(username="settingsuser", password="secretpassword")
         fake_file = SimpleUploadedFile("script.sh", b"echo evil", content_type="text/x-shellscript")

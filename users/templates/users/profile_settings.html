@@ -2,6 +2,37 @@
 {% load i18n socialaccount static user_tags %}
 {% block title %}{% trans "Account Settings" %} — Antkeeping.info{% endblock %}
 
+{% block css %}
+<style>
+.avatar-preview-thumbnail {
+    object-fit: cover;
+    aspect-ratio: 1/1;
+}
+.avatar-crop-dialog {
+    max-width: 420px;
+}
+.cropper-box {
+    width: 300px;
+    height: 300px;
+    cursor: grab;
+    touch-action: none;
+}
+.cropper-canvas-el {
+    width: 300px;
+    height: 300px;
+    display: block;
+}
+.btn-zoom-circle {
+    width: 32px;
+    height: 32px;
+}
+.security-status-icon {
+    width: 36px;
+    height: 36px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center mt-3">
     <div class="col-lg-10 col-xl-9">
@@ -62,32 +93,36 @@
                                         <img src="{{ profile.avatar.url }}"
                                              id="avatar-preview-img"
                                              alt="{{ user.username }}"
-                                             class="rounded-circle shadow-sm border border-2 border-body"
-                                             width="76" height="76"
-                                             style="object-fit: cover; aspect-ratio: 1/1;">
+                                             class="rounded-circle shadow-sm border border-2 border-body avatar-preview-thumbnail"
+                                             width="76" height="76">
                                     {% else %}
                                         <div id="avatar-preview-placeholder">
                                             {% user_avatar user size=76 class="shadow-sm border border-2 border-body" %}
                                         </div>
                                         <img id="avatar-preview-img"
                                              alt="{% trans 'Preview' %}"
-                                             class="rounded-circle shadow-sm border border-2 border-body d-none"
-                                             width="76" height="76"
-                                             style="object-fit: cover; aspect-ratio: 1/1;">
+                                             class="rounded-circle shadow-sm border border-2 border-body avatar-preview-thumbnail d-none"
+                                             width="76" height="76">
                                     {% endif %}
                                 </div>
                                 <div class="flex-grow-1">
-                                    <label for="{{ form.avatar.id_for_label }}" class="form-label fw-semibold mb-1 small">
-                                        {% trans "Profile Avatar" %}
+                                    <label for="{{ form.avatar.id_for_label }}" class="form-label fw-semibold mb-1 small d-flex justify-content-between align-items-center">
+                                        <span>{% trans "Profile Avatar" %}</span>
+                                        <button type="button"
+                                                class="btn btn-link btn-sm text-primary p-0 text-decoration-none small d-none"
+                                                id="btn-reopen-cropper"
+                                                onclick="reopenAvatarCropper();">
+                                            <i class="bi bi-crop me-1"></i>{% trans "Adjust crop / zoom" %}
+                                        </button>
                                     </label>
                                     <input type="file"
                                            name="{{ form.avatar.name }}"
                                            id="{{ form.avatar.id_for_label }}"
                                            class="form-control form-control-sm mb-1"
                                            accept="image/jpeg,image/png,image/webp,image/gif"
-                                           onchange="previewAvatar(this);">
+                                           onchange="handleAvatarFileSelect(this);">
                                     <div class="form-text small text-muted">
-                                        {% trans "Upload JPG, PNG or WebP (square recommended, max. 5 MB)." %}
+                                        {% trans "Upload JPG, PNG or WebP (max. 5 MB). You can crop and zoom your picture directly." %}
                                     </div>
                                     {% if form.avatar.errors %}
                                         <div class="text-danger small mt-1">{{ form.avatar.errors }}</div>
@@ -236,8 +271,9 @@
                             <i class="bi bi-envelope-at text-primary"></i>
                             <span>{% trans "Email Settings" %}</span>
                         </h2>
-                        <a href="{% url 'account_email' %}" class="btn btn-sm btn-outline-primary py-1 px-2">
-                            {% trans "Manage" %} &rarr;
+                        <a href="{% url 'account_email' %}" class="btn btn-sm btn-outline-primary py-1 px-2 d-inline-flex align-items-center gap-1">
+                            <span>{% trans "Manage" %}</span>
+                            <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>
                     <div class="card-body p-3 p-md-4">
@@ -282,7 +318,7 @@
                     <div class="card-body p-3 p-md-4">
                         {% if has_usable_password %}
                             <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="rounded-circle bg-success-subtle text-success p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                <div class="rounded-circle bg-success-subtle text-success p-2 d-inline-flex align-items-center justify-content-center flex-shrink-0 security-status-icon">
                                     <i class="bi bi-check-lg fs-5"></i>
                                 </div>
                                 <div class="flex-grow-1 small">
@@ -356,23 +392,356 @@
     </div>
 </div>
 
+{# Discord-style Avatar Cropper Modal #}
+<div class="modal fade" id="avatarCropModal" tabindex="-1" aria-labelledby="avatarCropModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered avatar-crop-dialog">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header border-bottom py-2 px-3">
+                <h5 class="modal-title h6 fw-bold d-flex align-items-center gap-2 mb-0" id="avatarCropModalLabel">
+                    <i class="bi bi-crop text-primary"></i>
+                    <span>{% trans "Adjust Avatar" %}</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}" onclick="cancelAvatarCrop();"></button>
+            </div>
+            <div class="modal-body p-3 text-center">
+                <p class="text-muted small mb-2">
+                    {% trans "Drag the image to position it. Use the slider or mouse wheel to zoom." %}
+                </p>
+
+                <!-- Cropper Canvas Container -->
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="position-relative overflow-hidden rounded-3 border bg-dark user-select-none shadow-sm cropper-box"
+                         id="cropper-container">
+                        <canvas id="cropper-canvas" width="600" height="600"
+                                class="cropper-canvas-el"></canvas>
+                    </div>
+                </div>
+
+                <!-- Zoom Controls -->
+                <div class="d-flex align-items-center justify-content-center gap-2 px-2 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle p-0 d-inline-flex align-items-center justify-content-center flex-shrink-0 btn-zoom-circle"
+                            id="btn-zoom-out" title="{% trans 'Zoom out' %}" onclick="stepAvatarZoom(-0.2);">
+                        <i class="bi bi-zoom-out"></i>
+                    </button>
+                    <input type="range" class="form-range flex-grow-1" id="cropper-zoom-range" min="1.0" max="3.5" step="0.01" value="1.0" oninput="onAvatarZoomInput(this.value);">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle p-0 d-inline-flex align-items-center justify-content-center flex-shrink-0 btn-zoom-circle"
+                            id="btn-zoom-in" title="{% trans 'Zoom in' %}" onclick="stepAvatarZoom(0.2);">
+                        <i class="bi bi-zoom-in"></i>
+                    </button>
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    <button type="button" class="btn btn-link btn-sm text-decoration-none text-muted py-0 small" onclick="resetAvatarCrop();">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>{% trans "Reset" %}
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2 px-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" onclick="cancelAvatarCrop();">
+                    {% trans "Cancel" %}
+                </button>
+                <button type="button" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1" id="btn-apply-crop" onclick="applyAvatarCrop();">
+                    <i class="bi bi-check-lg"></i>
+                    <span>{% trans "Apply" %}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function previewAvatar(input) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var img = document.getElementById('avatar-preview-img');
-            var placeholder = document.getElementById('avatar-preview-placeholder');
-            if (img) {
-                img.src = e.target.result;
-                img.classList.remove('d-none');
+(function() {
+    let cropperModalInstance = null;
+    let cropperImg = new Image();
+    let cropperState = {
+        loaded: false,
+        zoom: 1.0,
+        baseScale: 1.0,
+        offsetX: 0,
+        offsetY: 0,
+        isDragging: false,
+        dragStartX: 0,
+        dragStartY: 0,
+        lastTouchDist: 0,
+        hasConfirmedCrop: false,
+        originalFile: null
+    };
+
+    const CANVAS_RES = 600;
+    const R = 225; // radius on 600x600 canvas (diameter 450px; displayed at 225px on 300px element)
+
+    function clampOffsets() {
+        if (!cropperImg.naturalWidth) return;
+        const scale = cropperState.baseScale * cropperState.zoom;
+        const w = cropperImg.naturalWidth * scale;
+        const h = cropperImg.naturalHeight * scale;
+        const maxOffsetX = Math.max(0, (w / 2) - R);
+        const maxOffsetY = Math.max(0, (h / 2) - R);
+
+        cropperState.offsetX = Math.min(maxOffsetX, Math.max(-maxOffsetX, cropperState.offsetX));
+        cropperState.offsetY = Math.min(maxOffsetY, Math.max(-maxOffsetY, cropperState.offsetY));
+    }
+
+    function drawCanvas() {
+        const canvas = document.getElementById('cropper-canvas');
+        if (!canvas || !cropperState.loaded) return;
+        const ctx = canvas.getContext('2d');
+        const cx = CANVAS_RES / 2;
+        const cy = CANVAS_RES / 2;
+
+        ctx.clearRect(0, 0, CANVAS_RES, CANVAS_RES);
+
+        // 1. Draw scaled & positioned image
+        const scale = cropperState.baseScale * cropperState.zoom;
+        const w = cropperImg.naturalWidth * scale;
+        const h = cropperImg.naturalHeight * scale;
+        const imgX = (cx + cropperState.offsetX) - (w / 2);
+        const imgY = (cy + cropperState.offsetY) - (h / 2);
+
+        ctx.drawImage(cropperImg, imgX, imgY, w, h);
+
+        // 2. Draw Discord-like dark vignette overlay with circular cutout
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        ctx.beginPath();
+        ctx.rect(0, 0, CANVAS_RES, CANVAS_RES);
+        ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
+        ctx.fill('evenodd');
+
+        // 3. Crisp circular border
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function setAvatarZoom(val) {
+        const clamped = Math.min(3.5, Math.max(1.0, parseFloat(val)));
+        cropperState.zoom = clamped;
+        const range = document.getElementById('cropper-zoom-range');
+        if (range) range.value = clamped;
+        clampOffsets();
+        drawCanvas();
+    }
+
+    window.onAvatarZoomInput = function(val) {
+        setAvatarZoom(val);
+    };
+
+    window.stepAvatarZoom = function(delta) {
+        setAvatarZoom(cropperState.zoom + delta);
+    };
+
+    window.resetAvatarCrop = function() {
+        cropperState.zoom = 1.0;
+        cropperState.offsetX = 0;
+        cropperState.offsetY = 0;
+        const range = document.getElementById('cropper-zoom-range');
+        if (range) range.value = 1.0;
+        clampOffsets();
+        drawCanvas();
+    };
+
+    window.handleAvatarFileSelect = function(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            // If already processed WebP from this cropper, avoid recursive reopen
+            if (cropperState.hasConfirmedCrop && file.name.endsWith('.webp') && file.size < 1000000) {
+                return;
+            }
+            cropperState.originalFile = file;
+            cropperState.hasConfirmedCrop = false;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                cropperImg = new Image();
+                cropperImg.onload = function() {
+                    cropperState.loaded = true;
+                    const minDim = Math.min(cropperImg.naturalWidth, cropperImg.naturalHeight);
+                    cropperState.baseScale = (2 * R) / Math.max(1, minDim);
+                    resetAvatarCrop();
+                    openCropperModal();
+                };
+                cropperImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    window.reopenAvatarCropper = function() {
+        if (cropperState.loaded) {
+            openCropperModal();
+        }
+    };
+
+    function openCropperModal() {
+        const modalEl = document.getElementById('avatarCropModal');
+        if (!modalEl) return;
+        if (!cropperModalInstance) {
+            cropperModalInstance = new bootstrap.Modal(modalEl);
+        }
+        cropperModalInstance.show();
+        setTimeout(function() {
+            clampOffsets();
+            drawCanvas();
+        }, 150);
+    }
+
+    window.cancelAvatarCrop = function() {
+        const fileInput = document.getElementById('{{ form.avatar.id_for_label }}');
+        if (!cropperState.hasConfirmedCrop && fileInput) {
+            fileInput.value = '';
+        }
+        if (cropperModalInstance) {
+            cropperModalInstance.hide();
+        }
+    };
+
+    window.applyAvatarCrop = function() {
+        if (!cropperState.loaded) return;
+
+        const scale = cropperState.baseScale * cropperState.zoom;
+        const srcSize = (2 * R) / scale;
+        const srcCenterX = (cropperImg.naturalWidth / 2) - (cropperState.offsetX / scale);
+        const srcCenterY = (cropperImg.naturalHeight / 2) - (cropperState.offsetY / scale);
+        const srcX = Math.max(0, srcCenterX - (srcSize / 2));
+        const srcY = Math.max(0, srcCenterY - (srcSize / 2));
+
+        const targetSize = 512;
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = targetSize;
+        exportCanvas.height = targetSize;
+        const expCtx = exportCanvas.getContext('2d');
+        expCtx.imageSmoothingEnabled = true;
+        expCtx.imageSmoothingQuality = 'high';
+
+        expCtx.drawImage(
+            cropperImg,
+            srcX, srcY, srcSize, srcSize,
+            0, 0, targetSize, targetSize
+        );
+
+        function handleBlob(blob) {
+            if (!blob) return;
+            const fileInput = document.getElementById('{{ form.avatar.id_for_label }}');
+            const origName = (cropperState.originalFile && cropperState.originalFile.name) ?
+                cropperState.originalFile.name.replace(/\.[^/.]+$/, "") : "avatar";
+            const filename = origName + ".webp";
+
+            try {
+                const file = new File([blob], filename, { type: 'image/webp' });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+            } catch (err) {
+                console.warn("DataTransfer fallback:", err);
+            }
+
+            const previewImg = document.getElementById('avatar-preview-img');
+            const placeholder = document.getElementById('avatar-preview-placeholder');
+            if (previewImg) {
+                previewImg.src = URL.createObjectURL(blob);
+                previewImg.classList.remove('d-none');
             }
             if (placeholder) {
                 placeholder.classList.add('d-none');
             }
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
+
+            const reopenBtn = document.getElementById('btn-reopen-cropper');
+            if (reopenBtn) reopenBtn.classList.remove('d-none');
+
+            cropperState.hasConfirmedCrop = true;
+
+            if (cropperModalInstance) {
+                cropperModalInstance.hide();
+            }
+        }
+
+        if (exportCanvas.toBlob) {
+            exportCanvas.toBlob(function(blob) {
+                if (!blob) {
+                    exportCanvas.toBlob(handleBlob, 'image/jpeg', 0.88);
+                } else {
+                    handleBlob(blob);
+                }
+            }, 'image/webp', 0.88);
+        }
+    };
+
+    // Attach canvas pointer drag and wheel events
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('cropper-container');
+        if (!container) return;
+
+        function getPointerPos(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        function onPointerDown(e) {
+            cropperState.isDragging = true;
+            container.style.cursor = 'grabbing';
+            const pos = getPointerPos(e);
+            cropperState.dragStartX = pos.x;
+            cropperState.dragStartY = pos.y;
+
+            if (e.touches && e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                cropperState.lastTouchDist = Math.hypot(dx, dy);
+            }
+        }
+
+        function onPointerMove(e) {
+            if (e.touches && e.touches.length === 2) {
+                e.preventDefault();
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.hypot(dx, dy);
+                if (cropperState.lastTouchDist > 0) {
+                    const factor = dist / cropperState.lastTouchDist;
+                    setAvatarZoom(cropperState.zoom * factor);
+                }
+                cropperState.lastTouchDist = dist;
+                return;
+            }
+
+            if (!cropperState.isDragging) return;
+            e.preventDefault();
+            const pos = getPointerPos(e);
+            const dx = (pos.x - cropperState.dragStartX) * 2;
+            const dy = (pos.y - cropperState.dragStartY) * 2;
+            cropperState.offsetX += dx;
+            cropperState.offsetY += dy;
+            cropperState.dragStartX = pos.x;
+            cropperState.dragStartY = pos.y;
+            clampOffsets();
+            drawCanvas();
+        }
+
+        function onPointerUp() {
+            cropperState.isDragging = false;
+            cropperState.lastTouchDist = 0;
+            container.style.cursor = 'grab';
+        }
+
+        container.addEventListener('mousedown', onPointerDown);
+        window.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('mouseup', onPointerUp);
+
+        container.addEventListener('touchstart', onPointerDown, { passive: false });
+        window.addEventListener('touchmove', onPointerMove, { passive: false });
+        window.addEventListener('touchend', onPointerUp);
+
+        container.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.12 : 0.12;
+            setAvatarZoom(cropperState.zoom + delta);
+        }, { passive: false });
+    });
+})();
 </script>
 {% endblock %}
