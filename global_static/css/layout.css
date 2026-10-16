@@ -11,15 +11,54 @@ body {
 }
 
 :root {
+  /* Brand Core Palette */
+  --brand-forest: #2d6a4f;
+  --brand-forest-rgb: 45, 106, 79;
+  --brand-pine: #1b3a2d;
+  --brand-pine-rgb: 27, 58, 45;
+  --brand-mint: #d4ede0;
+
+  /* Warm Amber / Honey Accent */
+  --brand-amber: #d97706;
+  --brand-amber-rgb: 217, 119, 6;
+  --brand-amber-hover: #b45309;
+  --brand-amber-subtle: #fef3c7;
+  --brand-amber-border: #fde68a;
+  --brand-amber-text: #92400e;
+
+  /* Bootstrap Brand Overrides */
   --bs-primary: #2d6a4f;
   --bs-primary-rgb: 45, 106, 79;
   --bs-link-color: #2d6a4f;
   --bs-link-color-rgb: 45, 106, 79;
   --bs-link-hover-color: #1b3a2d;
   --bs-link-hover-color-rgb: 27, 58, 45;
-  --bs-body-color: #2a2a2a;
-  --bs-body-color-rgb: 42, 42, 42;
+  --bs-body-color: #1e2421;
+  --bs-body-color-rgb: 30, 36, 33;
   --bs-heading-color: #1b3a2d;
+}
+
+/* Warm Amber Accent Helper Classes */
+.badge-amber,
+.bg-amber-subtle {
+  background-color: var(--brand-amber-subtle) !important;
+  color: var(--brand-amber-text) !important;
+  border: 1px solid var(--brand-amber-border) !important;
+}
+
+.text-amber {
+  color: var(--brand-amber) !important;
+}
+
+.border-amber {
+  border-color: var(--brand-amber-border) !important;
+}
+
+[data-bs-theme="dark"] {
+  --brand-amber: #f59e0b;
+  --brand-amber-subtle: rgba(245, 158, 11, 0.15);
+  --brand-amber-border: rgba(245, 158, 11, 0.3);
+  --brand-amber-text: #fde68a;
 }
 
 .accordion {

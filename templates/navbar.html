@@ -4,7 +4,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark navbar-forest d-print-none mb-4 shadow-sm">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2 py-1 me-3" href="{% url 'home' %}">
-            <img src="{% static 'img/logo.png' %}" alt="Antkeeping.info" width="30" height="30" class="d-inline-block">
+            {% include "icons/ant_icon.html" with size="26" class="text-white" %}
             <span class="fw-bold tracking-tight text-white d-none d-sm-inline fs-6">Antkeeping.info</span>
         </a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="{% trans 'Toggle navigation' %}">
@@ -23,32 +23,32 @@
                     <ul class="dropdown-menu shadow-sm" aria-labelledby="antDatabaseDropdown">
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'taxonomic_ranks_by_region' 'species' %}">
-                                <i class="bi bi-geo-alt text-success"></i>
+                                <i class="bi bi-geo-alt text-primary"></i>
                                 <span>{% trans "Ant species by Region" %}</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'taxonomic_ranks_by_region' 'genera' %}">
-                                <i class="bi bi-diagram-3 text-success"></i>
+                                <i class="bi bi-diagram-3 text-primary"></i>
                                 <span>{% trans "Ant genera by Region" %}</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'taxonomic_ranks_by_region' 'tribes' %}">
-                                <i class="bi bi-diagram-2 text-success"></i>
+                                <i class="bi bi-diagram-2 text-primary"></i>
                                 <span>{% trans "Ant tribes by Region" %}</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'taxonomic_ranks_by_region' 'sub-families' %}">
-                                <i class="bi bi-layers text-success"></i>
+                                <i class="bi bi-layers text-primary"></i>
                                 <span>{% trans "Ant sub families by Region" %}</span>
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'food_overview' %}">
-                                {% include "icons/food_icon.html" with size="14" class="text-info" %}
+                                {% include "icons/food_icon.html" with size="14" class="text-primary" %}
                                 <span>{% trans "Ant Food Database" %}</span>
                             </a>
                         </li>
@@ -90,7 +90,7 @@
                         <li>
                             <a class="dropdown-item d-flex align-items-center justify-content-between gap-2" href="https://antscout.com/flights" target="_blank" rel="noopener noreferrer">
                                 <span class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-broadcast text-primary"></i>
+                                    <i class="bi bi-broadcast text-amber"></i>
                                     <span>AntScout Flights</span>
                                 </span>
                                 <i class="bi bi-box-arrow-up-right text-muted small"></i>
@@ -111,7 +111,7 @@
                         </li>
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'community_journal' %}">
-                                <i class="bi bi-people-fill text-info"></i>
+                                <i class="bi bi-people-fill text-primary"></i>
                                 <span>{% trans "Community Journal" %}</span>
                             </a>
                         </li>
