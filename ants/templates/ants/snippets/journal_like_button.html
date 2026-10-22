@@ -6,6 +6,7 @@
             id="like-btn-{{ entry.pk }}"
             class="btn btn-sm {% if is_liked %}btn-danger text-white{% else %}btn-outline-secondary{% endif %} journal-like-btn d-inline-flex align-items-center gap-1 shadow-sm"
             hx-post="{% url 'colony_journal_entry_like' entry.pk %}"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
             hx-swap="outerHTML"
             title="{% if is_liked %}{% trans 'Remove heart' %}{% else %}{% trans 'Give a heart' %}{% endif %}">
         <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
@@ -28,6 +29,7 @@
             id="like-btn-{{ entry.pk }}"
             class="btn btn-sm {% if is_liked %}btn-danger text-white{% else %}btn-outline-secondary{% endif %} journal-like-btn d-inline-flex align-items-center gap-1 shadow-sm"
             hx-post="{% url 'colony_journal_entry_like' entry.pk %}"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
             hx-swap="outerHTML"
             title="{% if is_liked %}{% trans 'Remove heart' %}{% else %}{% trans 'Give a heart' %}{% endif %}">
         <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>

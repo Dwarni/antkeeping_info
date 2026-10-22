@@ -37,6 +37,7 @@ from django.utils.translation import gettext as _
 from django.utils.decorators import method_decorator
 from django.utils.text import slugify
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
@@ -2302,6 +2303,7 @@ class ColonyJournalEntryShortRedirectView(View):
         return redirect(entry.get_absolute_url())
 
 
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 @method_decorator(never_cache, name="dispatch")
 class ColonyJournalEntryLikeToggleView(View):
     """HTMX endpoint to toggle a heart/like on a journal entry."""

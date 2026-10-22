@@ -152,6 +152,32 @@ class ColonyJournalFeaturesTestCase(TestCase):
         self.assertEqual(ColonyJournalEntryLike.objects.filter(entry=self.entry).count(), 0)
         self.assertContains(res2, "bi-heart")
 
+    def test_like_toggle_csrf_protection(self):
+        from django.test import Client
+        from django.middleware.csrf import _get_new_csrf_string
+
+        url = reverse("colony_journal_entry_like", args=[self.entry.pk])
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.bob)
+
+        # 1. POST without CSRF header must be rejected with 403 Forbidden
+        res_no_csrf = csrf_client.post(url)
+        self.assertEqual(res_no_csrf.status_code, 403)
+
+        # 2. POST with X-CSRFToken header must succeed
+        token = _get_new_csrf_string()
+        csrf_client.cookies["csrftoken"] = token
+        res_with_csrf = csrf_client.post(url, HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(res_with_csrf.status_code, 200)
+        self.assertContains(res_with_csrf, "hx-headers='{\"X-CSRFToken\":")
+
+    def test_layout_includes_htmx_and_csrf(self):
+        detail_url = self.entry.get_absolute_url()
+        res = self.client.get(detail_url)
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "htmx.min.")
+        self.assertContains(res, "hx-headers='{\"X-CSRFToken\":")
+
     def test_comment_create_and_delete(self):
         url = reverse("colony_journal_comment_create", args=[self.entry.pk])
 

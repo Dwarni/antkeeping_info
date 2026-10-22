@@ -23,6 +23,7 @@
                 <button type="button"
                         class="btn btn-sm btn-outline-success py-0 px-2 small"
                         hx-post="{% url 'colony_journal_comment_moderate' comment.pk %}?action=restore"
+                        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                         hx-target="#comment-{{ comment.pk }}"
                         hx-swap="outerHTML">
                     <i class="bi bi-arrow-counterclockwise me-1"></i>{% trans "Restore comment" %}
@@ -30,6 +31,7 @@
                 <button type="button"
                         class="btn btn-sm btn-outline-danger py-0 px-2 small"
                         hx-post="{% url 'colony_journal_comment_delete' comment.pk %}"
+                        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                         hx-target="#comment-{{ comment.pk }}"
                         hx-swap="outerHTML"
                         hx-confirm="{% trans 'Permanently delete this comment from the database?' %}">
@@ -61,6 +63,7 @@
                             class="btn btn-sm btn-outline-warning py-0 px-2 small"
                             title="{% trans 'Remove as spam (moderation)' %}"
                             hx-post="{% url 'colony_journal_comment_moderate' comment.pk %}?action=remove&reason=Spam"
+                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                             hx-target="#comment-{{ comment.pk }}"
                             hx-swap="outerHTML"
                             hx-confirm="{% trans 'Remove this comment for normal users?' %}">
@@ -73,6 +76,7 @@
                                 class="btn btn-sm btn-link text-danger p-0 ms-1 text-decoration-none"
                                 title="{% trans 'Delete comment' %}"
                                 hx-post="{% url 'colony_journal_comment_delete' comment.pk %}"
+                                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                                 hx-target="#comment-{{ comment.pk }}"
                                 hx-swap="outerHTML"
                                 hx-confirm="{% trans 'Delete this comment?' %}">

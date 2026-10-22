@@ -62,7 +62,7 @@
         </style>
         {% endif %}
     </head>
-    <body {% if iframe %} class="iframe" {% endif %}>
+    <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'{% if iframe %} class="iframe"{% endif %}>
         {% if iframe is None or iframe == False %}
         <header>
             {% include "navbar.html" %}
@@ -79,7 +79,8 @@
         {% endif %}
         <!-- JavaScript Bundle with Popper -->
         <script src="{% static 'js/bootstrap.bundle.min.js' %}?v=5.3.8"></script>
-        <script src="{% static 'js/layout.js' %}?v=2"></script>
+        <script src="{% static 'js/htmx.min.js' %}?v=2.0.4"></script>
+        <script src="{% static 'js/layout.js' %}?v=3"></script>
         <script src="{% static 'js/theme.js' %}?v=1"></script>
         {% block script %} {% endblock %}
         {% block scripts %} {% endblock %}

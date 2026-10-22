@@ -2,6 +2,7 @@
   initScrollUp();
   activatePopovers();
   initNavbarSearchAutocomplete();
+  initHtmxCsrf();
 
   function initScrollUp() {
     var btn = document.getElementById("return-to-top");
@@ -184,5 +185,25 @@
       div.textContent = str;
       return div.innerHTML;
     }
+  }
+  function initHtmxCsrf() {
+    document.body.addEventListener("htmx:configRequest", function (event) {
+      if (event.detail && event.detail.verb !== "get" && !event.detail.headers["X-CSRFToken"]) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+          var cookies = document.cookie.split(";");
+          for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, 10) === "csrftoken=") {
+              cookieValue = decodeURIComponent(cookie.substring(10));
+              break;
+            }
+          }
+        }
+        if (cookieValue) {
+          event.detail.headers["X-CSRFToken"] = cookieValue;
+        }
+      }
+    });
   }
 })();

@@ -1169,6 +1169,14 @@ class ColonyJournalEntry(models.Model):
         self.__dict__["likes_count"] = value
 
     @property
+    def user_has_liked(self):
+        return self.__dict__.get("user_has_liked", False)
+
+    @user_has_liked.setter
+    def user_has_liked(self, value):
+        self.__dict__["user_has_liked"] = value
+
+    @property
     def comments_count(self):
         if "comments_count" in self.__dict__:
             return self.__dict__["comments_count"]
