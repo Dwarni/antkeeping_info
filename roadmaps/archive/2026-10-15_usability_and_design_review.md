@@ -1,4 +1,8 @@
-# Usability & Design Review Roadmap
+# Usability & Design Review Roadmap (Archiv)
+
+> [!NOTE]
+> **Status:** Vollständig umgesetzt & abgeschlossen (Stand: 15. Oktober 2026)  
+> **Archiviert am:** 26. Oktober 2026
 
 Status- und Aufgabenübersicht für die Usability-, Design- und Barrierefreiheitsprüfung aller Seiten von **antkeeping.info** (sowohl Light- als auch Darkmode).
 

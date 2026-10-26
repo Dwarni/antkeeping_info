@@ -72,4 +72,4 @@ Ziel: Schnelle und anpassbare Benachrichtigungen für Interaktionen (Likes, Komm
 
 ## 📦 2. Historie & Archiv
 
-Frühere, bereits abgeschlossene Meilensteine (z. B. das vollständige Usability-, Design- & Darkmode-Review aller bestehenden Seiten) sind im [Archiv (ROADMAP_ARCHIVE.md)](ROADMAP_ARCHIVE.md) dokumentiert.
+Frühere, bereits abgeschlossene Meilensteine (z. B. das vollständige Usability-, Design- & Darkmode-Review aller bestehenden Seiten) sind im [2026-10-15 Usability & Design Review](archive/2026-10-15_usability_and_design_review.md) dokumentiert.
