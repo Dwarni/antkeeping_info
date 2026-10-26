@@ -12,3 +12,8 @@
 ## Tests & Qualitaetssicherung
 * Nach Aenderungen an Templates oder Views stets relevante Tests ausfuehren (`python manage.py test <app>.tests...`).
 * Bei neuen Snippets oder UI-Features sicherstellen, dass die Einbindung in Views ueber entsprechende Assertions (`assertContains`) abgesichert ist.
+
+## Roadmaps & Aufgabenplanung
+* **Verzeichnis `roadmaps/`:** Alle Roadmaps liegen im Verzeichnis `roadmaps/`.
+* **Aktive Roadmap:** Die derzeit gültige Roadmap liegt unter `roadmaps/ROADMAP.md`.
+* **Archivierung abgeschlossener Roadmaps:** Vollständig umgesetzte Roadmaps werden mit Datumspräfix (z. B. `roadmaps/archive/YYYY-MM-DD_<thema>.md`) archiviert und in `roadmaps/ROADMAP.md` im Abschnitt Archiv verlinkt.
