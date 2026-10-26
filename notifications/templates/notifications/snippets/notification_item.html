@@ -1,0 +1,66 @@
+{% load i18n humanize static user_tags %}
+<div class="notification-item position-relative p-3 border-bottom transition-all {% if not notification.is_read %}bg-primary-subtle bg-opacity-25 notification-unread{% else %}bg-body{% endif %}" id="notification-{{ notification.pk }}">
+    <div class="d-flex align-items-start gap-3">
+        <!-- Actor Avatar or Category Icon -->
+        <div class="position-relative flex-shrink-0">
+            {% if notification.actor %}
+                {% user_avatar notification.actor size=38 class="rounded-circle shadow-sm" %}
+            {% else %}
+                <div class="rounded-circle bg-secondary-subtle d-flex align-items-center justify-content-center text-secondary shadow-sm" style="width: 38px; height: 38px;">
+                    <i class="bi bi-bell"></i>
+                </div>
+            {% endif %}
+            <span class="position-absolute bottom-0 end-0 translate-middle-y badge rounded-circle bg-body p-1 shadow-xs border">
+                <i class="bi {{ notification.icon_class }}" style="font-size: 0.75rem;"></i>
+            </span>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-grow-1 min-w-0">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                <span class="fw-semibold small text-body">{{ title }}</span>
+                <span class="text-body-secondary" style="font-size: 0.75rem;" title="{{ notification.updated_at|date:'c' }}">
+                    {{ notification.updated_at|naturaltime }}
+                </span>
+            </div>
+            <p class="mb-1 text-body-secondary small text-break" style="line-height: 1.35;">
+                {{ message }}
+            </p>
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <a href="{% url 'notifications:open' notification.pk %}" class="btn btn-xs btn-primary rounded-pill px-2.5 py-0.5 text-decoration-none" style="font-size: 0.75rem;">
+                    {% trans "View" %} <i class="bi bi-arrow-right-short"></i>
+                </a>
+
+                <form method="post" action="{% url 'notifications:toggle_read' notification.pk %}"
+                      hx-post="{% url 'notifications:toggle_read' notification.pk %}"
+                      hx-target="#notification-{{ notification.pk }}"
+                      hx-swap="outerHTML"
+                      class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-xs btn-link text-body-secondary p-0 text-decoration-none" style="font-size: 0.75rem;" title="{% if notification.is_read %}{% trans 'Mark as unread' %}{% else %}{% trans 'Mark as read' %}{% endif %}">
+                        {% if notification.is_read %}
+                            <i class="bi bi-circle"></i> {% trans "Mark unread" %}
+                        {% else %}
+                            <i class="bi bi-check2"></i> {% trans "Mark read" %}
+                        {% endif %}
+                    </button>
+                </form>
+
+                <form method="post" action="{% url 'notifications:delete' notification.pk %}"
+                      hx-post="{% url 'notifications:delete' notification.pk %}"
+                      hx-target="#notification-{{ notification.pk }}"
+                      hx-swap="delete"
+                      class="d-inline ms-auto">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-xs text-danger-emphasis opacity-50 hover-opacity-100 p-0" title="{% trans 'Delete' %}" style="font-size: 0.75rem;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {% if not notification.is_read %}
+            <span class="p-1 bg-primary rounded-circle align-self-start mt-1 flex-shrink-0" style="width: 8px; height: 8px;" title="{% trans 'Unread' %}"></span>
+        {% endif %}
+    </div>
+</div>

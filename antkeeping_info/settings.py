@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "regions",
     "flights",
     "users",
+    "notifications",
     "search",
     "staff",
     "api",

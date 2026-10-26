@@ -1,0 +1,17 @@
+{% load i18n %}
+<form method="post" action="{% url 'notifications:toggle_thread_mute' entry.pk %}"
+      hx-post="{% url 'notifications:toggle_thread_mute' entry.pk %}"
+      hx-swap="outerHTML"
+      class="d-inline">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm {% if is_muted %}btn-secondary{% else %}btn-outline-secondary{% endif %} rounded-pill d-inline-flex align-items-center gap-1.5"
+            title="{% if is_muted %}{% trans 'Unmute notifications for this entry' %}{% else %}{% trans 'Mute notifications for this entry' %}{% endif %}">
+        {% if is_muted %}
+            <i class="bi bi-bell-slash-fill"></i>
+            <span>{% trans "Muted" %}</span>
+        {% else %}
+            <i class="bi bi-bell"></i>
+            <span>{% trans "Mute thread" %}</span>
+        {% endif %}
+    </button>
+</form>

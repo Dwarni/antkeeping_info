@@ -1,0 +1,135 @@
+{% extends "layout.html" %}
+{% load i18n humanize static %}
+{% block title %}{% trans "Notifications" %} — Antkeeping.info{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-9 col-xl-8">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% trans "Notifications" %}</li>
+            </ol>
+        </nav>
+
+        {# Header Card #}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center p-3 shadow-sm" style="width: 52px; height: 52px;">
+                            <i class="bi bi-bell-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h1 class="h4 mb-0 fw-bold">{% trans "Notifications" %}</h1>
+                            <p class="text-muted small mb-0">
+                                {% blocktrans with unread=unread_count %}You have <strong>{{ unread }}</strong> unread update(s).{% endblocktrans %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if unread_count > 0 %}
+                            <form method="post" action="{% url 'notifications:mark_all_read' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill d-inline-flex align-items-center gap-1.5 px-3">
+                                    <i class="bi bi-check2-all"></i>
+                                    <span>{% trans "Mark all as read" %}</span>
+                                </button>
+                            </form>
+                        {% endif %}
+                        <a href="{% url 'notifications:settings' %}" class="btn btn-outline-secondary btn-sm rounded-pill d-inline-flex align-items-center gap-1.5 px-3">
+                            <i class="bi bi-gear-fill"></i>
+                            <span>{% trans "Settings" %}</span>
+                        </a>
+                    </div>
+                </div>
+
+                {# Filter Tabs #}
+                <div class="d-flex align-items-center gap-2 mt-4 pt-2 border-top">
+                    <a href="{% url 'notifications:list' %}?filter=all"
+                       class="btn btn-sm rounded-pill px-3 py-1.5 {% if filter_type == 'all' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}">
+                        {% trans "All" %}
+                        <span class="badge rounded-pill {% if filter_type == 'all' %}bg-white text-primary{% else %}bg-secondary-subtle text-body-secondary border{% endif %} ms-1">
+                            {{ total_count }}
+                        </span>
+                    </a>
+                    <a href="{% url 'notifications:list' %}?filter=unread"
+                       class="btn btn-sm rounded-pill px-3 py-1.5 {% if filter_type == 'unread' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}">
+                        {% trans "Unread" %}
+                        {% if unread_count > 0 %}
+                            <span class="badge rounded-pill {% if filter_type == 'unread' %}bg-white text-primary{% else %}bg-danger text-white{% endif %} ms-1">
+                                {{ unread_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'notifications:list' %}?filter=mentions"
+                       class="btn btn-sm rounded-pill px-3 py-1.5 {% if filter_type == 'mentions' %}btn-primary text-white active{% else %}btn-outline-secondary{% endif %}">
+                        {% trans "Mentions" %}
+                        {% if mentions_count > 0 %}
+                            <span class="badge rounded-pill {% if filter_type == 'mentions' %}bg-white text-primary{% else %}bg-secondary-subtle text-body-secondary border{% endif %} ms-1">
+                                {{ mentions_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {# Notifications List #}
+        <div class="card border-0 shadow-sm overflow-hidden mb-4">
+            <div id="notificationsContainer">
+                {% if page_obj %}
+                    {% for notification in page_obj %}
+                        {% include "notifications/snippets/notification_item.html" with notification=notification title=notification.title_and_message.0 message=notification.title_and_message.1 %}
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 px-3">
+                        <div class="mb-3">
+                            <i class="bi bi-bell-slash text-body-tertiary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">{% trans "No notifications found" %}</h5>
+                        <p class="text-muted small mb-0">
+                            {% if filter_type == 'unread' %}
+                                {% trans "Great! You don't have any unread notifications." %}
+                            {% elif filter_type == 'mentions' %}
+                                {% trans "Nobody has mentioned you in a comment yet." %}
+                            {% else %}
+                                {% trans "Activity from comments, likes, and mentions will appear here." %}
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            {# Pagination #}
+            {% if page_obj.has_other_pages %}
+                <div class="card-footer bg-body-tertiary py-3 text-center">
+                    <nav aria-label="{% trans 'Notification pagination' %}">
+                        <ul class="pagination pagination-sm justify-content-center mb-0 gap-1">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link rounded-pill px-3" href="?filter={{ filter_type }}&page={{ page_obj.previous_page_number }}">
+                                        &laquo; {% trans "Previous" %}
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li class="page-item disabled">
+                                <span class="page-link rounded-pill border-0 bg-transparent text-muted">
+                                    {% blocktrans with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}
+                                </span>
+                            </li>
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link rounded-pill px-3" href="?filter={{ filter_type }}&page={{ page_obj.next_page_number }}">
+                                        {% trans "Next" %} &raquo;
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

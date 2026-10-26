@@ -7,6 +7,11 @@
             {% include "icons/ant_icon.html" with size="26" class="text-white" %}
             <span class="fw-bold tracking-tight text-white d-none d-sm-inline fs-6">Antkeeping.info</span>
         </a>
+        <div class="d-flex align-items-center gap-1 ms-auto me-2 d-lg-none">
+            {% if user.is_authenticated %}
+                {% include "notifications/snippets/bell.html" with suffix="mobile" %}
+            {% endif %}
+        </div>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="{% trans 'Toggle navigation' %}">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -167,6 +172,12 @@
                 </div>
                 <div id="navbarAutocompleteMenu" class="navbar-autocomplete-dropdown shadow" role="listbox" data-autocomplete-url="{% url 'search_autocomplete' %}"></div>
             </form>
+
+            {% if user.is_authenticated %}
+                <div class="d-none d-lg-block me-1">
+                    {% include "notifications/snippets/bell.html" with suffix="desktop" %}
+                </div>
+            {% endif %}
 
             <!-- Theme Toggle -->
             <button class="btn btn-link nav-link theme-toggle p-2 rounded-circle mx-1 d-inline-flex align-items-center justify-content-center"

@@ -1,6 +1,8 @@
 from django.contrib import admin, messages
 from django.db import transaction
 from django.utils.translation import gettext as _
+
+from notifications.services import handle_colony_forced_private, handle_comment_removed
 from sorl.thumbnail.admin import AdminImageMixin
 
 from ants.models import (
@@ -286,7 +288,10 @@ class ColonyAdmin(admin.ModelAdmin):
 
     @admin.action(description=_("Force selected colonies private (moderation)"))
     def force_private(self, request, queryset):
+        colonies = list(queryset.select_related("user"))
         updated = queryset.update(force_private_by_staff=True)
+        for colony in colonies:
+            handle_colony_forced_private(colony, staff_user=request.user)
         self.message_user(request, _("%(n)d colony/colonies hidden from public view.") % {"n": updated})
 
 
@@ -309,12 +314,15 @@ class ColonyJournalCommentAdmin(admin.ModelAdmin):
     @admin.action(description=_("Remove selected comments (moderation / spam)"))
     def mark_as_spam(self, request, queryset):
         from django.utils import timezone
+        comments = list(queryset.select_related("user", "entry", "entry__colony"))
         updated = queryset.update(
             is_removed=True,
             removed_at=timezone.now(),
             removed_by=request.user,
             removal_reason="Spam",
         )
+        for comment in comments:
+            handle_comment_removed(comment, staff_user=request.user, reason="Spam")
         self.message_user(request, _("%(n)d comment(s) marked as removed.") % {"n": updated})
 
     @admin.action(description=_("Restore selected comments"))

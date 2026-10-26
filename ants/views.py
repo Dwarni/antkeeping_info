@@ -76,6 +76,8 @@ from .models import (
 )
 from .utils.export import export_csv_response, export_json_response
 
+from notifications.services import handle_comment_created, handle_comment_removed, handle_like_toggled
+
 _MONTH_NAMES_SHORT = [
     "Jan",
     "Feb",
@@ -2321,9 +2323,11 @@ class ColonyJournalEntryLikeToggleView(View):
         if like:
             like.delete()
             user_has_liked = False
+            handle_like_toggled(entry, request.user, liked=False)
         else:
             ColonyJournalEntryLike.objects.create(entry=entry, user=request.user)
             user_has_liked = True
+            handle_like_toggled(entry, request.user, liked=True)
 
         likes_count = entry.likes.count()
 
@@ -2362,6 +2366,7 @@ class ColonyJournalCommentCreateView(View):
             user=request.user,
             comment=comment_text,
         )
+        handle_comment_created(comment)
 
         if request.headers.get("HX-Request"):
             return render(
@@ -2404,6 +2409,7 @@ class ColonyJournalCommentModerateView(View):
             comment.removed_by = request.user
             comment.removal_reason = reason or "Spam / Inappropriate"
             comment.save()
+            handle_comment_removed(comment, staff_user=request.user, reason=comment.removal_reason)
 
         if request.headers.get("HX-Request"):
             return render(

@@ -1,0 +1,9 @@
+{% load i18n %}
+{% if unread_count and unread_count > 0 %}
+    <span class="notification-badge translate-middle badge rounded-pill bg-danger border border-light shadow-sm" style="font-size: 0.65rem; padding: 0.22em 0.45em; z-index: 2;" aria-live="polite">
+        {% if unread_count > 99 %}99+{% else %}{{ unread_count }}{% endif %}
+        <span class="visually-hidden">{% trans "unread notifications" %}</span>
+    </span>
+{% else %}
+    <span class="notification-badge d-none"></span>
+{% endif %}

@@ -1,0 +1,50 @@
+{% load i18n static %}
+<div class="notification-dropdown-header d-flex align-items-center justify-content-between p-3 border-bottom bg-body-tertiary">
+    <div class="d-flex align-items-center gap-2">
+        <h6 class="mb-0 fw-bold fs-6">{% trans "Notifications" %}</h6>
+        {% if unread_count and unread_count > 0 %}
+            <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis border border-danger-subtle small px-2">
+                {{ unread_count }}
+            </span>
+        {% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        {% if unread_count and unread_count > 0 %}
+            <form method="post" action="{% url 'notifications:mark_all_read' %}"
+                  hx-post="{% url 'notifications:mark_all_read' %}"
+                  hx-target="closest .notification-dropdown-content"
+                  hx-vals='{"next": "dropdown"}'>
+                {% csrf_token %}
+                <button type="submit" class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-0.5" style="font-size: 0.75rem;" title="{% trans 'Mark all as read' %}">
+                    <i class="bi bi-check2-all"></i> {% trans "Mark all read" %}
+                </button>
+            </form>
+        {% endif %}
+        <a href="{% url 'notifications:settings' %}" class="btn btn-xs text-body-secondary p-1" title="{% trans 'Notification settings' %}">
+            <i class="bi bi-gear"></i>
+        </a>
+    </div>
+</div>
+
+<div class="notification-dropdown-body overflow-y-auto" style="max-height: 380px;">
+    {% if notifications %}
+        {% for notification in notifications %}
+            {% include "notifications/snippets/notification_item.html" with notification=notification title=notification.title_and_message.0 message=notification.title_and_message.1 %}
+        {% endfor %}
+    {% else %}
+        <div class="p-4 text-center text-body-secondary">
+            <div class="mb-2">
+                <i class="bi bi-bell-slash text-body-tertiary" style="font-size: 2rem;"></i>
+            </div>
+            <p class="mb-0 small fw-semibold">{% trans "No notifications yet" %}</p>
+            <p class="mb-0 text-body-tertiary small">{% trans "You're all caught up!" %}</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="notification-dropdown-footer p-2 text-center border-top bg-body-tertiary">
+    <a href="{% url 'notifications:list' %}" class="small text-decoration-none fw-semibold d-inline-flex align-items-center gap-1 text-primary">
+        <span>{% trans "View all notifications" %}</span>
+        <i class="bi bi-chevron-right small"></i>
+    </a>
+</div>

@@ -14,6 +14,12 @@
                 </a>
             </li>
             <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "notifications:list" %}">
+                    <i class="bi bi-bell-fill text-warning"></i>
+                    <span>{% trans "Notifications" %}</span>
+                </a>
+            </li>
+            <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="{% url "user_profile_settings" %}">
                     <i class="bi bi-gear-fill text-secondary"></i>
                     <span>{% trans "Settings & Avatar" %}</span>
